@@ -21,7 +21,11 @@ const userSchema = new mongoose.Schema(
     department: {type: String},
     level: {type: String},
     hostel: {type: String},
-    matricNumber: {type: String}
+    matricNumber: {type: String},
+    studentStatus: {
+      type: Boolean,
+      default: false
+    }
   },
   { timestamps: true }
 );
