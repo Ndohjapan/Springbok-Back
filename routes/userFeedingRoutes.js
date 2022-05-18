@@ -2,7 +2,7 @@ const express = require("express")
 
 const router = express.Router()
 
-const {savePin, resetPin, deleteUser, getAllUsers, getUser, postFilter} = require("../controllers/foodCollection/userFeedingController")
+const {savePin, resetPin, deleteUser, getAllUsers, getUser, postFilter, validateUsers, fundWallet} = require("../controllers/foodCollection/userFeedingController")
 
 const {protect, restrictTo} = require("../controllers/authController")
 
@@ -14,7 +14,7 @@ router
 // Get all from the collection
 router
     .route("/")
-    .get(protect, restrictTo("manager", "bursar"), getAllUsers)    
+    .get(protect, restrictTo("manager", "bursar", "user"), getAllUsers)    
 
 // Get by id
 router
@@ -36,5 +36,14 @@ router
 router
     .route("/post/filter")
     .post(postFilter)
+
+
+// Validate Users 
+router.route("/validateUsers").post(validateUsers)
+
+
+//Fund students wallet
+router
+    .route("/fundWallet").post(fundWallet)
 
 module.exports = router

@@ -7,7 +7,7 @@ const {
   getUser,
   deleteUser,
   updateUser,
-  postFilter,
+  postFilter
 } = require("../controllers/userController");
 const {protect, restrictTo} = require("../controllers/authController")
 
@@ -27,5 +27,6 @@ router.route("/:id").put(restrictTo("bursar", "dev"), updateUser);
 
 // User eith filter
 router.route("/post/filter").post(postFilter);
+
 
 module.exports = router;

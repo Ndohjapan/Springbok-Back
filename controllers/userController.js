@@ -52,21 +52,3 @@ exports.postFilter = catchAsync(async(req, res, next) => {
 
     res.status(200).send({status: true, message: "Successful", data: user})
 })
-
-exports.validateUsers = catchAsync(async(req,res, next) => {
-    let {userIds, feedingType, studentStatus} = req.body
-    try{
-        let userUpdate = User.updateMany({$in: {"_id": userIds}}, {$set: {studentStatus: studentStatus}})
-        let feedingUpdate = userFeedingSchema.updateMany({$in: {userId: userIds}}, {$set: {feedingType: feedingType}})
-    
-        let promises = [userUpdate, feedingUpdate]
-    
-        Promise.all(promises).then(results => {
-            res.status(200).send({status: true, message:"Update Successful"})
-        })
-    }
-    catch(err){
-        return next(new AppError("Error in Update", 400));
-    }
-
-}) 

@@ -26,6 +26,14 @@ const userFeedingSchema = new mongoose.Schema({
         feedingType: {
             type: Number,
             default: 2
+        },
+        lastFunding: {
+            type: Date,
+            default: new Date().toISOString()
+        },
+        studentStatus: {
+            type: Boolean,
+            default: false
         }
     },
     { timestamps: true }
@@ -50,4 +58,4 @@ userFeedingSchema.methods.checkPin = function (transactionPin) {
 };
 
 module.exports.userFeedingSchema = mongoose.model("user-feeding", userFeedingSchema);
-module.exports.disburementSchema = mongoose.model("disbursement", disbursementSchema);
+module.exports.disbursementSchema = mongoose.model("disbursement", disbursementSchema);
