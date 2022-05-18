@@ -1,6 +1,7 @@
 const User = require("../models/UserModel");
 const AppError = require("../utils/appError");
 const catchAsync = require("../utils/catchAsync");
+const {userFeedingSchema} = require("../models/userFeedingModel")
 
 
 exports.getAllUsers = catchAsync(async(req, res, next) => {
@@ -51,4 +52,3 @@ exports.postFilter = catchAsync(async(req, res, next) => {
 
     res.status(200).send({status: true, message: "Successful", data: user})
 })
-

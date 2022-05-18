@@ -2,6 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const morgan = require("morgan");
 const globalErrorHandler = require("./controllers/errorController");
+const {fundingStatus} = require("./middleware/fundingStatus")
 const {protect} = require("./controllers/authController")
 const foodRoutes = require("./routes/foodRoutes")
 const restaurantRoutes = require("./routes/restaurantRoutes")
@@ -23,11 +24,11 @@ if (process.env.NODE_ENV === "development") app.use(morgan("short"));
 
 app.use("/api/v1/users", authRoutes);
 app.use("/food", protect, foodRoutes)
-app.use("/restaurant", protect, restaurantRoutes)
+app.use("/restaurant", fundingStatus, protect, restaurantRoutes)
 app.use("/order", protect, orderRoutes)
-app.use("/feeding", protect, userFeedingRoutes)
+app.use("/feeding", fundingStatus, protect, userFeedingRoutes)
 app.use("/user", protect, userRoutes)
-app.use("/qr", protect, qrTransactions)
+app.use("/qr", fundingStatus, protect, qrTransactions)
 
 app.all("*", (req, res, next) =>
   next(new AppError(`Cannot find ${req.originalUrl} on this server`, 404))

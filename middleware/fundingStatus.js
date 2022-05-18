@@ -1,0 +1,23 @@
+const jwt = require("jsonwebtoken");
+const config = process.env;
+const {utilsSchema} = require("../models/utilsModel")
+const {userFeedingSchema} = require("../models/userFeedingModel")
+
+const fundingStatus = async(req, res, next) => {
+    const token = req.headers["authorization"]
+    
+    let utils = await utilsSchema.findById("6283ecbcffda06c1fd477266")
+    let status = isExpiryDate(new Date, utils.fundDate)
+    if(status){
+        userFeedingSchema.updateMany({}, {fundingStatus: false})
+    }
+    return next()
+
+}
+
+function isExpiryDate(date, fundDate) {
+    
+    return new Date(date.getTime()).getDate() === fundDate;
+}
+
+module.exports.fundingStatus = fundingStatus

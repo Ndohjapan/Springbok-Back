@@ -1,4 +1,5 @@
-const userFeedingModel = require("../../models/userFeedingModel")
+const {userFeedingSchema, disbursementSchema} = require("../../models/userFeedingModel")
+const User = require("../../models/UserModel")
 const AppError = require("../../utils/appError");
 const catchAsync = require("../../utils/catchAsync");
 const bcrypt = require("bcrypt")
@@ -16,13 +17,13 @@ exports.savePin = catchAsync(async(req, res, next) => {
 })
 
 exports.getAllUsers = catchAsync(async(req, res, next) => {
-    const user = await userFeedingModel.find({})
+    const user = await userFeedingSchema.find({}).populate(["userId"])
 
     res.status(200).send({status: true, message: "Successful", data: user})
 })
 
 exports.getUser = catchAsync(async(req, res, next) => {
-    const user = await userFeedingModel.findOne({userId: req.params.id})
+    const user = await userFeedingSchema.findOne({userId: req.params.id})
 
     res.status(200).send({status: true, message: "Successful", data: user})
 })
@@ -38,13 +39,13 @@ exports.resetPin = catchAsync(async(req, res, next) => {
         }
     })
 
-    let user = await userFeedingModel.findOneAndUpdate({userId: req.params.id}, updateData, {new: true})
+    let user = await userFeedingSchema.findOneAndUpdate({userId: req.params.id}, updateData, {new: true})
 
     res.status(200).send({status: true, message: "User Updated", data: user})
 })
 
 exports.deleteUser = catchAsync(async(req, res, next) => {
-    const user = await userFeedingModel.findOneAndDelete({userId: req.params.id})
+    const user = await userFeedingSchema.findOneAndDelete({userId: req.params.id})
 
     res.status(200).send({status: true, message: "User Deleted"})
 })
@@ -60,11 +61,80 @@ exports.postFilter = catchAsync(async(req, res, next) => {
         }
     })
 
-    let user = await userFeedingModel.find(updateData)
+    let user = await userFeedingSchema.find(updateData)
 
     res.status(200).send({status: true, message: "Successful", data: user})
 })
 
+exports.validateUsers = catchAsync(async(req,res, next) => {
+    let {userIds, feedingType, studentStatus} = req.body
+    try{
+        let userUpdate = User.updateMany({$in: {"_id": userIds}}, {$set: {studentStatus: studentStatus}})
+        let feedingUpdate = userFeedingSchema.updateMany({$in: {userId: userIds}}, {$set: {feedingType: feedingType, studentStatus: studentStatus}})
+    
+        let promises = [userUpdate, feedingUpdate]
+    
+        Promise.all(promises).then(results => {
+            res.status(200).send({status: true, message:"Update Successful"})
+        })
+    }
+    catch(err){
+        console.log(err)
+        return next(new AppError("Error in Update", 400));
+    }
+
+}) 
+
+exports.fundWallet = catchAsync(async(req, res, next) => {
+    let {userIds} = req.body
+
+    try{
+
+        let todaysDate = new Date().toISOString()
+    
+        let user = await userFeedingSchema.updateMany(
+            {$in: {userId: userIds}, fundingStatus: false},
+            [{$set: {"previousBalance": '$balance', 'balance': { $multiply: [ 15000, "$feedingType" ] }, "lastFunding": todaysDate, fundingStatus: true}}], 
+            {multi: true}
+        )
+                
+        let statistics = await userFeedingSchema.aggregate([
+            { $match: 
+                { 
+                    userId: {
+                        $in: userIds
+                    }
+
+                } 
+            }, 
+            {
+                $group:
+                { 
+                    _id: null,
+                    amount: { $sum: "$balance" },
+                }
+            }
+           
+        ])
+
+        let totalAmount = (statistics[0].amount)
+        await disbursementSchema.create({
+            amount: totalAmount,
+            numberOfStudents: user.modifiedCount
+        })
+    
+        res.status(200).send({status: true, message: "Update Successful"})
+    }
+    catch(err){
+        console.log(err)
+        return next(new AppError("Error In Update", 400));
+    }
+
+})
+
+exports.totalDisbursed = catchAsync(async(req, res, next) => {
+    
+})
 // Save Hashed Pin
 // Reset Pin
 
