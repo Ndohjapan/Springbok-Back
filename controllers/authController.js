@@ -59,9 +59,9 @@ exports.signin = catchAsync(async (req, res, next) => {
 });
 
 exports.verify = catchAsync(async (req, res, next) => {
-  const { otp, userId } = req.body;
+  const { otp, email } = req.body;
 
-  const user = await User.findOne({ "_id": userId, otp: otp });
+  const user = await User.findOne({ "email": email, otp: otp });
   if (!user) return next(new AppError("Otp is invalid", 400));
 
   const currentDate = Date.now();
@@ -90,6 +90,38 @@ exports.resendOtp = catchAsync(async (req, res, next) => {
 
   res.status(200).json({ status: true, data: "OTP re-sent" });
 });
+
+
+exports.sendUserOTP = catchAsync(async(req, res, next) => {
+  let {email} = req.body
+
+  let user = await User.findOne({email: email})
+
+  if(user.email){
+    const otp = generateOtp();
+    await user.generateAuthToken();
+
+    await sendMail(email, otp)
+    res.status(200).send({status: true, message: "Email Sent"})
+
+  }else{
+    return next(new AppError("User does not exist", 400));
+    
+  }
+
+})
+
+exports.resetPassword = catchAsync(async(req, res, next) => {
+  let {email, newPassword} = req.body
+
+  const salt = await bcrypt.genSalt(10);
+  const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+  await User.findOneAndUpdate({email: email}, {password: hashedPassword})
+
+  res.status(200).send({status: true, message: "Password Set Successfully"})
+
+})
 
 exports.restrictTo = (...roles) => {
   return catchAsync((req, res, next) => {
