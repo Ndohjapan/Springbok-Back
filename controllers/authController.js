@@ -108,7 +108,7 @@ exports.protect = catchAsync(async (req, res, next) => {
     }
   try{
         const decoded = jwt.verify(token, config.get("jwtPrivateKey"))
-        req.user = decoded;
+        req.user = await User.findById(decoded.id);;
         return next()
     }
     catch(err){
