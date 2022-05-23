@@ -16,7 +16,6 @@ exports.signup = catchAsync(async (req, res, next) => {
     return next(new AppError("User already exists", 400));
 
   const otp = generateOtp();
-  console.log(otp)
   const otpExpiresIn = dates.getFutureMinutes(config.get("otpMinutesLimit"));
 
   const salt = await bcrypt.genSalt(10);
@@ -71,7 +70,6 @@ exports.verify = catchAsync(async (req, res, next) => {
   const { otp, email } = req.body;
 
   let user = await User.findOne({ email: email, otp: otp });
-  console.log(user)
   if (!user) return next(new AppError("Otp is invalid", 400));
 
   const currentDate = Date.now();
