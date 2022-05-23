@@ -79,7 +79,7 @@ exports.verify = catchAsync(async (req, res, next) => {
     return next(new AppError("OTP expired", 400));
   }else{
     
-    user = await user.findOneAndUpdate({email:email}, {$set: {otp:"", verified: true, otpExpiresIn: null}}, {new: true})
+    user = await User.findOneAndUpdate({email:email}, {$set: {otp:"", verified: true, otpExpiresIn: null}}, {new: true})
   
     res.status(200).json({ status: true, data: user });
   }
