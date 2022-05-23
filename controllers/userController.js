@@ -32,8 +32,9 @@ exports.updateUser = catchAsync(async(req, res, next) => {
 })
 
 exports.deleteUser = catchAsync(async(req, res, next) => {
+    let userId = req.params.id
     const user = await User.findByIdAndDelete(req.params.id)
-
+    await userFeedingSchema.findOneAnddelete({userId: userId})
     res.status(204).send({status: true, message: "User Deleted"})
 })
 
