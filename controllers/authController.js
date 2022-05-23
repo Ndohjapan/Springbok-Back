@@ -69,7 +69,7 @@ exports.signin = catchAsync(async (req, res, next) => {
 exports.verify = catchAsync(async (req, res, next) => {
   const { otp, email } = req.body;
 
-  const user = await User.findOne({ "email": email, otp: otp });
+  let user = await User.findOne({ "email": email, otp: otp });
   if (!user) return next(new AppError("Otp is invalid", 400));
 
   const currentDate = Date.now();
