@@ -48,14 +48,22 @@ exports.signin = catchAsync(async (req, res, next) => {
     return next(new AppError("Provide an email and password", 400));
 
   const user = await User.findOne({ email });
-  if (!user) return next(new AppError("User not found", 404));
+  if (!user){
+    return next(new AppError("User not found", 404));
+  }
+  else{
 
-  const correctPassword = await user.checkPassword(password);
-  if (!correctPassword)
-    return next(new AppError("Incorrect email or password", 400));
+    const correctPassword = await user.checkPassword(password);
+    if (!correctPassword){
 
-  const token = await user.generateAuthToken();
-  res.status(200).json({ status: true, token, payload: user });
+      return next(new AppError("Incorrect email or password", 400));
+    }else{
+      const token = await user.generateAuthToken();
+      res.status(200).json({ status: true, token, payload: user });
+    }
+
+  } 
+
 });
 
 exports.verify = catchAsync(async (req, res, next) => {
@@ -67,15 +75,14 @@ exports.verify = catchAsync(async (req, res, next) => {
   const currentDate = Date.now();
   const elapsed = dates.minuteDifference(currentDate, user.otpExpiresIn);
 
-  if (elapsed > config.get("otpMinutesLimit"))
+  if (elapsed > config.get("otpMinutesLimit")){
     return next(new AppError("OTP expired", 400));
-
-  user.otp = "";
-  user.otpExpiresIn = null;
-  user.verified = true;
-  await user.save();
-
-  res.status(200).json({ status: true, data: user });
+  }else{
+    
+    user = await user.findOneAndUpdate({email:email}, {$set: {otp:"", verified: true, otpExpiresIn: null}}, {new: true})
+  
+    res.status(200).json({ status: true, data: user });
+  }
 });
 
 exports.resendOtp = catchAsync(async (req, res, next) => {
