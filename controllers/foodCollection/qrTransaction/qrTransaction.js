@@ -2,6 +2,7 @@ const {userFeedingSchema} = require("../../../models/userFeedingModel")
 const {restaurantSchema, transactionSchema} = require("../../../models/restaurantModel")
 const AppError = require("../../../utils/appError");
 const catchAsync = require("../../../utils/catchAsync");
+const ObjectId = require('mongoose').Types.ObjectId;
 
 exports.checkBalance = catchAsync(async(req, res, next) => {
     let userId = req.user["_id"].toString()
@@ -13,9 +14,23 @@ exports.checkBalance = catchAsync(async(req, res, next) => {
 
 exports.confirmRestaurant = catchAsync(async(req, res, next) => {
     let restaurantId = req.params.id
-    const restaurant = await restaurantSchema.findById(restaurantId).select("-balance -previousBalance")
 
-    res.status(200).send({status: true, data: restaurant})
+    
+    if(ObjectId.isValid(restaurantId)){
+        if((String)(new ObjectId(restaurantId)) === restaurantId){
+            const restaurant = await restaurantSchema.findById(restaurantId).select("-balance -previousBalance")
+            if(restaurant.name){
+                res.status(200).send({status: true, data: restaurant})
+            }else{
+                return next(new AppError("Invalid Restaurant ID", 400));
+            }
+        }
+        return next(new AppError("Invalid Restaurant ID", 400));
+    }else{
+        return next(new AppError("Invalid Restaurant ID", 400));
+    }
+
+
     
 })
 
