@@ -106,7 +106,9 @@ exports.sendUserOTP = catchAsync(async(req, res, next) => {
 
   if(user.email){
     const otp = generateOtp();
-    await user.generateAuthToken();
+    const otpExpiresIn = dates.getFutureMinutes(config.get("otpMinutesLimit"));
+
+    await User.findOneAndUpdate({email:email}, {$set: {otp:otp, otpExpiresIn: otpExpiresIn}}, {new: true})
 
     await sendMail(email, otp)
     res.status(200).send({status: true, message: "Email Sent"})
