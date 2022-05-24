@@ -27,6 +27,29 @@ exports.getAllTransactions = catchAsync(async(req, res, next) => {
     })
 })
 
+exports.getUserTransactions = catchAsync(async(req, res, next) => {
+
+    let userId = req.user["_id"].toString()
+    let page = req.query.page ? req.query.page : 1
+    let limit = req.query.limit ? req.query.limit : 50
+
+    const options = {
+        page: page,
+        limit: limit,
+        sort: {"createdAt": -1},
+        populate: ["from", "to"]
+    };
+
+    transactionSchema.paginate({from: userId}, options, function(err, result) {
+        if(err){
+            console.log(err)
+            res.status(400).send(err)
+        }else{
+            res.status(200).send({status: true, message: "Successful", data: result.docs})
+        }
+    })
+})
+
 exports.getTransaction = catchAsync(async(req, res, next) => {
     const transaction = await transactionSchema.findOne({_id: req.params.id})
 

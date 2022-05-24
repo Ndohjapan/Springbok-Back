@@ -153,11 +153,6 @@ exports.totalDisbursed = catchAsync(async(req, res, next) => {
     
 })
 
-
-exports.transactions = catchAsync(async(req, res, next) => {
-    
-
-})
 // Save Hashed Pin
 // Reset Pin
 

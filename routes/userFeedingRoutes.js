@@ -2,7 +2,7 @@ const express = require("express")
 
 const router = express.Router()
 
-const {savePin, resetPin, deleteUser, getAllUsers, getUser, postFilter, validateUsers, fundWallet, transactions} = require("../controllers/foodCollection/userFeedingController")
+const {savePin, resetPin, deleteUser, getAllUsers, getUser, postFilter, validateUsers, fundWallet} = require("../controllers/foodCollection/userFeedingController")
 
 const {protect, restrictTo} = require("../controllers/authController")
 
@@ -20,11 +20,6 @@ router
 router
     .route("/:id")
     .get(getUser)
-
-// Get by id
-router
-    .route("/getTransactions")
-    .get(protect, transactions)
 
 // Delete
 router
