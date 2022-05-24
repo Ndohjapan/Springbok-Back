@@ -50,7 +50,7 @@ exports.doTransfer = catchAsync(async(req, res, next) => {
         return next(new AppError("Wrong Pin", 400));
     }
     else{
-        if(balance < amount){
+        if(balance < amount || amount < 1){
             return next(new AppError("Insufficient Funds", 400));
         }else{
 
@@ -78,3 +78,4 @@ exports.doTransfer = catchAsync(async(req, res, next) => {
     // create transaction document
     
 })
+

@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
+const mongoosePaginate = require("mongoose-paginate-v2")
 
 const userFeedingSchema = new mongoose.Schema({
     
@@ -56,6 +57,7 @@ const disbursementSchema = new mongoose.Schema({
 userFeedingSchema.methods.checkPin = function (transactionPin) {
     return bcrypt.compare(transactionPin, this.transactionPin);
 };
-
+userFeedingSchema.plugin(mongoosePaginate)
+disbursementSchema.plugin(mongoosePaginate)
 module.exports.userFeedingSchema = mongoose.model("user-feeding", userFeedingSchema);
 module.exports.disbursementSchema = mongoose.model("disbursement", disbursementSchema);

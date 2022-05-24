@@ -67,12 +67,12 @@ exports.restaurantTransactions = catchAsync(async(req, res, next) => {
     try{
         let {restaurantId, from, to} = req.body
     
-        let statistics = transactionSchema.aggregate([
+        let statistics = await transactionSchema.aggregate([
             { $match: 
                 { 
                     createdAt: {
                         $gte: new Date(from),
-                        $lt: new Date(to)
+                        $lte: new Date(to)
                     },
                     to: restaurantId
 
@@ -89,16 +89,24 @@ exports.restaurantTransactions = catchAsync(async(req, res, next) => {
         
         ])
 
-        let transactions = transactionSchema.find({createdAt:{$gte:new Date(from),$lt:new Date(to)}, to: restaurantId}).populate(["from", "to"])
-        
-        let promises = [statistics, transactions]
 
-        Promise.all(promises).then(results => {
-            statistics = results[0]
-            transactions = results[1]
+        let page = req.query.page ? req.query.page : 1
+        let limit = req.query.limit ? req.query.limit : 50
 
-            res.status(200).send({status: true, result: transactions, totalAmount: statistics[0].amount, transactions: statistics[0].transactions })
+        const options = {
+            page: page,
+            limit: limit,
+            sort: {"createdAt": -1},
+            populate: ["from", "to"]
+        };
 
+        transactionSchema.paginate({createdAt:{$gte:new Date(from),$lt:new Date(to)}, to: restaurantId}, options, function(err, result) {
+            if(err){
+                console.log(err)
+                res.status(400).send(err)
+            }else{
+                res.status(200).send({status: true, result: result.docs, totalAmount: statistics[0].amount, transactions: statistics[0].transactions})
+            }
         })
         
     }
@@ -114,12 +122,12 @@ exports.allTransactions = catchAsync(async(req, res, next) => {
     try{
         let {from, to} = req.body
     
-        let statistics = transactionSchema.aggregate([
+        let statistics = await transactionSchema.aggregate([
             { $match: 
                 { 
                     createdAt: {
                         $gte: new Date(from),
-                        $lt: new Date(to)
+                        $lte: new Date(to)
                     }
                 } 
             }, 
@@ -134,15 +142,24 @@ exports.allTransactions = catchAsync(async(req, res, next) => {
         
         ])
 
-        let transactions = transactionSchema.find({createdAt:{$gte:new Date(from),$lt:new Date(to)}}).populate(["from", "to"])
-        
-        let promises = [statistics, transactions]
 
-        Promise.all(promises).then(results => {
-            statistics = results[0]
-            transactions = results[1]
-            res.status(200).send({status: true, result: transactions, totalAmount: statistics[0].amount, transactions: statistics[0].transactions })
+        let page = req.query.page ? req.query.page : 1
+        let limit = req.query.limit ? req.query.limit : 50
 
+        const options = {
+            page: page,
+            limit: limit,
+            sort: {"createdAt": -1},
+            populate: ["from", "to"]
+        };
+
+        transactionSchema.paginate({createdAt:{$gte:new Date(from),$lt:new Date(to)}}, options, function(err, result) {
+            if(err){
+                console.log(err)
+                res.status(400).send(err)
+            }else{
+                res.status(200).send({status: true, result: result.docs, totalAmount: statistics[0].amount, transactions: statistics[0].transactions})
+            }
         })
         
     }

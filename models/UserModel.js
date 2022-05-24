@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const config = require("config");
+const mongoosePaginate = require("mongoose-paginate-v2")
 
 const userSchema = new mongoose.Schema(
   {
@@ -45,5 +46,7 @@ userSchema.methods.generateAuthToken = function () {
 userSchema.methods.checkPassword = function (password) {
   return bcrypt.compare(password, this.password);
 };
+
+userSchema.plugin(mongoosePaginate)
 
 module.exports = mongoose.model("user", userSchema);

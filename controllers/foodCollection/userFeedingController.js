@@ -1,4 +1,5 @@
 const {userFeedingSchema, disbursementSchema} = require("../../models/userFeedingModel")
+const {restaurantSchema, transactionSchema} = require("../../models/restaurantModel")
 const User = require("../../models/UserModel")
 const AppError = require("../../utils/appError");
 const catchAsync = require("../../utils/catchAsync");
@@ -17,9 +18,25 @@ exports.savePin = catchAsync(async(req, res, next) => {
 })
 
 exports.getAllUsers = catchAsync(async(req, res, next) => {
-    const user = await userFeedingSchema.find({}).populate(["userId"])
 
-    res.status(200).send({status: true, message: "Successful", data: user})
+    let page = req.query.page ? req.query.page : 1
+    let limit = req.query.limit ? req.query.limit : 50
+
+    const options = {
+        page: page,
+        limit: limit,
+        sort: {"createdAt": -1},
+        populate: ["userId"]
+    };
+
+    userFeedingSchema.paginate({}, options, function(err, result) {
+        if(err){
+            console.log(err)
+            res.status(400).send(err)
+        }else{
+            res.status(200).send({status: true, message: "Successful", payload: result.docs})
+        }
+    })
 })
 
 exports.getUser = catchAsync(async(req, res, next) => {
@@ -134,6 +151,12 @@ exports.fundWallet = catchAsync(async(req, res, next) => {
 
 exports.totalDisbursed = catchAsync(async(req, res, next) => {
     
+})
+
+
+exports.transactions = catchAsync(async(req, res, next) => {
+    
+
 })
 // Save Hashed Pin
 // Reset Pin
