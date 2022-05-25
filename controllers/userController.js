@@ -5,9 +5,25 @@ const {userFeedingSchema} = require("../models/userFeedingModel")
 
 
 exports.getAllUsers = catchAsync(async(req, res, next) => {
-    const user = await User.find({})
 
-    res.status(200).send({status: true, message: "Successful", data: user})
+    let page = req.query.page ? req.query.page : 1
+    let limit = req.query.limit ? req.query.limit : 10
+
+    const options = {
+        page: page,
+        limit: limit,
+        sort: {"createdAt": -1},
+        
+    };
+
+    User.paginate({}, options, function(err, result) {
+        if(err){
+            console.log(err)
+            res.status(400).send(err)
+        }else{
+            res.status(200).send({status: true, message: "Successful", payload: result.docs})
+        }
+    })
 })
 
 exports.getUser = catchAsync(async(req, res, next) => {
@@ -32,8 +48,9 @@ exports.updateUser = catchAsync(async(req, res, next) => {
 })
 
 exports.deleteUser = catchAsync(async(req, res, next) => {
+    let userId = req.params.id
     const user = await User.findByIdAndDelete(req.params.id)
-
+    await userFeedingSchema.findOneAndDelete({userId: userId})
     res.status(204).send({status: true, message: "User Deleted"})
 })
 

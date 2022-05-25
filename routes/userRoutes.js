@@ -23,7 +23,7 @@ router.route("/:id").get(getUser);
 router.route("/:id").delete( restrictTo("bursar", "dev"), deleteUser);
 
 // Put
-router.route("/:id").put(restrictTo("bursar", "dev"), updateUser);
+router.route("/:id").put( updateUser);
 
 // User eith filter
 router.route("/post/filter").post(postFilter);

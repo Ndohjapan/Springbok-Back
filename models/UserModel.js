@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const config = require("config");
+const mongoosePaginate = require("mongoose-paginate-v2")
 
 const userSchema = new mongoose.Schema(
   {
@@ -25,6 +26,11 @@ const userSchema = new mongoose.Schema(
     studentStatus: {
       type: Boolean,
       default: false
+    }, 
+    status: {
+      type: String,
+      enum: ["blocked", "active"],
+      default: "active"
     }
   },
   { timestamps: true }
@@ -40,5 +46,7 @@ userSchema.methods.generateAuthToken = function () {
 userSchema.methods.checkPassword = function (password) {
   return bcrypt.compare(password, this.password);
 };
+
+userSchema.plugin(mongoosePaginate)
 
 module.exports = mongoose.model("user", userSchema);

@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const mongoosePaginate = require("mongoose-paginate-v2")
 
 const restaurantSchema = new mongoose.Schema(
   {
@@ -40,6 +41,9 @@ const transactionSchema = new mongoose.Schema({
     ref: "Restaurants"
   }
 }, {timestamps: true})
+
+restaurantSchema.plugin(mongoosePaginate)
+transactionSchema.plugin(mongoosePaginate)
 
 module.exports.restaurantSchema = mongoose.model("Restaurants", restaurantSchema);
 module.exports.transactionSchema = mongoose.model("transactions", transactionSchema)

@@ -48,34 +48,41 @@ exports.signin = catchAsync(async (req, res, next) => {
     return next(new AppError("Provide an email and password", 400));
 
   const user = await User.findOne({ email });
-  if (!user) return next(new AppError("User not found", 404));
+  if (!user){
+    return next(new AppError("User not found", 404));
+  }
+  else{
 
-  const correctPassword = await user.checkPassword(password);
-  if (!correctPassword)
-    return next(new AppError("Incorrect email or password", 400));
+    const correctPassword = await user.checkPassword(password);
+    if (!correctPassword){
 
-  const token = await user.generateAuthToken();
-  res.status(200).json({ status: true, token, payload: user });
+      return next(new AppError("Incorrect email or password", 400));
+    }else{
+      const token = await user.generateAuthToken();
+      res.status(200).json({ status: true, token, payload: user });
+    }
+
+  } 
+
 });
 
 exports.verify = catchAsync(async (req, res, next) => {
-  const { otp, userId } = req.body;
+  const { otp, email } = req.body;
 
-  const user = await User.findOne({ "_id": userId, otp: otp });
+  let user = await User.findOne({ email: email, otp: otp });
   if (!user) return next(new AppError("Otp is invalid", 400));
 
   const currentDate = Date.now();
   const elapsed = dates.minuteDifference(currentDate, user.otpExpiresIn);
 
-  if (elapsed > config.get("otpMinutesLimit"))
+  if (elapsed > config.get("otpMinutesLimit")){
     return next(new AppError("OTP expired", 400));
-
-  user.otp = "";
-  user.otpExpiresIn = null;
-  user.verified = true;
-  await user.save();
-
-  res.status(200).json({ status: true, data: user });
+  }else{
+    
+    user = await User.findOneAndUpdate({email:email}, {$set: {otp:"", verified: true, otpExpiresIn: null}}, {new: true})
+  
+    res.status(200).json({ status: true, data: user });
+  }
 });
 
 exports.resendOtp = catchAsync(async (req, res, next) => {
@@ -90,6 +97,40 @@ exports.resendOtp = catchAsync(async (req, res, next) => {
 
   res.status(200).json({ status: true, data: "OTP re-sent" });
 });
+
+
+exports.sendUserOTP = catchAsync(async(req, res, next) => {
+  let {email} = req.body
+
+  let user = await User.findOne({email: email})
+
+  if(user.email){
+    const otp = generateOtp();
+    const otpExpiresIn = dates.getFutureMinutes(config.get("otpMinutesLimit"));
+
+    await User.findOneAndUpdate({email:email}, {$set: {otp:otp, otpExpiresIn: otpExpiresIn}}, {new: true})
+
+    await sendMail(email, otp)
+    res.status(200).send({status: true, message: "Email Sent"})
+
+  }else{
+    return next(new AppError("User does not exist", 400));
+    
+  }
+
+})
+
+exports.resetPassword = catchAsync(async(req, res, next) => {
+  let {email, newPassword} = req.body
+
+  const salt = await bcrypt.genSalt(10);
+  const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+  await User.findOneAndUpdate({email: email}, {password: hashedPassword})
+
+  res.status(200).send({status: true, message: "Password Set Successfully"})
+
+})
 
 exports.restrictTo = (...roles) => {
   return catchAsync((req, res, next) => {
