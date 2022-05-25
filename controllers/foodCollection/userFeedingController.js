@@ -78,9 +78,24 @@ exports.postFilter = catchAsync(async(req, res, next) => {
         }
     })
 
-    let user = await userFeedingSchema.find(updateData)
+    let page = req.query.page ? req.query.page : 1
+    let limit = req.query.limit ? req.query.limit : 50
 
-    res.status(200).send({status: true, message: "Successful", data: user})
+    const options = {
+        page: page,
+        limit: limit,
+        sort: {"createdAt": -1},
+        populate: ["userId"]
+    };
+
+    userFeedingSchema.paginate(updateData, options, function(err, result) {
+        if(err){
+            console.log(err)
+            res.status(400).send(err)
+        }else{
+            res.status(200).send({status: true, message: "Successful", data: result.docs})
+        }
+    })
 })
 
 exports.validateUsers = catchAsync(async(req,res, next) => {
