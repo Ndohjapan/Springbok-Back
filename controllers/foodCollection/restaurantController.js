@@ -154,7 +154,7 @@ exports.allTransactions = catchAsync(async(req, res, next) => {
             sort: {"createdAt": -1},
             populate: ["from", "to"]
         };
-        let result = await transactionSchema.find({createdAt:{$gte:new Date(from),$lt:new Date(to)}, to: restaurantId}).populate(["from", "to"])
+        let result = await transactionSchema.find({createdAt:{$gte:new Date(from),$lt:new Date(to)}}).populate(["from", "to"])
         res.status(200).send({status: true, result: result, totalAmount: statistics})
 
         // transactionSchema.paginate({createdAt:{$gte:new Date(from),$lt:new Date(to)}}, options, function(err, result) {
