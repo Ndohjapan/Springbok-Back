@@ -10,10 +10,14 @@ const utilsSchema = new mongoose.Schema({
     feedingAmount: {
         type: Number,
         default: 15000
-    }
+    }, 
 
+    newStudentAlert:{
+        type: Number, 
+        default: 0
+    }
 
 }, {timestamps: true})
 
 
-exports.utilsSchema = mongoose.model("utils", utilsSchema);
+modules.exports.utilsSchema = mongoose.model("utils", utilsSchema);

@@ -3,6 +3,7 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const User = require("../models/UserModel");
 const {userFeedingSchema} = require("../models/userFeedingModel");
+const {utilsSchema} = require("../models/utilsModel");
 const AppError = require("../utils/appError");
 const generateOtp = require("../utils/generateOtp");
 const sendMail = require("../utils/sendMail");
@@ -39,6 +40,9 @@ exports.signup = catchAsync(async (req, res, next) => {
   await sendMail(email, otp);
 
   res.status(201).json({ status: true, data: user, token });
+
+  await utilsSchema.updateMany({}, {$inc: {newStudentAlert: 1}})
+
 });
 
 exports.signin = catchAsync(async (req, res, next) => {

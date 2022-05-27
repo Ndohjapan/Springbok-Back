@@ -1,5 +1,6 @@
 const {userFeedingSchema, disbursementSchema} = require("../../models/userFeedingModel")
 const {restaurantSchema, transactionSchema} = require("../../models/restaurantModel")
+const {utilsSchema} = require("../../models/utilsModel")
 const User = require("../../models/UserModel")
 const AppError = require("../../utils/appError");
 const catchAsync = require("../../utils/catchAsync");
@@ -154,6 +155,8 @@ exports.fundWallet = catchAsync(async(req, res, next) => {
             amount: totalAmount,
             numberOfStudents: user.modifiedCount
         })
+
+        await utilsSchema.updateMany({}, {$set: {newStudentAlert: 0}})
     
         res.status(200).send({status: true, message: "Update Successful"})
     }
