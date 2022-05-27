@@ -20,4 +20,4 @@ const utilsSchema = new mongoose.Schema({
 }, {timestamps: true})
 
 
-modules.exports.utilsSchema = mongoose.model("utils", utilsSchema);
+exports.utilsSchema = mongoose.model("utils", utilsSchema);
