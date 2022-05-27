@@ -93,21 +93,23 @@ exports.restaurantTransactions = catchAsync(async(req, res, next) => {
         let page = req.query.page ? req.query.page : 1
         let limit = req.query.limit ? req.query.limit : 50
 
-        const options = {
-            page: page,
-            limit: limit,
-            sort: {"createdAt": -1},
-            populate: ["from", "to"]
-        };
+        let result = await transactionSchema.find({createdAt:{$gte:new Date(from),$lt:new Date(to)}, to: restaurantId}).populate(["from", "to"])
+        
+        res.status(200).send({status: true, result: result, totalAmount: statistics})
+        // const options = {
+        //     page: page,
+        //     limit: limit,
+        //     sort: {"createdAt": -1},
+        //     populate: ["from", "to"]
+        // };
 
-        transactionSchema.paginate({createdAt:{$gte:new Date(from),$lt:new Date(to)}, to: restaurantId}, options, function(err, result) {
-            if(err){
-                console.log(err)
-                res.status(400).send(err)
-            }else{
-                res.status(200).send({status: true, result: result.docs, statistics: statistics})
-            }
-        })
+        // transactionSchema.paginate(, options, function(err, result) {
+        //     if(err){
+        //         console.log(err)
+        //         res.status(400).send(err)
+        //     }else{
+        //     }
+        // })
         
     }
     catch(err){
@@ -152,15 +154,17 @@ exports.allTransactions = catchAsync(async(req, res, next) => {
             sort: {"createdAt": -1},
             populate: ["from", "to"]
         };
+        let result = await transactionSchema.find({createdAt:{$gte:new Date(from),$lt:new Date(to)}, to: restaurantId}).populate(["from", "to"])
+        res.status(200).send({status: true, result: result, totalAmount: statistics})
 
-        transactionSchema.paginate({createdAt:{$gte:new Date(from),$lt:new Date(to)}}, options, function(err, result) {
-            if(err){
-                console.log(err)
-                res.status(400).send(err)
-            }else{
-                res.status(200).send({status: true, result: result.docs, statistics: statistics})
-            }
-        })
+        // transactionSchema.paginate({createdAt:{$gte:new Date(from),$lt:new Date(to)}}, options, function(err, result) {
+        //     if(err){
+        //         console.log(err)
+        //         res.status(400).send(err)
+        //     }else{
+        //         res.status(200).send({status: true, result: result.docs, totalAmount: statistics[0].amount, transactions: statistics[0].transactions})
+        //     }
+        // })
         
     }
     catch(err){
