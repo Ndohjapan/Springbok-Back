@@ -158,7 +158,7 @@ exports.allTransactions = catchAsync(async(req, res, next) => {
                 console.log(err)
                 res.status(400).send(err)
             }else{
-                res.status(200).send({status: true, result: result.docs, totalAmount: statistics[0].amount, transactions: statistics[0].transactions})
+                res.status(200).send({status: true, result: result.docs, statistics: statistics})
             }
         })
         
