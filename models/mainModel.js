@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 const mongoosePaginate = require("mongoose-paginate-v2")
 const bcrypt = require("bcrypt")
-const jwt = require("jwt")
+const jwt = require("jsonwebtoken")
 
 const userSchema = new mongoose.Schema(
     {
