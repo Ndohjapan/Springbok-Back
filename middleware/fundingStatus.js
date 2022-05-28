@@ -1,7 +1,6 @@
 const jwt = require("jsonwebtoken");
 const config = process.env;
-const {utilsSchema} = require("../models/utilsModel")
-const {userFeedingSchema} = require("../models/userFeedingModel")
+const {userFeedingSchema, utilsSchema} = require("../models/mainModel")
 
 const fundingStatus = async(req, res, next) => {
     const token = req.headers["authorization"]

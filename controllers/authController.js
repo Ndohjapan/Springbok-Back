@@ -1,9 +1,7 @@
 const config = require("config");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const User = require("../models/UserModel");
-const {userFeedingSchema} = require("../models/userFeedingModel");
-const {utilsSchema} = require("../models/utilsModel");
+const {userFeedingSchema, utilsSchema, userSchema} = require("../models/mainModel");
 const AppError = require("../utils/appError");
 const generateOtp = require("../utils/generateOtp");
 const sendMail = require("../utils/sendMail");
@@ -13,7 +11,7 @@ const catchAsync = require("../utils/catchAsync");
 exports.signup = catchAsync(async (req, res, next) => {
   const { firstname, lastname, email, password, department, level, hostel, transactionPin, matricNumber } = req.body;
 
-  if (await User.findOne({ email }))
+  if (await userSchema.findOne({ email }))
     return next(new AppError("User already exists", 400));
 
   const otp = generateOtp();
@@ -23,7 +21,7 @@ exports.signup = catchAsync(async (req, res, next) => {
   const hashedPassword = await bcrypt.hash(password, salt);
   const hashedPin = await bcrypt.hash(transactionPin, salt)
 
-  const user = await User.create({
+  const user = await userSchema.create({
     firstname,
     lastname,
     email,
@@ -51,7 +49,7 @@ exports.signin = catchAsync(async (req, res, next) => {
   if (!email || !password)
     return next(new AppError("Provide an email and password", 400));
 
-  const user = await User.findOne({ email });
+  const user = await userSchema.findOne({ email });
   if (!user){
     return next(new AppError("User not found", 404));
   }
@@ -73,7 +71,7 @@ exports.signin = catchAsync(async (req, res, next) => {
 exports.verify = catchAsync(async (req, res, next) => {
   const { otp, email } = req.body;
 
-  let user = await User.findOne({ email: email, otp: otp });
+  let user = await userSchema.findOne({ email: email, otp: otp });
   if (!user) return next(new AppError("Otp is invalid", 400));
 
   const currentDate = Date.now();
@@ -83,7 +81,7 @@ exports.verify = catchAsync(async (req, res, next) => {
     return next(new AppError("OTP expired", 400));
   }else{
     
-    user = await User.findOneAndUpdate({email:email}, {$set: {otp:"", verified: true, otpExpiresIn: null}}, {new: true})
+    user = await userSchema.findOneAndUpdate({email:email}, {$set: {otp:"", verified: true, otpExpiresIn: null}}, {new: true})
   
     res.status(200).json({ status: true, data: user });
   }
@@ -96,7 +94,7 @@ exports.resendOtp = catchAsync(async (req, res, next) => {
   const otp = generateOtp();
   const otpExpiresIn = dates.getFutureMinutes(config.get("otpMinutesLimit"));
 
-  await User.findByIdAndUpdate(req.user._id, { otp, otpExpiresIn });
+  await userSchema.findByIdAndUpdate(req.user._id, { otp, otpExpiresIn });
   await sendMail(req.user.email, otp);
 
   res.status(200).json({ status: true, data: "OTP re-sent" });
@@ -106,13 +104,13 @@ exports.resendOtp = catchAsync(async (req, res, next) => {
 exports.sendUserOTP = catchAsync(async(req, res, next) => {
   let {email} = req.body
 
-  let user = await User.findOne({email: email})
+  let user = await userSchema.findOne({email: email})
 
   if(user.email){
     const otp = generateOtp();
     const otpExpiresIn = dates.getFutureMinutes(config.get("otpMinutesLimit"));
 
-    await User.findOneAndUpdate({email:email}, {$set: {otp:otp, otpExpiresIn: otpExpiresIn}}, {new: true})
+    await userSchema.findOneAndUpdate({email:email}, {$set: {otp:otp, otpExpiresIn: otpExpiresIn}}, {new: true})
 
     await sendMail(email, otp)
     res.status(200).send({status: true, message: "Email Sent"})
@@ -130,7 +128,7 @@ exports.resetPassword = catchAsync(async(req, res, next) => {
   const salt = await bcrypt.genSalt(10);
   const hashedPassword = await bcrypt.hash(newPassword, salt);
 
-  await User.findOneAndUpdate({email: email}, {password: hashedPassword})
+  await userSchema.findOneAndUpdate({email: email}, {password: hashedPassword})
 
   res.status(200).send({status: true, message: "Password Set Successfully"})
 
@@ -153,7 +151,7 @@ exports.protect = catchAsync(async (req, res, next) => {
     }
   try{
         const decoded = jwt.verify(token, config.get("jwtPrivateKey"))
-        req.user = await User.findById(decoded.id);;
+        req.user = await userSchema.findById(decoded.id);;
         return next()
     }
     catch(err){

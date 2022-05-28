@@ -1,5 +1,4 @@
-const {userFeedingSchema} = require("../../../models/userFeedingModel")
-const {restaurantSchema, transactionSchema} = require("../../../models/restaurantModel")
+const {restaurantSchema, transactionSchema, userFeedingSchema} = require("../../../models/mainModel")
 const AppError = require("../../../utils/appError");
 const catchAsync = require("../../../utils/catchAsync");
 const ObjectId = require('mongoose').Types.ObjectId;

@@ -1,4 +1,4 @@
-const foodModel = require("../../models/foodModel");
+const {foodSchema} = require("../../models/mainModel");
 const AppError = require("../../utils/appError");
 const catchAsync = require("../../utils/catchAsync");
 
@@ -8,7 +8,7 @@ exports.postFood = catchAsync(async (req, res, next) => {
 
   const createdBy = req.user["_id"];
 
-  const food = await foodModel.create({
+  const food = await foodSchema.create({
     name,
     servedWith,
     description,
@@ -20,12 +20,12 @@ exports.postFood = catchAsync(async (req, res, next) => {
 });
 
 exports.getAllFoods = catchAsync(async (req, res, next) => {
-  const food = await foodModel.find({});
+  const food = await foodSchema.find({});
   res.status(200).send({ status: true, message: "Successful", data: food });
 });
 
 exports.getFood = catchAsync(async (req, res, next) => {
-  const food = await foodModel.findById(req.params.id);
+  const food = await foodSchema.findById(req.params.id);
   res.status(200).send({ status: true, message: "Successful", data: food });
 });
 
@@ -40,7 +40,7 @@ exports.updateFood = catchAsync(async (req, res, next) => {
   });
 
   try{
-    let food = await foodModel.findOneAndUpdate(
+    let food = await foodSchema.findOneAndUpdate(
       { _id: req.params.id },
       updateData,
       { new: true }
@@ -54,7 +54,7 @@ exports.updateFood = catchAsync(async (req, res, next) => {
 });
 
 exports.deleteFood = catchAsync(async (req, res, next) => {
-  await foodModel.findByIdAndDelete(req.params.id);
+  await foodSchema.findByIdAndDelete(req.params.id);
   res.status(200).send({ status: true, message: "Food Deleted" });
 });
 
@@ -68,6 +68,6 @@ exports.postFilter = catchAsync(async (req, res, next) => {
     }
   });
 
-  let food = await foodModel.find(updateData);
+  let food = await foodSchema.find(updateData);
   res.status(200).send({ status: true, message: "Successful", data: food });
 });

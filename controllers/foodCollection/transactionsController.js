@@ -1,5 +1,4 @@
-const {restaurantSchema, transactionSchema} = require("../../models/restaurantModel")
-const User = require("../../models/UserModel")
+const {userSchema, restaurantSchema, transactionSchema} = require("../../models/mainModel")
 const AppError = require("../../utils/appError");
 const catchAsync = require("../../utils/catchAsync");
 const bcrypt = require("bcrypt")

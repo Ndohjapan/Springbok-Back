@@ -1,7 +1,4 @@
-const {userFeedingSchema, disbursementSchema} = require("../../models/userFeedingModel")
-const {restaurantSchema, transactionSchema} = require("../../models/restaurantModel")
-const {utilsSchema} = require("../../models/utilsModel")
-const User = require("../../models/UserModel")
+const {utilsSchema, transactionSchema, restaurantSchema, userFeedingSchema, disbursementSchema, userSchema} = require("../../models/mainModel")
 const AppError = require("../../utils/appError");
 const catchAsync = require("../../utils/catchAsync");
 const bcrypt = require("bcrypt")
@@ -104,11 +101,14 @@ exports.validateUsers = catchAsync(async(req,res, next) => {
     try{
         let userUpdate = User.updateMany({$in: {"_id": userIds}}, {$set: {studentStatus: studentStatus}})
         let feedingUpdate = userFeedingSchema.updateMany({$in: {userId: userIds}}, {$set: {feedingType: feedingType, studentStatus: studentStatus}})
+        let newStudentAlert = utilsSchema.updateMany({}, {$set: {newStudentAlert: 0}})
     
-        let promises = [userUpdate, feedingUpdate]
+        let promises = [userUpdate, feedingUpdate, newStudentAlert]
     
         Promise.all(promises).then(results => {
-            res.status(200).send({status: true, message:"Update Successful"})
+            return res.status(200).send({status: true, message:"Update Successful"})
+
+
         })
     }
     catch(err){
@@ -155,8 +155,6 @@ exports.fundWallet = catchAsync(async(req, res, next) => {
             amount: totalAmount,
             numberOfStudents: user.modifiedCount
         })
-
-        await utilsSchema.updateMany({}, {$set: {newStudentAlert: 0}})
     
         res.status(200).send({status: true, message: "Update Successful"})
     }

@@ -1,4 +1,4 @@
-const {restaurantSchema, transactionSchema} = require("../../models/restaurantModel")
+const {restaurantSchema, transactionSchema} = require("../../models/mainModel")
 const AppError = require("../../utils/appError");
 const catchAsync = require("../../utils/catchAsync");
 
@@ -93,28 +93,27 @@ exports.restaurantTransactions = catchAsync(async(req, res, next) => {
         let page = req.query.page ? req.query.page : 1
         let limit = req.query.limit ? req.query.limit : 50
 
-        let result = await transactionSchema.find({createdAt:{$gte:new Date(from),$lt:new Date(to)}, to: restaurantId}).populate(["from", "to"])
         
-        res.status(200).send({status: true, result: result, totalAmount: statistics})
-        // const options = {
-        //     page: page,
-        //     limit: limit,
-        //     sort: {"createdAt": -1},
-        //     populate: ["from", "to"]
-        // };
+        const options = {
+            page: page,
+            limit: limit,
+            sort: {"createdAt": -1},
+            populate: ["from", "to"]
+        };
 
-        // transactionSchema.paginate(, options, function(err, result) {
-        //     if(err){
-        //         console.log(err)
-        //         res.status(400).send(err)
-        //     }else{
-        //     }
-        // })
+
+        transactionSchema.paginate({createdAt:{$gte:new Date(from),$lte:new Date(to)}, to: restaurantId}, options, function(err, result) {
+            if(err){
+                return next(new AppError(err, 400));
+
+            }else{
+                return res.status(200).send({status: true, result: result.docs, statistics: statistics})
+            }
+        })
         
     }
     catch(err){
-        console.log(err)
-        res.status(400).send({status: false, message: "Error in Update"})
+        return next(new AppError(err, 400));
     }
     
 })
@@ -154,22 +153,19 @@ exports.allTransactions = catchAsync(async(req, res, next) => {
             sort: {"createdAt": -1},
             populate: ["from", "to"]
         };
-        let result = await transactionSchema.find({createdAt:{$gte:new Date(from),$lt:new Date(to)}}).populate(["from", "to"])
-        res.status(200).send({status: true, result: result, totalAmount: statistics})
+        
 
-        // transactionSchema.paginate({createdAt:{$gte:new Date(from),$lt:new Date(to)}}, options, function(err, result) {
-        //     if(err){
-        //         console.log(err)
-        //         res.status(400).send(err)
-        //     }else{
-        //         res.status(200).send({status: true, result: result.docs, totalAmount: statistics[0].amount, transactions: statistics[0].transactions})
-        //     }
-        // })
+        transactionSchema.paginate({createdAt:{$gte:new Date(from),$lte:new Date(to)}}, options, function(err, result) {
+            if(err){
+                return next(new AppError(err, 400));
+            }else{
+                return res.status(200).send({status: true, result: result.docs, statistics: statistics})
+            }
+        })
         
     }
     catch(err){
-        console.log(err)
-        res.status(400).send({status: false, message: "Error in Update"})
+        return next(new AppError(err, 400));
     }
     
 })
