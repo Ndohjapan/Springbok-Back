@@ -10,14 +10,15 @@ const userSchema = new mongoose.Schema(
       firstname: { type: String, required: true, trim: true },
       lastname: { type: String, required: true, trim: true },
       email: { type: String, required: true, trim: true, unique: true },
-      picture: { type: String },
+      number: { type: String, trim: true, unique: true },
+      avatar: { type: String },
       password: { type: String, required: true },
       verified: { type: Boolean, default: false },
       otp: { type: String },
       otpExpiresIn: { type: Date },
       role: {
         type: String,
-        enum: ["user", "restaurantAdmin", "manager", "bursar", "dev"],
+        enum: ["user", "restaurant", "manager", "bursar", "dev"],
         default: "user",
       },
       department: {type: String},
@@ -114,6 +115,10 @@ const restaurantSchema = new mongoose.Schema(
     previousBalance: {
       type: Number,
       default: 0
+    },
+    userId: {
+        type: String,
+        ref: "user"
     }
   },
   { timestamps: true }

@@ -1,6 +1,6 @@
 const AppError = require("../utils/appError");
 const catchAsync = require("../utils/catchAsync");
-const {userFeedingSchema, userSchema} = require("../models/mainModel")
+const {userFeedingSchema, userSchema, transactionSchema} = require("../models/mainModel")
 
 
 exports.getAllUsers = catchAsync(async(req, res, next) => {
@@ -15,7 +15,7 @@ exports.getAllUsers = catchAsync(async(req, res, next) => {
         
     };
 
-    userSchema.paginate({}, options, function(err, result) {
+    userSchema.paginate({role: {$ne: "restaurant"}}, options, function(err, result) {
         if(err){
             console.log(err)
             res.status(400).send(err)
@@ -49,7 +49,8 @@ exports.updateUser = catchAsync(async(req, res, next) => {
 exports.deleteUser = catchAsync(async(req, res, next) => {
     let userId = req.params.id
     const user = await userSchema.findByIdAndDelete(req.params.id)
-    await userFeedingSchema.findOneAndDelete({userId: userId})
+    userFeedingSchema.findOneAndDelete({userId: userId})
+    transactionSchema.deleteMany({from: userId})
     res.status(204).send({status: true, message: "User Deleted"})
 })
 
@@ -64,7 +65,7 @@ exports.postFilter = catchAsync(async(req, res, next) => {
         }
     })
 
-    let user = await userSchema.find(updateData)
+    let user = await userSchema.find({updateData, role: {$ne:"restaurant"}})
 
     res.status(200).send({status: true, message: "Successful", data: user})
 })

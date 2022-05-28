@@ -1,17 +1,30 @@
-const {restaurantSchema, transactionSchema} = require("../../models/mainModel")
+const {restaurantSchema, transactionSchema, userSchema} = require("../../models/mainModel")
 const AppError = require("../../utils/appError");
 const catchAsync = require("../../utils/catchAsync");
+const bcrypt = require("bcrypt")
 
 exports.postRestaurant = catchAsync(async(req, res, next) => {
-    const {name} = req.body
+    const {name, number} = req.body
     const createdBy = req.user["_id"]
-    console.log(createdBy)
 
+    let firstname = name.split(" ")[0]
+    let lastname = name.split(" ").slice(1).join('') ?  name.split(" ").slice(1).join(' ') : "Restaurant"
+    let email = name.split(" ").slice(1).join('') ?  name.split(" ")[0].toLowerCase()+name.split(" ")[1].toLowerCase()+"@lcu.edu.ng" : name.split(" ")[0].toLowerCase()+"@lcu.edu.ng"
+    let avatar = "https://res.cloudinary.com/billingshq/image/upload/v1646363586/springsbok/restaurant_qzb7vt.png"
+
+    const salt = await bcrypt.genSalt(10);
+    const password = await bcrypt.hash("12345678", salt);
+    const user = await userSchema.create({
+        number, role: "restaurant", firstname, verified: true, password, email, lastname, avatar
+    })
     const restaurant = await restaurantSchema.create({
-        name
+        name,
+        userId: user["_id"].toString()
     })
 
-    res.status(200).send({status: true, message: "Restaurant Created", data: restaurant})
+
+    // res.status(200).send({status: true, message: "Restaurant Created", data: restaurant})
+    res.status(200).send({status: true, message: "Restaurant Created", data: user})
 })
 
 exports.getAllRestaurants = catchAsync(async(req, res, next) => {
@@ -42,8 +55,9 @@ exports.updateRestaurant = catchAsync(async(req, res, next) => {
 })
 
 exports.deleteRestaurant = catchAsync(async(req, res, next) => {
+    let restaurantId = req.params.id
     const food = await restaurantSchema.findByIdAndDelete(req.params.id)
-
+    await transactionSchema.deleteMany({to: restaurantId})
     res.status(200).send({status: true, message: "Restaurant Deleted"})
 })
 
