@@ -98,9 +98,10 @@ exports.postFilter = catchAsync(async(req, res, next) => {
 
 exports.validateUsers = catchAsync(async(req,res, next) => {
     let {userIds, feedingType, studentStatus} = req.body
+    let totalFeedingAmount = feedingType * 135000
     try{
-        let userUpdate = User.updateMany({$in: {"_id": userIds}}, {$set: {studentStatus: studentStatus}})
-        let feedingUpdate = userFeedingSchema.updateMany({$in: {userId: userIds}}, {$set: {feedingType: feedingType, studentStatus: studentStatus}})
+        let userUpdate = userSchema.updateMany({$in: {"_id": userIds}}, {$set: {studentStatus: studentStatus}})
+        let feedingUpdate = userFeedingSchema.updateMany({$in: {userId: userIds}}, {$set: {feedingType: feedingType, studentStatus: studentStatus, totalFeedingAmount: totalFeedingAmount}})
         let newStudentAlert = utilsSchema.updateMany({}, {$set: {newStudentAlert: 0}})
     
         let promises = [userUpdate, feedingUpdate, newStudentAlert]
@@ -126,8 +127,19 @@ exports.fundWallet = catchAsync(async(req, res, next) => {
         let todaysDate = new Date().toISOString()
     
         let user = await userFeedingSchema.updateMany(
-            {$in: {userId: userIds}, fundingStatus: false},
-            [{$set: {"previousBalance": '$balance', 'balance': { $multiply: [ 15000, "$feedingType" ] }, "lastFunding": todaysDate, fundingStatus: true}}], 
+            {fundingStatus: false, userId: {$in: userIds}},
+            [
+                {$set: {
+                    "previousBalance": '$balance', 
+                    'balance': { $multiply: [ 15000, "$feedingType" ] }, 
+                    "lastFunding": todaysDate, 
+                    'fundingStatus': true, 
+                    'totalAmountFunded': {$add: ["$totalAmountFunded", { $multiply: [ 15000, "$feedingType" ] }]},
+                    'numOfTimesFunded': {$add: ["$numOfTimesFunded", 1]},
+                    "amountLeft": {$subtract: ["$totalFeedingAmount", { $multiply: [ 15000, "$feedingType" ] }]}
+                    }
+                } 
+            ], 
             {multi: true}
         )
                 

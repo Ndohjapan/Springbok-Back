@@ -58,20 +58,36 @@ const userFeedingSchema = new mongoose.Schema({
         default: 0
     },
     fundingStatus: {
-        type: Boolean,
-        default: false
+      type: Boolean,
+      default: false
     },
     feedingType: {
-        type: Number,
-        default: 2
+      type: Number,
+      default: 2
     },
     lastFunding: {
-        type: Date,
-        default: new Date().toISOString()
+      type: Date,
+      default: new Date().toISOString()
     },
     studentStatus: {
-        type: Boolean,
-        default: false
+      type: Boolean,
+      default: false
+    },
+    totalAmountFunded: {
+      type: Number,
+      default: 0
+    },
+    numOfTimesFunded: {
+      type: Number,
+      default: 0
+    },
+    totalFeedingAmount: {
+      type: Number,
+      default: 0
+    },
+    amountLeft: {
+      type: Number,
+      default: 0
     }
 },
 { timestamps: true }
