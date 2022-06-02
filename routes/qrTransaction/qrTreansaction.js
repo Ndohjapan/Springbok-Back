@@ -31,5 +31,5 @@ router
     .post(restrictTo("restaurant"), restaurantDoTransfer)
 router
     .route("/validateTransaction")
-    .get()
+    .get(validateTransaction)
 module.exports = router
