@@ -33,7 +33,7 @@ exports.signup = catchAsync(async (req, res, next) => {
     hostel,
     matricNumber
   });
-  await userFeedingSchema.create({userId: user["_id"].toString(), transactionPin: hashedPin, totalAmountFunded: 0, numOfTimesFunded: 0, amountLeft: 0 })
+  await userFeedingSchema.create({userId: user["_id"].toString(), transactionPin: hashedPin, totalAmountFunded: 0, numOfTimesFunded: 0, amountLeft: 0, amountLeft: 0 })
   const token = await user.generateAuthToken();
   await sendMail(email, otp);
 

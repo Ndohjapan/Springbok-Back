@@ -2,7 +2,7 @@ const express = require("express")
 
 const router = express.Router()
 
-const {checkBalance, confirmRestaurant, doTransfer, confirmPinandBalance, restaurantDoTransfer} = require("../../controllers/foodCollection/qrTransaction/qrTransaction")
+const {checkBalance, confirmRestaurant, doTransfer, confirmPinandBalance, restaurantDoTransfer, validateTransaction} = require("../../controllers/foodCollection/qrTransaction/qrTransaction")
 
 const {restrictTo, protect} = require("../../controllers/authController")
 
@@ -29,5 +29,7 @@ router
 router
     .route("/restaurantDoTransfer")
     .post(restrictTo("restaurant"), restaurantDoTransfer)
-
+router
+    .route("/validateTransaction")
+    .get()
 module.exports = router

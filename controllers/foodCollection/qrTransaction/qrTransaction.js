@@ -132,6 +132,9 @@ exports.restaurantDoTransfer = catchAsync(async(req, res, next) => {
 
 })
 
+exports.validateTransaction = catchAsync(async(req, res, next) => {
+    return res.send({status: true})
+})
 
 async function confirm(balance, amount){
     if(balance < amount || amount < 1){
