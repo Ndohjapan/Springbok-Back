@@ -14,17 +14,13 @@ exports.postRestaurant = catchAsync(async(req, res, next) => {
 
     const salt = await bcrypt.genSalt(10);
     const password = await bcrypt.hash("12345678", salt);
-    const user = await userSchema.create({
-        number, role: "restaurant", firstname, verified: true, password, email, lastname, avatar
-    })
     const restaurant = await restaurantSchema.create({
-        name,
-        userId: user["_id"].toString()
+        name, userId: user["_id"].toString(), email, logo: avatar, password
     })
 
 
     // res.status(200).send({status: true, message: "Restaurant Created", data: restaurant})
-    res.status(200).send({status: true, message: "Restaurant Created", data: user})
+    res.status(200).send({status: true, message: "Restaurant Created", data: restaurant})
 })
 
 exports.getAllRestaurants = catchAsync(async(req, res, next) => {
@@ -48,6 +44,12 @@ exports.updateRestaurant = catchAsync(async(req, res, next) => {
             updateData[key] = value
         }
     })
+
+    if(updateData["password"]){
+        const salt = await bcrypt.genSalt(10);
+        let password = updateData["password"]
+        updateData["password"] = await bcrypt.hash(password, salt);
+    }
 
     let food = await restaurantSchema.findOneAndUpdate({_id: req.params.id}, updateData, {new: true}).select("-balance -previousBalance")
 

@@ -1,7 +1,7 @@
 const config = require("config");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const {userFeedingSchema, utilsSchema, userSchema} = require("../models/mainModel");
+const {userFeedingSchema, utilsSchema, userSchema, adminSchema, restaurantSchema} = require("../models/mainModel");
 const AppError = require("../utils/appError");
 const generateOtp = require("../utils/generateOtp");
 const sendMail = require("../utils/sendMail");
@@ -62,6 +62,79 @@ exports.signin = catchAsync(async (req, res, next) => {
     }else{
       const token = await user.generateAuthToken();
       res.status(200).json({ status: true, token, payload: user });
+    }
+
+  } 
+
+});
+
+exports.adminSignup = catchAsync(async (req, res, next) => {
+  const { firstname, lastname, email, password, number, role } = req.body;
+
+  if (await adminSchema.findOne({ email }))
+    return next(new AppError("User already exists", 400));
+
+  const salt = await bcrypt.genSalt(10);
+  const hashedPassword = await bcrypt.hash(password, salt);
+
+  const user = await adminSchema.create({
+    firstname,
+    lastname,
+    email,
+    password: hashedPassword,
+    number, role
+  });
+
+  const token = await user.generateAuthToken();
+
+  res.status(201).json({ status: true, data: user, token });
+
+});
+
+exports.adminSignin = catchAsync(async (req, res, next) => {
+  const { email, password } = req.body;
+
+  if (!email || !password)
+    return next(new AppError("Provide an email and password", 400));
+
+  const user = await adminSchema.findOne({ email });
+  if (!user){
+    return next(new AppError("User not found", 404));
+  }
+  else{
+
+    const correctPassword = await user.checkPassword(password);
+    if (!correctPassword){
+
+      return next(new AppError("Incorrect email or password", 400));
+    }else{
+      const token = await user.generateAuthToken();
+      res.status(200).json({ status: true, token, payload: user });
+    }
+
+  } 
+
+});
+
+exports.restaurantSignin = catchAsync(async (req, res, next) => {
+  const { email, password } = req.body;
+
+  if (!email || !password)
+    return next(new AppError("Provide an email and password", 400));
+
+  const restaurant = await restaurantSchema.findOne({ email });
+  if (!restaurant){
+    return next(new AppError("Restaurant not found", 404));
+  }
+  else{
+
+    const correctPassword = await restaurant.checkPassword(password);
+    if (!correctPassword){
+
+      return next(new AppError("Incorrect email or password", 400));
+    }else{
+      const token = await restaurant.generateAuthToken();
+      res.status(200).json({ status: true, token, payload: restaurant });
     }
 
   } 
@@ -134,27 +207,42 @@ exports.resetPassword = catchAsync(async(req, res, next) => {
 
 })
 
-exports.restrictTo = (...roles) => {
+exports.permissionTo = (...roles) => {
   return catchAsync((req, res, next) => {
-    if (!roles.includes(req.user.role))
-      return next(
-        new AppError("You do not have permission to perform this action", 403)
-      );
-    next();
+    if(req.user.role === "bursar"){
+      next()
+    }
+    else{
+      let userPermissions = req.user.permissions
+      let permission = userPermissions.join().includes(roles.join())
+      if (!permission)
+        return next(
+          new AppError("You do not have permission to perform this action", 403)
+        );
+      next();
+    }
   });
 };
 
 exports.protect = catchAsync(async (req, res, next) => {
   let token = req.header("x-auth-token");
   if(!token){
-        return res.status(403).send({success: false, message: "Unauthorized"})
-    }
+    return res.status(403).send({success: false, message: "Unauthorized"})
+  }
+  
   try{
-        const decoded = jwt.verify(token, config.get("jwtPrivateKey"))
-        req.user = await userSchema.findById(decoded.id);;
-        return next()
+    const decoded = jwt.verify(token, config.get("jwtPrivateKey"))
+    req.user = await userSchema.findById(decoded.id);
+    if(req.user){
+      return next()
     }
-    catch(err){
-        return res.status(401).send({success: false, message: "Invalid Token"})
+    else{
+      req.user = await adminSchema.findById(decoded.id)
+      req.user = req.user ? req.user : await restaurantSchema.findById(decoded.id)
+      return next()
     }
+  }
+  catch(err){
+    return res.status(401).send({success: false, message: "Invalid Token"})
+  }
 });

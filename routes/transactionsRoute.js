@@ -4,18 +4,18 @@ const router = express.Router()
 
 const {getAllTransactions, getTransaction, deleteTransaction, postFilter, getUserTransactions} = require("../controllers/foodCollection/transactionsController")
 
-const {protect, restrictTo} = require("../controllers/authController")
+const {permissionTo} = require("../controllers/authController")
 
 
 // Get all from the collection
 router
     .route("/all")
-    .get(protect, restrictTo("manager", "bursar", "user"), getAllTransactions)    
+    .get(permissionTo("view transactions"), getAllTransactions)    
 
 // Get by id
 router
     .route("/byId/:id")
-    .get(protect, getTransaction)
+    .get(getTransaction)
 
 
 // Gt a users transactions
@@ -26,13 +26,13 @@ router
 // Delete
 router
     .route("/:id")
-    .delete(protect, restrictTo("bursar"), deleteTransaction)
+    .delete(permissionTo("view transactions"), deleteTransaction)
 
 
 // Transactions with filter
 router
     .route("/post/filter")
-    .post(postFilter)
+    .post(permissionTo("view transactions"), postFilter)
 
 
 

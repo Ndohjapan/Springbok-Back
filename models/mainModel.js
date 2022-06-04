@@ -18,7 +18,6 @@ const userSchema = new mongoose.Schema(
       otpExpiresIn: { type: Date },
       role: {
         type: String,
-        enum: ["user", "restaurant", "manager", "bursar", "dev"],
         default: "user",
       },
       department: {type: String},
@@ -33,6 +32,10 @@ const userSchema = new mongoose.Schema(
         type: String,
         enum: ["blocked", "active"],
         default: "active"
+      },
+      permissions: {
+        type: [String],
+        default: ["user"]
       }
     },
     { timestamps: true }
@@ -93,6 +96,33 @@ const userFeedingSchema = new mongoose.Schema({
 { timestamps: true }
 );
 
+const adminSchema = new mongoose.Schema(
+  {
+    firstname: { type: String, required: true, trim: true },
+    lastname: { type: String, required: true, trim: true },
+    email: { type: String, required: true, trim: true, unique: true },
+    number: { type: String, trim: true, unique: true },
+    avatar: { type: String, default: "https://oss.ban-qu.com/opportunity/startup3.png" },
+    password: { type: String, required: true },
+    verified: { type: Boolean, default: false },
+    role: {
+      type: String,
+      enum: ["subAdmin", "bursar"],
+      default: "subAdmin",
+    },
+    permissions: {
+      type: [{type: String, enum: ["all", "fund wallet", "validate users", "create admin", "edit restaurant", "export csv", "view transactions", "reset password", "edit users"]}],
+      default: []
+    }, 
+    status: {
+      type: String,
+      enum: ["blocked", "active"],
+      default: "active"
+    }
+  },
+  { timestamps: true }
+)
+
 const disbursementSchema = new mongoose.Schema({
 amount: {
     type: Number,
@@ -132,9 +162,12 @@ const restaurantSchema = new mongoose.Schema(
       type: Number,
       default: 0
     },
-    userId: {
-        type: String,
-        ref: "user"
+    password: { type: String, required: true },
+    email: { type: String, required: true, trim: true, unique: true },
+    number: { type: String, trim: true, unique: true },
+    permissions: {
+      type: [String],
+      default:  ["view transactions", "edit restaurant"]
     }
   },
   { timestamps: true }
@@ -242,8 +275,32 @@ userSchema.methods.generateAuthToken = function () {
 };
   
 userSchema.methods.checkPassword = function (password) {
-return bcrypt.compare(password, this.password);
+  return bcrypt.compare(password, this.password);
 };
+
+adminSchema.methods.generateAuthToken = function () {
+    return jwt.sign(
+      { id: this._id, verified: this.verified },
+      config.get("jwtPrivateKey")
+    );
+};  
+
+adminSchema.methods.checkPassword = function (password) {
+  return bcrypt.compare(password, this.password);
+};
+
+
+restaurantSchema.methods.generateAuthToken = function () {
+  return jwt.sign(
+    { id: this._id, verified: this.verified },
+    config.get("jwtPrivateKey")
+  );
+};  
+
+restaurantSchema.methods.checkPassword = function (password) {
+  return bcrypt.compare(password, this.password);
+};
+
 
 userFeedingSchema.methods.checkPin = function (transactionPin) {
     return bcrypt.compare(transactionPin, this.transactionPin);
@@ -256,9 +313,10 @@ foodSchema.plugin(mongoosePaginate)
 userFeedingSchema.plugin(mongoosePaginate)
 disbursementSchema.plugin(mongoosePaginate)
 userSchema.plugin(mongoosePaginate)
-
+adminSchema.plugin(mongoosePaginate)
   
 module.exports.userSchema = mongoose.model("user", userSchema);
+module.exports.adminSchema = mongoose.model("admins", adminSchema);
 module.exports.userFeedingSchema = mongoose.model("user-feeding", userFeedingSchema);
 module.exports.disbursementSchema = mongoose.model("disbursement", disbursementSchema);
 module.exports.foodSchema = mongoose.model("Food", foodSchema);
