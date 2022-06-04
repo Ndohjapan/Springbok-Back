@@ -135,7 +135,7 @@ exports.getDisbursementDetails = catchAsync(async(req, res, next) => {
 
 })
 
-exports.updateSubAdmins = catchAsync(async(req, res, next) => {
+exports.updateAdmins = catchAsync(async(req, res, next) => {
   const socket = req.app.get("socket");
   let userId = req.user["_id"].toString()
   
@@ -164,6 +164,25 @@ exports.updateSubAdmins = catchAsync(async(req, res, next) => {
   res.status(200).send({status: true, message: "Sub Admin Updated", data: subAdmins})
 
   success(userId, ` updated ${subAdmins.firstname} ${subAdmins.lastname}'s: ${activityMessage}`, socket)
+
+})
+
+exports.getAllAdmins = catchAsync(async(req, res, next) => {
+  let admins = await adminSchema.find({})
+
+  return res.status(200).send({status: true, message: "Successful", data: admins})
+
+})
+
+exports.deleteAdmins = catchAsync(async(req, res, next) => {
+  const socket = req.app.get("socket");
+  let userId = req.user["_id"].toString()
+
+  await adminSchema.findByIdAndDelete(req.params.id)
+
+  res.status(200).send({status: true, message: "Admin Deleted"})
+
+  return success(userId, ` deleted an admin from database`, socket)
 
 })
 
