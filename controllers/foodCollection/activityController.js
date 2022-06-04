@@ -1,4 +1,4 @@
-const {activitySchema} = require("../../models/mainModel");
+const {activitySchema, utilsSchema} = require("../../models/mainModel");
 const AppError = require("../../utils/appError");
 const catchAsync = require("../../utils/catchAsync");
 const {success} = require("../../utils/activityLogs")
@@ -19,7 +19,8 @@ exports.getAllActivity = catchAsync(async (req, res, next) => {
         if(err){
             return next(new AppError(err.message, 400));
         }else{
-            return res.status(200).send({status: true, message: "Successful", data: result.docs})
+            res.status(200).send({status: true, message: "Successful", data: result.docs})
+            return utilsSchema.updateMany({}, {$set: {unreadNotifications: 0}})
         }
     })
 

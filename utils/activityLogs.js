@@ -1,4 +1,4 @@
-const {activitySchema} = require("../models/mainModel.js")
+const {activitySchema, utilsSchema} = require("../models/mainModel.js")
 
 
 
@@ -8,5 +8,6 @@ exports.success = async(...args) => {
     activity = await activity.populate("by")
     socket.emit("listen", activity);
 
+    await utilsSchema.updateMany({}, {$inc: {unreadNotifications: 1}})
 
 }

@@ -3,7 +3,7 @@ const router = express.Router();
 const {adminSignin, adminSignup, protect, resendOtp, resetPassword, permissionTo: restrictTo, sendUserOTP, signin, signup, verify, restaurantSignin} = require("../controllers/authController");
 
 router.post("/signup", signup);
-router.post("/adminSignup", adminSignup);
+router.post("/adminSignup", protect, adminSignup);
 router.post("/signin", signin);
 router.post("/adminSignin", adminSignin);
 router.post("/restaurantSignin", restaurantSignin)

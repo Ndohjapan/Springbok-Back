@@ -252,18 +252,23 @@ const orderSchema = new mongoose.Schema(
 
 const utilsSchema = new mongoose.Schema({
   fundDate: {
-      type: Number,
-      default: 27
+    type: Number,
+    default: 27
   },
 
   feedingAmount: {
-      type: Number,
-      default: 15000
+    type: Number,
+    default: 15000
   }, 
 
   newStudentAlert:{
-      type: Number, 
-      default: 0
+    type: Number, 
+    default: 0
+  },
+  
+  unreadNotifications: {
+    type: Number,
+    default: 0
   }
 
 }, {timestamps: true})

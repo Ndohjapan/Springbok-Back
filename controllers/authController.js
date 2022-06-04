@@ -7,6 +7,7 @@ const generateOtp = require("../utils/generateOtp");
 const sendMail = require("../utils/sendMail");
 const dates = require("../utils/dates");
 const catchAsync = require("../utils/catchAsync");
+const {success} = require("../utils/activityLogs")
 
 exports.signup = catchAsync(async (req, res, next) => {
   const { firstname, lastname, email, password, department, level, hostel, transactionPin, matricNumber } = req.body;
@@ -69,6 +70,10 @@ exports.signin = catchAsync(async (req, res, next) => {
 });
 
 exports.adminSignup = catchAsync(async (req, res, next) => {
+
+  const socket = req.app.get("socket");
+  let userId = req.user["_id"].toString()
+
   const { firstname, lastname, email, password, number, role } = req.body;
 
   if (await adminSchema.findOne({ email }))
@@ -88,6 +93,9 @@ exports.adminSignup = catchAsync(async (req, res, next) => {
   const token = await user.generateAuthToken();
 
   res.status(201).json({ status: true, data: user, token });
+
+  return success(userId, ` added ${user.firstname} ${user.lastname} as an admin`, socket)
+
 
 });
 
