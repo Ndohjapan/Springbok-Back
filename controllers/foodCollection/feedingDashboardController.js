@@ -2,7 +2,7 @@ const {utilsSchema, userFeedingSchema, transactionSchema, disbursementSchema, ad
 const AppError = require("../../utils/appError");
 const catchAsync = require("../../utils/catchAsync");
 const bcrypt = require("bcrypt");
-
+const {success} = require("../../utils/activityLogs")
 
 exports.getUsersDetails = catchAsync(async(req, res, next) => {
     let usersAggregate = [
@@ -111,6 +111,7 @@ exports.getTransactionsDetails = catchAsync(async(req, res, next) => {
 })
 
 exports.getDisbursementDetails = catchAsync(async(req, res, next) => {
+
   let disbursementAggregate = [
     {
       '$group': {
@@ -130,28 +131,40 @@ exports.getDisbursementDetails = catchAsync(async(req, res, next) => {
   ]
 
   let disbursementData = await disbursementSchema.aggregate(disbursementAggregate)
-  return res.status(200).send({status: true, message:"Successful", data: disbursementData})
+  res.status(200).send({status: true, message:"Successful", data: disbursementData})
+
 })
 
 exports.updateSubAdmins = catchAsync(async(req, res, next) => {
+  const socket = req.app.get("socket");
+  let userId = req.user["_id"].toString()
+  
   let data = req.body
-    let updateData = {}
+  let updateData = {}
 
-    Object.entries(data).forEach(([key, value]) => {
-        if(value != ""){
-            updateData[key] = value
-        }
-    })
+  let activityMessage = []
 
-    if(updateData["password"]){
-      const salt = await bcrypt.genSalt(10);
-      let password = updateData["password"]
-      updateData["password"] = await bcrypt.hash(password, salt);
-    }
+  Object.entries(data).forEach(([key, value]) => {
+      if(value != ""){
+          updateData[key] = value
+          activityMessage.push(key)
+      }
+  })
 
-    let subAdmins = await adminSchema.findOneAndUpdate({_id: req.params.id}, updateData, {new: true})
+  activityMessage = activityMessage.join(", ")
 
-    res.status(200).send({status: true, message: "Sub Admin Updated", data: subAdmins})
+  if(updateData["password"]){
+    const salt = await bcrypt.genSalt(10);
+    let password = updateData["password"]
+    updateData["password"] = await bcrypt.hash(password, salt);
+  }
+
+  let subAdmins = await adminSchema.findOneAndUpdate({_id: req.params.id}, updateData, {new: true})
+
+  res.status(200).send({status: true, message: "Sub Admin Updated", data: subAdmins})
+
+  success(userId, ` updated ${subAdmins.firstname} ${subAdmins.lastname}'s: ${activityMessage}`, socket)
+
 })
 
 

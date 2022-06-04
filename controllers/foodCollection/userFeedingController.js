@@ -2,6 +2,8 @@ const {utilsSchema, transactionSchema, restaurantSchema, userFeedingSchema, disb
 const AppError = require("../../utils/appError");
 const catchAsync = require("../../utils/catchAsync");
 const bcrypt = require("bcrypt")
+const {success} = require("../../utils/activityLogs")
+    
 
 exports.savePin = catchAsync(async(req, res, next) => {
     let {transactionPin} = req.body
@@ -60,9 +62,14 @@ exports.resetPin = catchAsync(async(req, res, next) => {
 })
 
 exports.deleteUser = catchAsync(async(req, res, next) => {
+    const socket = req.app.get("socket");
+    let userId = req.user["_id"].toString()
+
     const user = await userFeedingSchema.findOneAndDelete({userId: req.params.id})
 
     res.status(200).send({status: true, message: "User Deleted"})
+    return success(userId, ` deleted a user from database`, socket)
+
 })
 
 
@@ -99,15 +106,18 @@ exports.postFilter = catchAsync(async(req, res, next) => {
 exports.validateUsers = catchAsync(async(req,res, next) => {
     let {userIds, feedingType, studentStatus} = req.body
     let totalFeedingAmount = feedingType * 135000
+    const socket = req.app.get("socket");
+    let userId = req.user["_id"].toString()
     try{
-        let userUpdate = userSchema.updateMany({$in: {"_id": userIds}}, {$set: {studentStatus: studentStatus}})
-        let feedingUpdate = userFeedingSchema.updateMany({$in: {userId: userIds}}, {$set: {feedingType: feedingType, studentStatus: studentStatus, totalFeedingAmount: totalFeedingAmount}})
+        let userUpdate = userSchema.updateMany({"_id": {$in: userIds}}, {$set: {studentStatus: studentStatus}})
+        let feedingUpdate = userFeedingSchema.updateMany({userId: {$in: userIds}}, {$set: {feedingType: feedingType, studentStatus: studentStatus, totalFeedingAmount: totalFeedingAmount}})
         let newStudentAlert = utilsSchema.updateMany({}, {$set: {newStudentAlert: 0}})
     
         let promises = [userUpdate, feedingUpdate, newStudentAlert]
     
         Promise.all(promises).then(results => {
-            return res.status(200).send({status: true, message:"Update Successful"})
+            res.status(200).send({status: true, message:"Update Successful"})
+            return success(userId, ` validated ${results[0].modifiedCount} students`, socket)
 
 
         })
@@ -121,7 +131,8 @@ exports.validateUsers = catchAsync(async(req,res, next) => {
 
 exports.fundWallet = catchAsync(async(req, res, next) => {
     let {userIds} = req.body
-
+    const socket = req.app.get("socket");
+    let userId = req.user["_id"].toString()
     try{
 
         let todaysDate = new Date().toISOString()
@@ -142,33 +153,43 @@ exports.fundWallet = catchAsync(async(req, res, next) => {
             ], 
             {multi: true}
         )
-                
+        
         let statistics = await userFeedingSchema.aggregate([
-            { $match: 
-                { 
-                    userId: {
-                        $in: userIds
-                    }
-
-                } 
-            }, 
             {
-                $group:
-                { 
-                    _id: null,
-                    amount: { $sum: "$balance" },
+              '$match': {
+                'userId': {
+                  '$in': [
+                    '628c06264ac3e4a18974084a', '628c0903454478c4b186b450'
+                  ]
+                },
+                "lastFunding": todaysDate
+              }
+            }, {
+              '$unwind': {
+                'path': '$userId', 
+                'preserveNullAndEmptyArrays': true
+              }
+            }, {
+              '$group': {
+                '_id': null, 
+                'amount': {
+                  '$sum': '$balance'
                 }
+              }
             }
-           
         ])
-
-        let totalAmount = (statistics[0].amount)
+        
+        
+        let totalAmount = (statistics[0]) ? statistics[0].amount : 0
         await disbursementSchema.create({
             amount: totalAmount,
             numberOfStudents: user.modifiedCount
         })
     
         res.status(200).send({status: true, message: "Update Successful"})
+
+        return success(userId, ` funded ${user.modifiedCount} students with total of ${totalAmount} naira`, socket)
+
     }
     catch(err){
         console.log(err)

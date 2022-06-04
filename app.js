@@ -9,10 +9,13 @@ const restaurantRoutes = require("./routes/restaurantRoutes")
 const orderRoutes = require("./routes/orderRoutes")
 const dashboardRoutes = require("./routes/feedingDashboardController")
 const userRoutes = require("./routes/userRoutes")
+const activityRoutes = require("./routes/activityRoutes")
+const utilsRoutes = require("./routes/utilRoutes")
 const transactionRoute = require("./routes/transactionsRoute")
 const qrTransactions = require("./routes/qrTransaction/qrTreansaction")
 const userFeedingRoutes = require("./routes/userFeedingRoutes")
 const AppError = require("./utils/appError");
+
 
 // routes
 const authRoutes = require("./routes/authRoutes");
@@ -31,6 +34,8 @@ app.use("/restaurant", fundingStatus, protect, restaurantRoutes)
 app.use("/order", protect, orderRoutes)
 app.use("/dashboard", protect, dashboardRoutes)
 app.use("/feeding", fundingStatus, protect, userFeedingRoutes)
+app.use("/activity", fundingStatus, protect, activityRoutes)
+app.use("/util", fundingStatus, protect, utilsRoutes)
 app.use("/user", protect, userRoutes)
 app.use("/qr", fundingStatus, protect, qrTransactions)
 

@@ -6,40 +6,40 @@ const config = require("config");
 
 
 const userSchema = new mongoose.Schema(
-    {
-      firstname: { type: String, required: true, trim: true },
-      lastname: { type: String, required: true, trim: true },
-      email: { type: String, required: true, trim: true, unique: true },
-      number: { type: String, trim: true, unique: true },
-      avatar: { type: String },
-      password: { type: String, required: true },
-      verified: { type: Boolean, default: false },
-      otp: { type: String },
-      otpExpiresIn: { type: Date },
-      role: {
-        type: String,
-        default: "user",
-      },
-      department: {type: String},
-      level: {type: String},
-      hostel: {type: String},
-      matricNumber: {type: String},
-      studentStatus: {
-        type: Boolean,
-        default: false
-      }, 
-      status: {
-        type: String,
-        enum: ["blocked", "active"],
-        default: "active"
-      },
-      permissions: {
-        type: [String],
-        default: ["user"]
-      }
+  {
+    firstname: { type: String, required: true, trim: true },
+    lastname: { type: String, required: true, trim: true },
+    email: { type: String, required: true, trim: true, unique: true },
+    number: { type: String, trim: true, unique: true },
+    avatar: { type: String },
+    password: { type: String, required: true },
+    verified: { type: Boolean, default: false },
+    otp: { type: String },
+    otpExpiresIn: { type: Date },
+    role: {
+      type: String,
+      default: "user",
     },
-    { timestamps: true }
-  );
+    department: {type: String},
+    level: {type: String},
+    hostel: {type: String},
+    matricNumber: {type: String},
+    studentStatus: {
+      type: Boolean,
+      default: false
+    }, 
+    status: {
+      type: String,
+      enum: ["blocked", "active"],
+      default: "active"
+    },
+    permissions: {
+      type: [String],
+      default: ["user"]
+    }
+  },
+  { timestamps: true }
+);
   
 
 const userFeedingSchema = new mongoose.Schema({
@@ -188,37 +188,38 @@ const transactionSchema = new mongoose.Schema({
 }, {timestamps: true})
 
 const foodSchema = new mongoose.Schema(
-    {
-      name: {
-        type: String,
-        required: true,
-      },
-      price: {
-        type: Number,
-        required: true,
-      },
-      servedWith: {
-        type: String,
-      },
-      createdBy: {
-        type: String,
-      },
-      isAvailable: {
-        type: Boolean,
-        default: true,
-      },
-      description: {
-        type: String,
-      },
-      tags: {
-        type: [{type: String, enum: ["snacks", "food", "drinks", "protein", "others"]}],
-        required: true
-      }
+  {
+    name: {
+      type: String,
+      required: true,
     },
-    { timestamps: true }
-  );
+    price: {
+      type: Number,
+      required: true,
+    },
+    servedWith: {
+      type: String,
+    },
+    createdBy: {
+      type: String,
+    },
+    isAvailable: {
+      type: Boolean,
+      default: true,
+    },
+    description: {
+      type: String,
+    },
+    tags: {
+      type: [{type: String, enum: ["snacks", "food", "drinks", "protein", "others"]}],
+      required: true
+    }
+  },
+  { timestamps: true }
+);
 
-  const orderSchema = new mongoose.Schema({
+const orderSchema = new mongoose.Schema(
+  {
     
     orderId: {
         type: String,
@@ -245,27 +246,38 @@ const foodSchema = new mongoose.Schema(
         type: String,
         enum: ["recieved", "sent", "completed", "processing"]
     }
-},
-{ timestamps: true }
+  },
+  { timestamps: true }
 );
 
 const utilsSchema = new mongoose.Schema({
-    fundDate: {
-        type: Number,
-        default: 27
-    },
+  fundDate: {
+      type: Number,
+      default: 27
+  },
 
-    feedingAmount: {
-        type: Number,
-        default: 15000
-    }, 
+  feedingAmount: {
+      type: Number,
+      default: 15000
+  }, 
 
-    newStudentAlert:{
-        type: Number, 
-        default: 0
-    }
+  newStudentAlert:{
+      type: Number, 
+      default: 0
+  }
 
 }, {timestamps: true})
+
+const activitySchema = new mongoose.Schema({
+  by: {
+    type: String,
+    ref: "admins"
+  },
+  activity: {
+    type: String
+  }
+}, {timestamps: true})
+
 
 userSchema.methods.generateAuthToken = function () {
     return jwt.sign(
@@ -314,9 +326,11 @@ userFeedingSchema.plugin(mongoosePaginate)
 disbursementSchema.plugin(mongoosePaginate)
 userSchema.plugin(mongoosePaginate)
 adminSchema.plugin(mongoosePaginate)
+activitySchema.plugin(mongoosePaginate)
   
 module.exports.userSchema = mongoose.model("user", userSchema);
 module.exports.adminSchema = mongoose.model("admins", adminSchema);
+module.exports.activitySchema = mongoose.model("activity", activitySchema);
 module.exports.userFeedingSchema = mongoose.model("user-feeding", userFeedingSchema);
 module.exports.disbursementSchema = mongoose.model("disbursement", disbursementSchema);
 module.exports.foodSchema = mongoose.model("Food", foodSchema);

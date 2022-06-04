@@ -2,8 +2,14 @@ const {restaurantSchema, transactionSchema, userSchema} = require("../../models/
 const AppError = require("../../utils/appError");
 const catchAsync = require("../../utils/catchAsync");
 const bcrypt = require("bcrypt")
+const {success} = require("../../utils/activityLogs")
+
 
 exports.postRestaurant = catchAsync(async(req, res, next) => {
+
+    const socket = req.app.get("socket");
+    let userId = req.user["_id"].toString()
+
     const {name, number} = req.body
     const createdBy = req.user["_id"]
 
@@ -15,12 +21,14 @@ exports.postRestaurant = catchAsync(async(req, res, next) => {
     const salt = await bcrypt.genSalt(10);
     const password = await bcrypt.hash("12345678", salt);
     const restaurant = await restaurantSchema.create({
-        name, userId: user["_id"].toString(), email, logo: avatar, password
+        name, email, logo: avatar, password
     })
 
 
     // res.status(200).send({status: true, message: "Restaurant Created", data: restaurant})
     res.status(200).send({status: true, message: "Restaurant Created", data: restaurant})
+    return success(userId, ` created a new restaurant ${name}`, socket)
+
 })
 
 exports.getAllRestaurants = catchAsync(async(req, res, next) => {
@@ -39,11 +47,20 @@ exports.updateRestaurant = catchAsync(async(req, res, next) => {
     let data = req.body
     let updateData = {}
 
+    const socket = req.app.get("socket");
+    let userId = req.user["_id"].toString()
+
+    let activityMessage = []
+
+
     Object.entries(data).forEach(([key, value]) => {
         if(value != ""){
             updateData[key] = value
+            activityMessage.push(key)
         }
     })
+
+    activityMessage = activityMessage.join(", ")
 
     if(updateData["password"]){
         const salt = await bcrypt.genSalt(10);
@@ -51,16 +68,26 @@ exports.updateRestaurant = catchAsync(async(req, res, next) => {
         updateData["password"] = await bcrypt.hash(password, salt);
     }
 
-    let food = await restaurantSchema.findOneAndUpdate({_id: req.params.id}, updateData, {new: true}).select("-balance -previousBalance")
+    let restaurant = await restaurantSchema.findOneAndUpdate({_id: req.params.id}, updateData, {new: false}).select("-balance -previousBalance")
 
-    res.status(200).send({status: true, message: "Restaurant Updated", data: food})
+    res.status(200).send({status: true, message: "Restaurant Updated"})
+
+    return success(userId, ` updated ${restaurant.name}: ${activityMessage}`, socket)
+
 })
 
 exports.deleteRestaurant = catchAsync(async(req, res, next) => {
+    const socket = req.app.get("socket");
+    let userId = req.user["_id"].toString()
+    
     let restaurantId = req.params.id
+    
     const food = await restaurantSchema.findByIdAndDelete(req.params.id)
     await transactionSchema.deleteMany({to: restaurantId})
+    
     res.status(200).send({status: true, message: "Restaurant Deleted"})
+    
+    return success(userId, ` deleted a restaurant from Database`, socket)
 })
 
 
