@@ -111,7 +111,7 @@ const adminSchema = new mongoose.Schema(
       default: "subAdmin",
     },
     permissions: {
-      type: [{type: String, enum: ["all", "fund wallet", "validate users", "create admin", "edit restaurant", "export csv", "view transactions", "reset password", "edit users"]}],
+      type: [{type: String, enum: ["all", "fund wallet", "validate users", "create admin", "edit restaurant", "export csv", "view transactions",  "edit users"]}],
       default: []
     }, 
     status: {
@@ -273,7 +273,7 @@ const utilsSchema = new mongoose.Schema({
 
   permissions: {
     type: [String],
-    default: ["all", "fund wallet", "validate users", "create admin", "edit restaurant", "export csv", "view transactions", "reset password", "edit users"]
+    default: ["all", "fund wallet", "validate users", "create admin", "edit restaurant", "export csv", "view transactions",  "edit users"]
   }
 
 }, {timestamps: true})
