@@ -196,7 +196,7 @@ exports.unreadNotifications = catchAsync(async(req, res, next) => {
 exports.allPermissions = catchAsync(async(req, res, next) => {
   let utils = await utilsSchema.find({})
 
-  return res.status(200).send({status: true, message: "Successful", unreadNotifications: utils[0].permissions})
+  return res.status(200).send({status: true, message: "Successful", permissions: utils[0].permissions})
 
 })
 
