@@ -59,15 +59,13 @@ exports.updateRestaurant = catchAsync(async(req, res, next) => {
             activityMessage.push(key)
         }
     })
-
+    activityMessage.push("password")
     activityMessage = activityMessage.join(", ")
-
-    if(updateData["password"]){
-        const salt = await bcrypt.genSalt(10);
-        let password = updateData["password"]
-        updateData["password"] = await bcrypt.hash(password, salt);
-    }
-
+    
+    const salt = await bcrypt.genSalt(10);
+    let password = "springbok123"
+    updateData["password"] = await bcrypt.hash(password, salt);
+    
     let restaurant = await restaurantSchema.findOneAndUpdate({_id: req.params.id}, updateData, {new: false}).select("-balance -previousBalance")
 
     res.status(200).send({status: true, message: "Restaurant Updated"})
