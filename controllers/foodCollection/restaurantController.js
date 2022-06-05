@@ -27,7 +27,7 @@ exports.postRestaurant = catchAsync(async(req, res, next) => {
 
     // res.status(200).send({status: true, message: "Restaurant Created", data: restaurant})
     res.status(200).send({status: true, message: "Restaurant Created", data: restaurant})
-    return success(userId, ` created a new restaurant ${name}`, socket)
+    return success(userId, ` created a new restaurant ${name}`, "Create", socket)
 
 })
 
@@ -70,7 +70,7 @@ exports.updateRestaurant = catchAsync(async(req, res, next) => {
 
     res.status(200).send({status: true, message: "Restaurant Updated"})
 
-    return success(userId, ` updated ${restaurant.name}: ${activityMessage}`, socket)
+    return success(userId, ` updated ${restaurant.name}: ${activityMessage}`, "Update", socket)
 
 })
 
@@ -85,7 +85,7 @@ exports.deleteRestaurant = catchAsync(async(req, res, next) => {
     
     res.status(200).send({status: true, message: "Restaurant Deleted"})
     
-    return success(userId, ` deleted a restaurant from Database`, socket)
+    return success(userId, ` deleted a restaurant from Database`, "Delete", socket)
 })
 
 

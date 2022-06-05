@@ -269,6 +269,11 @@ const utilsSchema = new mongoose.Schema({
   unreadNotifications: {
     type: Number,
     default: 0
+  },
+
+  permissions: {
+    type: [String],
+    default: ["all", "fund wallet", "validate users", "create admin", "edit restaurant", "export csv", "view transactions", "reset password", "edit users"]
   }
 
 }, {timestamps: true})
@@ -280,6 +285,11 @@ const activitySchema = new mongoose.Schema({
   },
   activity: {
     type: String
+  },
+  type: {
+    type: String,
+    enum: ["Update", "Create", "Login", "Delete"],
+    default: "Update"
   }
 }, {timestamps: true})
 

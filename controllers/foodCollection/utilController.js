@@ -32,7 +32,7 @@ exports.updateUtils = catchAsync(async (req, res, next) => {
         let utils = await utilsSchema.findOneAndUpdate({ _id: "6283ecbcffda06c1fd477266" },updateData,{ new: true });
         res.status(200).send({ status: true, message: "Utils Updated", data: utils });
 
-        success(userId, ` updated : ${activityMessage}`, socket)
+        success(userId, ` updated : ${activityMessage}`, "Update", socket)
 
     }catch(err){
         console.log(err)

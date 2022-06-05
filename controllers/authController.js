@@ -74,38 +74,45 @@ exports.adminSignup = catchAsync(async (req, res, next) => {
   const socket = req.app.get("socket");
   let userId = req.user["_id"].toString()
 
-  const { firstname, lastname, email, password, number, role } = req.body;
+  const { firstname, lastname, email, password, number, role, permissions } = req.body;
 
   if (await adminSchema.findOne({ email }))
     return next(new AppError("User already exists", 400));
 
   const salt = await bcrypt.genSalt(10);
   const hashedPassword = await bcrypt.hash(password, salt);
+  try{
 
-  const user = await adminSchema.create({
-    firstname,
-    lastname,
-    email,
-    password: hashedPassword,
-    number, role
-  });
-
-  const token = await user.generateAuthToken();
-
-  res.status(201).json({ status: true, data: user, token });
-
-  return success(userId, ` added ${user.firstname} ${user.lastname} as an admin`, socket)
+    const user = await adminSchema.create({
+      firstname,
+      lastname,
+      email,
+      password: hashedPassword,
+      number, role, permissions
+    });
+  
+    const token = await user.generateAuthToken();
+  
+    res.status(201).json({ status: true, data: user, token });
+  
+    return success(userId, ` added ${user.firstname} ${user.lastname} as an admin`, "Create", socket)
+  }
+  catch(err){
+    return res.status(400).send({status:false, message: err.message})
+  }
 
 
 });
 
 exports.adminSignin = catchAsync(async (req, res, next) => {
   const { email, password } = req.body;
+  const socket = req.app.get("socket");
 
   if (!email || !password)
     return next(new AppError("Provide an email and password", 400));
 
-  const user = await adminSchema.findOne({ email });
+    const user = await adminSchema.findOne({ email });
+    let userId = user["_id"].toString()
   if (!user){
     return next(new AppError("User not found", 404));
   }
@@ -118,6 +125,9 @@ exports.adminSignin = catchAsync(async (req, res, next) => {
     }else{
       const token = await user.generateAuthToken();
       res.status(200).json({ status: true, token, payload: user });
+
+      return success(userId, ` just logged on to admin dashboard`, "Login", socket)
+
     }
 
   } 

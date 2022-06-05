@@ -68,7 +68,7 @@ exports.deleteUser = catchAsync(async(req, res, next) => {
     const user = await userFeedingSchema.findOneAndDelete({userId: req.params.id})
 
     res.status(200).send({status: true, message: "User Deleted"})
-    return success(userId, ` deleted a user from database`, socket)
+    return success(userId, ` deleted a user from database`, "Delete", socket)
 
 })
 
@@ -117,7 +117,7 @@ exports.validateUsers = catchAsync(async(req,res, next) => {
     
         Promise.all(promises).then(results => {
             res.status(200).send({status: true, message:"Update Successful"})
-            return success(userId, ` validated ${results[0].modifiedCount} students`, socket)
+            return success(userId, ` validated ${results[0].modifiedCount} students`, "Update", socket)
 
 
         })
@@ -188,7 +188,7 @@ exports.fundWallet = catchAsync(async(req, res, next) => {
     
         res.status(200).send({status: true, message: "Update Successful"})
 
-        return success(userId, ` funded ${user.modifiedCount} students with total of ${totalAmount} naira`, socket)
+        return success(userId, ` funded ${user.modifiedCount} students with total of ${totalAmount} naira`, "Update", socket)
 
     }
     catch(err){

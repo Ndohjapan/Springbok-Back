@@ -163,7 +163,7 @@ exports.updateAdmins = catchAsync(async(req, res, next) => {
 
   res.status(200).send({status: true, message: "Sub Admin Updated", data: subAdmins})
 
-  success(userId, ` updated ${subAdmins.firstname} ${subAdmins.lastname}'s: ${activityMessage}`, socket)
+  success(userId, ` updated ${subAdmins.firstname} ${subAdmins.lastname}'s: ${activityMessage}`, "Update", socket)
 
 })
 
@@ -182,7 +182,7 @@ exports.deleteAdmins = catchAsync(async(req, res, next) => {
 
   res.status(200).send({status: true, message: "Admin Deleted"})
 
-  return success(userId, ` deleted an admin from database`, socket)
+  return success(userId, ` deleted an admin from database`, "Delete", socket)
 
 })
 
@@ -190,6 +190,13 @@ exports.unreadNotifications = catchAsync(async(req, res, next) => {
   let utils = await utilsSchema.find({})
 
   return res.status(200).send({status: true, message: "Successful", unreadNotifications: utils[0].unreadNotifications})
+
+})
+
+exports.allPermissions = catchAsync(async(req, res, next) => {
+  let utils = await utilsSchema.find({})
+
+  return res.status(200).send({status: true, message: "Successful", unreadNotifications: utils[0].permissions})
 
 })
 

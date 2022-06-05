@@ -65,7 +65,7 @@ exports.deleteTransaction = catchAsync(async(req, res, next) => {
 
     res.status(200).send({status: true, message: "Tranaction Deleted"})
 
-  success(userId, ` deleted a transaction from Database`, socket)
+  success(userId, ` deleted a transaction from Database`, "Delete", socket)
 
 })
 
