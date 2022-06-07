@@ -135,6 +135,41 @@ exports.getDisbursementDetails = catchAsync(async(req, res, next) => {
 
 })
 
+exports.createAdmin = catchAsync(async (req, res, next) => {
+
+  const socket = req.app.get("socket");
+  let userId = req.user["_id"].toString()
+
+  const { firstname, lastname, email, password, number, role, permissions } = req.body;
+
+  if (await adminSchema.findOne({ email }))
+    return next(new AppError("User already exists", 400));
+
+  const salt = await bcrypt.genSalt(10);
+  const hashedPassword = await bcrypt.hash(password, salt);
+  try{
+
+    const user = await adminSchema.create({
+      firstname,
+      lastname,
+      email,
+      password: hashedPassword,
+      number, role, permissions
+    });
+  
+    const token = await user.generateAuthToken();
+  
+    res.status(201).json({ status: true, data: user, token });
+  
+    return success(userId, ` added ${user.firstname} ${user.lastname} as an admin`, "Create", socket)
+  }
+  catch(err){
+    return res.status(400).send({status:false, message: err.message})
+  }
+
+
+});
+
 exports.updateAdmins = catchAsync(async(req, res, next) => {
   const socket = req.app.get("socket");
   let userId = req.user["_id"].toString()

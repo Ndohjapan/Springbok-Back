@@ -2,7 +2,7 @@ const express = require("express");
 
 const router = express.Router();
 
-const {getTransactionsDetails, getUsersDetails, getDisbursementDetails, updateAdmins, deleteAdmins, getAllAdmins, unreadNotifications, allPermissions} = require("../controllers/foodCollection/feedingDashboardController");
+const {getTransactionsDetails, getUsersDetails, getDisbursementDetails, updateAdmins, deleteAdmins, getAllAdmins, unreadNotifications, allPermissions, createAdmin} = require("../controllers/foodCollection/feedingDashboardController");
 const {permissionTo} = require("../controllers/authController")
 
 router
@@ -16,6 +16,10 @@ router
 router
     .route("/disbursementDetails")
     .get(permissionTo("all"), getDisbursementDetails);
+
+router
+    .route("/createAdmin")
+    .post(permissionTo("all"), createAdmin);
 
 router
     .route("/getAllAdmins")
