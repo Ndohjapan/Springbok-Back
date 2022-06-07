@@ -178,11 +178,17 @@ exports.deleteAdmins = catchAsync(async(req, res, next) => {
   const socket = req.app.get("socket");
   let userId = req.user["_id"].toString()
 
-  await adminSchema.findByIdAndDelete(req.params.id)
+  if(userId === req.params.id){
+    return res.status(403).send({status:false, message: "You Cannot Delete This Account"})
+  }else{
+    await adminSchema.findByIdAndDelete(req.params.id)
+  
+    res.status(200).send({status: true, message: "Admin Deleted"})
+  
+    return success(userId, ` deleted an admin from database`, "Delete", socket)
+    
+  }
 
-  res.status(200).send({status: true, message: "Admin Deleted"})
-
-  return success(userId, ` deleted an admin from database`, "Delete", socket)
 
 })
 
