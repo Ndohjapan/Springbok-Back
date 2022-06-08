@@ -31,7 +31,7 @@ router
 
 router
     .route("/updateAdmins/:id")
-    .put(permissionTo("all"), updateAdmins)
+    .post(permissionTo("all"), updateAdmins)
 
 router
     .route("/unreadNotifications")
