@@ -7,23 +7,23 @@ const {permissionTo} = require("../controllers/authController")
 
 router
     .route("/userDetails")
-    .get(permissionTo("all"), getUsersDetails);
+    .get(getUsersDetails);
 
 router
     .route("/transactionsDetails")
-    .get(permissionTo("all"), getTransactionsDetails);
+    .get(getTransactionsDetails);
 
 router
     .route("/disbursementDetails")
-    .get(permissionTo("all"), getDisbursementDetails);
+    .get(getDisbursementDetails);
 
 router
     .route("/createAdmin")
-    .post(permissionTo("all"), createAdmin);
+    .post(permissionTo("all", "create admin"), createAdmin);
 
 router
     .route("/getAllAdmins")
-    .get(permissionTo("all"), getAllAdmins);
+    .get(getAllAdmins);
 
 router
     .route("/deleteAdmins/:id")

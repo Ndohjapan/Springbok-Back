@@ -14,7 +14,7 @@ const {protect, permissionTo} = require("../controllers/authController")
 
 
 // Get all from the collection
-router.route("/").get( permissionTo("edit users"), getAllUsers);
+router.route("/").get(permissionTo("edit users"), getAllUsers);
 
 // Get by id
 router.route("/:id").get(getUser);
@@ -26,7 +26,7 @@ router.route("/:id").delete( permissionTo("edit users"), deleteUser);
 router.route("/:id").put(updateUser);
 
 // User eith filter
-router.route("/post/filter").post(permissionTo("edit users"), postFilter);
+router.route("/post/filter").post(postFilter);
 
 
 module.exports = router;

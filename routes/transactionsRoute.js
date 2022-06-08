@@ -10,7 +10,7 @@ const {permissionTo} = require("../controllers/authController")
 // Get all from the collection
 router
     .route("/all")
-    .get(permissionTo("view transactions"), getAllTransactions)    
+    .get(getAllTransactions)    
 
 // Get by id
 router
@@ -26,13 +26,13 @@ router
 // Delete
 router
     .route("/:id")
-    .delete(permissionTo("view transactions"), deleteTransaction)
+    .delete(permissionTo("all"), deleteTransaction)
 
 
 // Transactions with filter
 router
     .route("/post/filter")
-    .post(permissionTo("view transactions"), postFilter)
+    .post(permissionTo("all"), postFilter)
 
 
 

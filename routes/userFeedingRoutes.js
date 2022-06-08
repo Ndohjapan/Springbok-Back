@@ -14,7 +14,7 @@ router
 // Get all from the collection
 router
     .route("/")
-    .get(permissionTo("edit users"), getAllUsers)    
+    .get( getAllUsers)    
 
 // Get by id
 router

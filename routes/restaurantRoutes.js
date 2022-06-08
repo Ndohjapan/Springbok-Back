@@ -13,7 +13,7 @@ const {
 const {permissionTo} = require("../controllers/authController")
 
 // Create or Restaurant into the document
-router.route("/").post(permissionTo("all"), postRestaurant);
+router.route("/").post(permissionTo("edit restaurant"), postRestaurant);
 
 // Get all from the collection
 router.route("/").get(getAllRestaurants);
@@ -31,9 +31,9 @@ router.route("/:id").put(permissionTo("edit restaurant"), updateRestaurant);
 router.route("/post/filter").post(postFilter);
 
 // Restaurant transactions
-router.route("/transactions").post(permissionTo("view transactions"), restaurantTransactions)
+router.route("/transactions").post(restaurantTransactions)
 
 // All transactions
-router.route("/allTransactions").post(permissionTo("all"), allTransactions)
+router.route("/allTransactions").post(allTransactions)
 
 module.exports = router;
