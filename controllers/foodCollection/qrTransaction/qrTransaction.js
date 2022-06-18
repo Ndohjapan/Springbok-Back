@@ -37,11 +37,13 @@ exports.doTransfer = catchAsync(async(req, res, next) => {
     let userId = req.user["_id"].toString()
     let {transactionPin, amount, restaurantId} = req.body
 
+    amount = parseInt(amount)
+
     const user = await userFeedingSchema.findOne({userId: userId});
     const restaurant = await restaurantSchema.findById(restaurantId);
 
-    let balance = user.balance
-    let restaurantBalance = restaurant.balance
+    let balance = parseInt(user.balance)
+    let restaurantBalance = parseInt(restaurant.balance)
 
     const checkPin = await user.checkPin(transactionPin);
 
@@ -56,7 +58,8 @@ exports.doTransfer = catchAsync(async(req, res, next) => {
             let userUpdate = userFeedingSchema.findOneAndUpdate({userId: userId}, {$inc :{"balance": -(amount) }, $set:  {"previousBalance": balance}})
             let restaurantUpdate = restaurantSchema.findByIdAndUpdate(restaurantId, {$inc :{"balance": amount }, $set: {"previousBalance": restaurantBalance}})
             let transaction = transactionSchema.create({
-                from: userId, to:restaurantId, amount: amount
+                from: userId, to:restaurantId, amount: amount, restaurantPreviousBalance: restaurantBalance, restaurantCurrentBalance: (restaurantBalance + amount),
+                studentPreviousBalance: balance, studentCurrentBalance: (balance + amount)
             })
 
             let promises = [userUpdate, restaurantUpdate, transaction]
@@ -114,7 +117,8 @@ exports.restaurantDoTransfer = catchAsync(async(req, res, next) => {
         let userUpdate = userFeedingSchema.findOneAndUpdate({userId: userId}, {$inc :{"balance": -(amount) }, $set:  {"previousBalance": balance}})
         let restaurantUpdate = restaurantSchema.findByIdAndUpdate(restaurantId, {$inc :{"balance": amount }, $set: {"previousBalance": restaurantBalance}})
         let transaction = transactionSchema.create({
-            from: userId, to:restaurantId, amount: amount
+            from: userId, to:restaurantId, amount: amount, restaurantPreviousBalance: restaurantBalance, restaurantCurrentBalance: (restaurantBalance + amount),
+            studentPreviousBalance: balance, studentCurrentBalance: (balance + amount)
         })
 
         let promises = [userUpdate, restaurantUpdate, transaction]

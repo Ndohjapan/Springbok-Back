@@ -184,6 +184,22 @@ const transactionSchema = new mongoose.Schema({
   to: {
     type: String,
     ref: "Restaurants"
+  },
+  restaurantPreviousBalance: {
+    type: Number,
+    default: 0
+  },
+  restaurantCurrentBalance: {
+    type: Number,
+    default: 0
+  },
+  studentPreviousBalance: {
+    type: Number,
+    default: 0
+  },
+  studentCurrentBalance: {
+    type: Number,
+    default: 0
   }
 }, {timestamps: true})
 
@@ -274,6 +290,17 @@ const utilsSchema = new mongoose.Schema({
   permissions: {
     type: [String],
     default: ["all", "fund wallet", "validate users", "create admin", "edit restaurant", "export csv", "view transactions",  "edit users"]
+  },
+
+  levels: {
+    type: [String],
+    default: ["100", "200", "300", "400", "500", "PG", "Sandwich"]
+  },
+
+  hostels: {
+    type: [String], 
+    default: ["Champions Hall", "Independence Hall", "Wisdom Hall", "Achievers Hostel", "Block L", "Block C", "Block U", "Block I", "Revelation Hall 1",
+     "Revelation Hall 2", "Proverbs Hall 1", "Proverbs Hall 2", "Cam David 1", "Cam David 2", "Hibiscus Hall 1", "Hibiscus Hall 2", "Jackson Hall", "Peace Hall 1", "Peace Hall 2"]
   }
 
 }, {timestamps: true})

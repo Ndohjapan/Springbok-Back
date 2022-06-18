@@ -32,7 +32,7 @@ exports.postRestaurant = catchAsync(async(req, res, next) => {
 })
 
 exports.getAllRestaurants = catchAsync(async(req, res, next) => {
-    const food = await restaurantSchema.find({}).select("-balance -previousBalance")
+    const food = await restaurantSchema.find({})
 
     res.status(200).send({status: true, message: "Successful", data: food})
 })

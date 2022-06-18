@@ -41,7 +41,7 @@ app.use("/order", protect, orderRoutes)
 app.use("/dashboard", protect, dashboardRoutes)
 app.use("/feeding", fundingStatus, protect, userFeedingRoutes)
 app.use("/activity", fundingStatus, protect, activityRoutes)
-app.use("/util", fundingStatus, protect, utilsRoutes)
+app.use("/util", fundingStatus, utilsRoutes)
 app.use("/user", protect, userRoutes)
 app.use("/qr", fundingStatus, protect, qrTransactions)
 
