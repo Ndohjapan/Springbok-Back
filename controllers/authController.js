@@ -198,7 +198,7 @@ exports.sendUserOTP = catchAsync(async(req, res, next) => {
 
   let user = await userSchema.findOne({email: email})
 
-  if(user.email){
+  if(user){
     const otp = generateOtp();
     const otpExpiresIn = dates.getFutureMinutes(process.env.otpMinutesLimit);
 
