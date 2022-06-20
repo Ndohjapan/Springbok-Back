@@ -9,7 +9,6 @@ dotenv.config({path: "./config/config.env"})
 process.on("uncaughtException", (err) => {
   console.error("\nErrorHandler-StartRecord----------------------------------------------------")
   console.error("ErrorHandler-Error Time   : ", new Date().toLocaleString())
-  console.error("ErrorHandler-Error API    : ", req.originalUrl)
   console.error("ErrorHandler-Error Name   : ", err.name)
   console.error("ErrorHandler-Error Msg    : ", err.message)
 });
@@ -31,7 +30,6 @@ io.on("connection", (socket) => {
 process.on("unhandledRejection", (err) => {
   console.error("\nErrorHandler-StartRecord----------------------------------------------------")
   console.error("ErrorHandler-Error Time   : ", new Date().toLocaleString())
-  console.error("ErrorHandler-Error API    : ", req.originalUrl)
   console.error("ErrorHandler-Error Name   : ", err.name)
   console.error("ErrorHandler-Error Msg    : ", err.message)
 });

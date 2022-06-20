@@ -8,6 +8,7 @@ const foodRoutes = require("./routes/foodRoutes")
 const restaurantRoutes = require("./routes/restaurantRoutes")
 const orderRoutes = require("./routes/orderRoutes")
 const dashboardRoutes = require("./routes/feedingDashboardController")
+const documentRoutes = require("./routes/document")
 const userRoutes = require("./routes/userRoutes")
 const activityRoutes = require("./routes/activityRoutes")
 const utilsRoutes = require("./routes/utilRoutes")
@@ -40,6 +41,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(interceptorParam)
 
 app.use("/api/v1/users", authRoutes);
+app.use("/document", documentRoutes);
 app.use("/food", protect, foodRoutes)
 app.use("/transaction", protect, transactionRoute)
 app.use("/restaurant", fundingStatus, protect, restaurantRoutes)
