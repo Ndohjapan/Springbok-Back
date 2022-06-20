@@ -2,7 +2,7 @@ const express = require("express")
 
 const router = express.Router()
 
-const {savePin, resetPin, deleteUser, getAllUsers, getUser, postFilter, validateUsers, fundWallet} = require("../controllers/foodCollection/userFeedingController")
+const {savePin, resetPin, deleteUser, getAllUsers, getUser, postFilter, validateUsers, fundWallet, confirmPin} = require("../controllers/foodCollection/userFeedingController")
 
 const {permissionTo} = require("../controllers/authController")
 
@@ -26,10 +26,14 @@ router
     .route("/:id")
     .delete(permissionTo("all"), deleteUser)
 
+router
+    .route("/confirmPin")
+    .post(confirmPin)
+
 // Put
 router
-    .route("/:id")
-    .put(resetPin)
+    .route("/resetPin")
+    .post(resetPin)
 
 
 // User eith filter
