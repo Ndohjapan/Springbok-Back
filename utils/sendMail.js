@@ -1,15 +1,11 @@
-const nodemailer = require("nodemailer");
 const config = require("config");
+const postmark = require("postmark")
 
-let transporter = nodemailer.createTransport({
-  "host": "smtpdm.aliyun.com",
-  "port": 80,
-  "secureConnection": true,
-  "auth": {
-      "user": 'user@banquapp.online',
-      "pass": "jzpWJH57NfAgV25"
-  }
-});
+let postmarkKey = config.get("postmarkKey")
+let senderEmail = config.get("senderEmail")
+var client = new postmark.ServerClient(postmarkKey);
+
+
 
 function otpHtmlTemplate(otp) {
   return `
@@ -22,23 +18,21 @@ function otpHtmlTemplate(otp) {
 }
 
 async function sendMail(receipientEmail, otp) {
-  const senderEmail = "SpringBok user@banquapp.online";
-
-  const mailOptions = {
-    from: senderEmail,
-    to: receipientEmail,
-    subject: "SpringBok OTP Code ✅✅",
-    text: `This is your SpringBok OTP Token: ${otp}`,
-    html: otpHtmlTemplate(otp),
-  };
-
-  try {
-    const info = await transporter.sendMail(mailOptions);
-    return info;
-  } catch (err) {
-    console.log(err);
-    return false;
-  }
+  client.sendEmail({
+    "From": senderEmail, 
+    "To": receipientEmail, 
+    "Subject": "SpringBok Verification ✅✅", 
+    "TextBody": "Your SpringBok OTP is ...",
+    "HtmlBody": otpHtmlTemplate(otp)
+  }, 
+  function(error, result) {
+    if(error) {
+        console.error("Unable to send via postmark: " + error.message);
+        return false;
+    }
+    console.info("Sent to postmark for delivery")
+    return result
+  });
 }
 
-module.exports = sendMail;
+module.exports.sendMail = sendMail;

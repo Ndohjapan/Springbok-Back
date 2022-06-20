@@ -23,6 +23,9 @@ io.on("connection", (socket) => {
 });
 
 process.on("unhandledRejection", (err) => {
-  console.log(err.name, err.message);
-  console.log("UNHANDLED REJECTION 📌");
+  console.error("\nErrorHandler-StartRecord----------------------------------------------------")
+  console.error("ErrorHandler-Error Time   : ", new Date().toLocaleString())
+  console.error("ErrorHandler-Error API    : ", req.originalUrl)
+  console.error("ErrorHandler-Error Name   : ", err.name)
+  console.error("ErrorHandler-Error Msg    : ", err.message)
 });

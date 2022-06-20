@@ -15,6 +15,7 @@ const transactionRoute = require("./routes/transactionsRoute")
 const qrTransactions = require("./routes/qrTransaction/qrTreansaction")
 const userFeedingRoutes = require("./routes/userFeedingRoutes")
 const AppError = require("./utils/appError");
+const interceptorParam = require("./middleware/interceptorParam")
 
 
 // routes
@@ -32,6 +33,8 @@ app.use(cors(corsOptions));
 app.use(express.json());
 if (process.env.NODE_ENV === "development") app.use(morgan("short"));
 app.use(express.urlencoded({ extended: true }));
+
+app.use(interceptorParam)
 
 app.use("/api/v1/users", authRoutes);
 app.use("/food", protect, foodRoutes)
