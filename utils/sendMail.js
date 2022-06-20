@@ -1,8 +1,9 @@
-const config = require("config");
 const postmark = require("postmark")
+const dotenv = require("dotenv")
+dotenv.config({path: "./config/config.env"})
+let postmarkKey = process.env.postmarkKey
+let senderEmail = process.env.senderEmail
 
-let postmarkKey = config.get("postmarkKey")
-let senderEmail = config.get("senderEmail")
 var client = new postmark.ServerClient(postmarkKey);
 
 

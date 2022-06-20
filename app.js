@@ -17,6 +17,9 @@ const userFeedingRoutes = require("./routes/userFeedingRoutes")
 const AppError = require("./utils/appError");
 const interceptorParam = require("./middleware/interceptorParam")
 
+const dotenv = require("dotenv")
+const path = require("path")
+dotenv.config({path: "./config/config.env"})
 
 // routes
 const authRoutes = require("./routes/authRoutes");

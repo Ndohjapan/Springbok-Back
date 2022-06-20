@@ -2,7 +2,6 @@ const mongoose = require("mongoose");
 const mongoosePaginate = require("mongoose-paginate-v2")
 const bcrypt = require("bcrypt")
 const jwt = require("jsonwebtoken")
-const config = require("config");
 
 
 const userSchema = new mongoose.Schema(
@@ -324,7 +323,7 @@ const activitySchema = new mongoose.Schema({
 userSchema.methods.generateAuthToken = function () {
     return jwt.sign(
       { id: this._id, verified: this.verified },
-      config.get("jwtPrivateKey")
+      process.env.jwtPrivateKey
     );
 };
   
@@ -335,7 +334,7 @@ userSchema.methods.checkPassword = function (password) {
 adminSchema.methods.generateAuthToken = function () {
     return jwt.sign(
       { id: this._id, verified: this.verified },
-      config.get("jwtPrivateKey")
+      process.env.jwtPrivateKey
     );
 };  
 
@@ -347,7 +346,7 @@ adminSchema.methods.checkPassword = function (password) {
 restaurantSchema.methods.generateAuthToken = function () {
   return jwt.sign(
     { id: this._id, verified: this.verified },
-    config.get("jwtPrivateKey")
+    process.env.jwtPrivateKey
   );
 };  
 

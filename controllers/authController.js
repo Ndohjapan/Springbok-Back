@@ -1,4 +1,5 @@
-const config = require("config");
+const dotenv = require("dotenv")
+dotenv.config({path: "./config/config.env"})
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const {userFeedingSchema, utilsSchema, userSchema, adminSchema, restaurantSchema} = require("../models/mainModel");
@@ -16,7 +17,7 @@ exports.signup = catchAsync(async (req, res, next) => {
     return next(new AppError("User already exists", 400));
 
   const otp = generateOtp();
-  const otpExpiresIn = dates.getFutureMinutes(config.get("otpMinutesLimit"));
+  const otpExpiresIn = dates.getFutureMinutes(process.env.otpMinutesLimit);
 
   const salt = await bcrypt.genSalt(10);
   const hashedPassword = await bcrypt.hash(password, salt);
@@ -168,7 +169,7 @@ exports.verify = catchAsync(async (req, res, next) => {
   const currentDate = Date.now();
   const elapsed = dates.minuteDifference(currentDate, user.otpExpiresIn);
 
-  if (elapsed > config.get("otpMinutesLimit")){
+  if (elapsed > process.env.otpMinutesLimit){
     return next(new AppError("OTP expired", 400));
   }else{
     
@@ -183,7 +184,7 @@ exports.resendOtp = catchAsync(async (req, res, next) => {
     return next(new AppError("user already verified", 400));
 
   const otp = generateOtp();
-  const otpExpiresIn = dates.getFutureMinutes(config.get("otpMinutesLimit"));
+  const otpExpiresIn = dates.getFutureMinutes(process.env.otpMinutesLimit);
 
   await userSchema.findByIdAndUpdate(req.user._id, { otp, otpExpiresIn });
   await sendMail(req.user.email, otp);
@@ -199,7 +200,7 @@ exports.sendUserOTP = catchAsync(async(req, res, next) => {
 
   if(user.email){
     const otp = generateOtp();
-    const otpExpiresIn = dates.getFutureMinutes(config.get("otpMinutesLimit"));
+    const otpExpiresIn = dates.getFutureMinutes(process.env.otpMinutesLimit);
 
     await userSchema.findOneAndUpdate({email:email}, {$set: {otp:otp, otpExpiresIn: otpExpiresIn}}, {new: true})
 
@@ -249,7 +250,7 @@ exports.protect = catchAsync(async (req, res, next) => {
   }
   
   try{
-    const decoded = jwt.verify(token, config.get("jwtPrivateKey"))
+    const decoded = jwt.verify(token, process.env.jwtPrivateKey)
     req.user = await userSchema.findById(decoded.id);
     if(req.user){
       return next()

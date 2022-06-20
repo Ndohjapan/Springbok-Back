@@ -1,9 +1,3 @@
 {
-    "mongoDbUrl": "mongodb+srv://springbok:T5fLPUleRzdOpApM@cluster0.pkwfj.mongodb.net/test",
-    "jwtPrivateKey": "lasfrmffgll3e3oigmo3g3rg03prkdri8en",
-    "senderEmail": "support@lcufeeding.com",
-    "otpMinutesLimit": 10,
-    "accessKeyId": "AKIA5WKT56NDQHCIYNNY",
-    "secretAccessKey": "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",
-    "postmarkKey": "207d8b59-4ba1-4b59-b3cf-4aaec609ee7d"
+    
 }
