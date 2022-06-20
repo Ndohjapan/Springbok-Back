@@ -158,9 +158,7 @@ exports.fundWallet = catchAsync(async(req, res, next) => {
             {
               '$match': {
                 'userId': {
-                  '$in': [
-                    '628c06264ac3e4a18974084a', '628c0903454478c4b186b450'
-                  ]
+                  '$in': userIds
                 },
                 "lastFunding": todaysDate
               }
