@@ -46,18 +46,22 @@ exports.getUser = catchAsync(async(req, res, next) => {
 })
 
 exports.resetPin = catchAsync(async(req, res, next) => {
-    let data = req.body
+    
+
     let userId = req.user["_id"].toString()
-    data.transactionPin = bcrypt.hashSync(data.transactionPin, 10)
-    let updateData = {}
+    let {transactionPin, newTransactionPin} = req.body
 
-    Object.entries(data).forEach(([key, value]) => {
-        if(value != ""){
-            updateData[key] = value
-        }
-    })
+    const user = await userFeedingSchema.findOne({userId: userId});
+    
+    const checkPin = await user.checkPin(transactionPin);
 
-    let user = await userFeedingSchema.findOneAndUpdate({userId: userId}, updateData, {new: true})
+    if(!checkPin){
+        return next(new AppError("Wrong Pin", 400));
+    }
+
+    newTransactionPin = bcrypt.hashSync(newTransactionPin, 10)
+
+    await userFeedingSchema.findOneAndUpdate({userId: userId}, {transactionPin: newTransactionPin}, {new: true})
 
     res.status(200).send({status: true, message: "Successful"})
 })
