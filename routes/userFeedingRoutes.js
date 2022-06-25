@@ -2,9 +2,9 @@ const express = require("express")
 
 const router = express.Router()
 
-const {savePin, resetPin, deleteUser, getAllUsers, getUser, postFilter, validateUsers, fundWallet} = require("../controllers/foodCollection/userFeedingController")
+const {savePin, resetPin, deleteUser, getAllUsers, getUser, postFilter, validateUsers, fundWallet, confirmPin} = require("../controllers/foodCollection/userFeedingController")
 
-const {protect, restrictTo} = require("../controllers/authController")
+const {permissionTo} = require("../controllers/authController")
 
 // Save Users Transaction Pin
 router
@@ -14,7 +14,7 @@ router
 // Get all from the collection
 router
     .route("/")
-    .get(protect, restrictTo("manager", "bursar", "user"), getAllUsers)    
+    .get( getAllUsers)    
 
 // Get by id
 router
@@ -24,12 +24,16 @@ router
 // Delete
 router
     .route("/:id")
-    .delete(protect, restrictTo("bursar"), deleteUser)
+    .delete(permissionTo("all"), deleteUser)
+
+router
+    .route("/confirmPin")
+    .post(confirmPin)
 
 // Put
 router
-    .route("/:id")
-    .put(protect, restrictTo("bursar"), resetPin)
+    .route("/resetPin")
+    .post(resetPin)
 
 
 // User eith filter
@@ -39,11 +43,11 @@ router
 
 
 // Validate Users 
-router.route("/validateUsers").post(validateUsers)
+router.route("/validateUsers").post(permissionTo("validate users"), validateUsers)
 
 
 //Fund students wallet
 router
-    .route("/fundWallet").post(fundWallet)
+    .route("/fundWallet").post(permissionTo("fund wallet"), fundWallet)
 
 module.exports = router

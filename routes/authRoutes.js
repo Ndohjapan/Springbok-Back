@@ -1,12 +1,15 @@
 const express = require("express");
 const router = express.Router();
-const authController = require("../controllers/authController");
+const {adminSignin, adminSignup, protect, resendOtp, resetPassword, permissionTo: restrictTo, sendUserOTP, signin, signup, verify, restaurantSignin} = require("../controllers/authController");
 
-router.post("/signup", authController.signup);
-router.post("/signin", authController.signin);
-router.post("/verify-otp", authController.verify);
-router.post("/resend-otp", authController.protect, authController.resendOtp);
-router.post("/senduserOTP", authController.sendUserOTP)
-router.post("/resetPassword", authController.resetPassword)
+router.post("/signup", signup);
+router.post("/adminSignup", protect, adminSignup);
+router.post("/signin", signin);
+router.post("/adminSignin", adminSignin);
+router.post("/restaurantSignin", restaurantSignin)
+router.post("/verify-otp", verify);
+router.post("/resend-otp", protect, resendOtp);
+router.post("/senduserOTP", sendUserOTP)
+router.post("/resetPassword", resetPassword)
 
 module.exports = router;

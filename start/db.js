@@ -1,7 +1,6 @@
 const mongoose = require("mongoose");
-const config = require("config");
 
-const mongoDbUrl = config.get("mongoDbUrl");
+const mongoDbUrl = process.env.mongoDbUrl
 
 module.exports = function connectDB() {
   mongoose

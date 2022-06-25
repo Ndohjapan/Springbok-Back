@@ -1,10 +1,16 @@
 const app = require("./app");
 const connectDb = require("./start/db");
+const socketio = require("socket.io")
+
+const dotenv = require("dotenv")
+const path = require("path")
+dotenv.config({path: "./config/config.env"})
 
 process.on("uncaughtException", (err) => {
-  console.log(err.name, err.message);
-  console.log("UNCAUGHT EXCEPTION 📌, shutting down ...");
-  process.exit(1);
+  console.error("\nErrorHandler-StartRecord----------------------------------------------------")
+  console.error("ErrorHandler-Error Time   : ", new Date().toLocaleString())
+  console.error("ErrorHandler-Error Name   : ", err.name)
+  console.error("ErrorHandler-Error Msg    : ", err.message)
 });
 
 // Connect to mongodb database
@@ -15,10 +21,15 @@ const server = app.listen(PORT, () =>
   console.log(`APP RUNNING ON PORT: ${PORT}`)
 );
 
+const io = socketio(server)
+
+io.on("connection", (socket) => {
+  app.set("socket", socket);
+});
+
 process.on("unhandledRejection", (err) => {
-  console.log(err.name, err.message);
-  console.log("UNHANDLED REJECTION 📌, shutting down ...");
-  server.close(() => {
-    process.exit(1);
-  });
+  console.error("\nErrorHandler-StartRecord----------------------------------------------------")
+  console.error("ErrorHandler-Error Time   : ", new Date().toLocaleString())
+  console.error("ErrorHandler-Error Name   : ", err.name)
+  console.error("ErrorHandler-Error Msg    : ", err.message)
 });

@@ -9,21 +9,21 @@ const {
   updateUser,
   postFilter
 } = require("../controllers/userController");
-const {protect, restrictTo} = require("../controllers/authController")
+const {protect, permissionTo} = require("../controllers/authController")
 
 
 
 // Get all from the collection
-router.route("/").get( restrictTo("bursar", "dev"), getAllUsers);
+router.route("/").get(permissionTo("edit users"), getAllUsers);
 
 // Get by id
 router.route("/:id").get(getUser);
 
 // Delete
-router.route("/:id").delete( restrictTo("bursar", "dev"), deleteUser);
+router.route("/:id").delete( permissionTo("edit users"), deleteUser);
 
 // Put
-router.route("/:id").put( updateUser);
+router.route("/:id").put(updateUser);
 
 // User eith filter
 router.route("/post/filter").post(postFilter);

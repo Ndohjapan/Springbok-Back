@@ -1,5 +1,4 @@
-const {userFeedingSchema} = require("../../../models/userFeedingModel")
-const {restaurantSchema, transactionSchema} = require("../../../models/restaurantModel")
+const {restaurantSchema, transactionSchema, userFeedingSchema} = require("../../../models/mainModel")
 const AppError = require("../../../utils/appError");
 const catchAsync = require("../../../utils/catchAsync");
 const ObjectId = require('mongoose').Types.ObjectId;
@@ -38,11 +37,13 @@ exports.doTransfer = catchAsync(async(req, res, next) => {
     let userId = req.user["_id"].toString()
     let {transactionPin, amount, restaurantId} = req.body
 
+    amount = parseInt(amount)
+
     const user = await userFeedingSchema.findOne({userId: userId});
     const restaurant = await restaurantSchema.findById(restaurantId);
 
-    let balance = user.balance
-    let restaurantBalnce = restaurant.balance
+    let balance = parseInt(user.balance)
+    let restaurantBalance = parseInt(restaurant.balance)
 
     const checkPin = await user.checkPin(transactionPin);
 
@@ -55,9 +56,10 @@ exports.doTransfer = catchAsync(async(req, res, next) => {
         }else{
 
             let userUpdate = userFeedingSchema.findOneAndUpdate({userId: userId}, {$inc :{"balance": -(amount) }, $set:  {"previousBalance": balance}})
-            let restaurantUpdate = restaurantSchema.findByIdAndUpdate(restaurantId, {$inc :{"balance": amount }, $set: {"previousBalance": restaurantBalnce}})
+            let restaurantUpdate = restaurantSchema.findByIdAndUpdate(restaurantId, {$inc :{"balance": amount }, $set: {"previousBalance": restaurantBalance}})
             let transaction = transactionSchema.create({
-                from: userId, to:restaurantId, amount: amount
+                from: userId, to:restaurantId, amount: amount, restaurantPreviousBalance: restaurantBalance, restaurantCurrentBalance: (restaurantBalance + amount),
+                studentPreviousBalance: balance, studentCurrentBalance: (balance + amount)
             })
 
             let promises = [userUpdate, restaurantUpdate, transaction]
@@ -78,4 +80,71 @@ exports.doTransfer = catchAsync(async(req, res, next) => {
     // create transaction document
     
 })
+
+
+exports.confirmPinandBalance = catchAsync(async(req, res, next) => {
+    let userId = req.user["_id"].toString()
+    let {transactionPin, amount} = req.body
+
+    const user = await userFeedingSchema.findOne({userId: userId});
+
+    let balance = user.balance
+    
+    const checkPin = await user.checkPin(transactionPin);
+    if(!checkPin){
+        return next(new AppError("Wrong Pin", 400));
+    }
+    else{
+        if(await confirm(balance, amount)){
+            return res.status(200).send({status: true, message: "Confirmation Successful"})
+        }else{
+            return next(new AppError("Insufficient Funds", 400));
+        }
+    }
+})
+
+exports.restaurantDoTransfer = catchAsync(async(req, res, next) => {
+    let {userId, amount} = req.body
+    let restaurantId = req.user["_id"].toString()
+
+    const restaurant = await restaurantSchema.findOne({userId: restaurantId});
+    const user = await userFeedingSchema.findOne({userId: userId}).populate(["userId"]);
+
+    let balance = user.balance
+    let restaurantBalance = restaurant.balance
+
+    if(await confirm(balance, amount)){
+        let userUpdate = userFeedingSchema.findOneAndUpdate({userId: userId}, {$inc :{"balance": -(amount) }, $set:  {"previousBalance": balance}})
+        let restaurantUpdate = restaurantSchema.findByIdAndUpdate(restaurantId, {$inc :{"balance": amount }, $set: {"previousBalance": restaurantBalance}})
+        let transaction = transactionSchema.create({
+            from: userId, to:restaurantId, amount: amount, restaurantPreviousBalance: restaurantBalance, restaurantCurrentBalance: (restaurantBalance + amount),
+            studentPreviousBalance: balance, studentCurrentBalance: (balance + amount)
+        })
+
+        let promises = [userUpdate, restaurantUpdate, transaction]
+
+        Promise.all(promises).then(async(results) => {
+            transaction = await transactionSchema.findById(results[2]["_id"].toString()).populate(["from", "to"]).select("-updatedAt")
+
+            return res.status(200).send({status: true, payload: transaction})
+
+        })
+    }else{
+        let message = `${user.userId.firstname} ${user.userId.lastname} has Insufficeint Balance`
+        return next(new AppError(message, 400));
+    }
+
+})
+
+exports.validateTransaction = catchAsync(async(req, res, next) => {
+    return res.send({status: true})
+})
+
+async function confirm(balance, amount){
+    if(balance < amount || amount < 1){
+        return false;
+    }else{
+        return true
+    }
+}
 

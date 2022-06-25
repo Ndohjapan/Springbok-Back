@@ -1,9 +1,9 @@
-const {userFeedingSchema, disbursementSchema} = require("../../models/userFeedingModel")
-const {restaurantSchema, transactionSchema} = require("../../models/restaurantModel")
-const User = require("../../models/UserModel")
+const {utilsSchema, transactionSchema, restaurantSchema, userFeedingSchema, disbursementSchema, userSchema} = require("../../models/mainModel")
 const AppError = require("../../utils/appError");
 const catchAsync = require("../../utils/catchAsync");
 const bcrypt = require("bcrypt")
+const {success} = require("../../utils/activityLogs")
+    
 
 exports.savePin = catchAsync(async(req, res, next) => {
     let {transactionPin} = req.body
@@ -46,25 +46,51 @@ exports.getUser = catchAsync(async(req, res, next) => {
 })
 
 exports.resetPin = catchAsync(async(req, res, next) => {
-    let data = req.body
-    data.transactionPin = bcrypt.hashSync(data.transactionPin, 10)
-    let updateData = {}
+    
 
-    Object.entries(data).forEach(([key, value]) => {
-        if(value != ""){
-            updateData[key] = value
-        }
-    })
+    let userId = req.user["_id"].toString()
+    let {transactionPin, newTransactionPin} = req.body
 
-    let user = await userFeedingSchema.findOneAndUpdate({userId: req.params.id}, updateData, {new: true})
+    const user = await userFeedingSchema.findOne({userId: userId});
+    
+    const checkPin = await user.checkPin(transactionPin);
 
-    res.status(200).send({status: true, message: "User Updated", data: user})
+    if(!checkPin){
+        return next(new AppError("Wrong Pin", 400));
+    }
+
+    newTransactionPin = bcrypt.hashSync(newTransactionPin, 10)
+
+    await userFeedingSchema.findOneAndUpdate({userId: userId}, {transactionPin: newTransactionPin}, {new: true})
+
+    res.status(200).send({status: true, message: "Successful"})
+})
+
+exports.confirmPin = catchAsync(async(req, res, next) => {
+    let userId = req.user["_id"].toString()
+    let {transactionPin} = req.body
+
+    const user = await userFeedingSchema.findOne({userId: userId});
+    
+    const checkPin = await user.checkPin(transactionPin);
+
+    if(!checkPin){
+        return next(new AppError("Wrong Pin", 400));
+    }
+
+    return res.status(200).send({status: true, message: "Pin Is Correct"})
+    
 })
 
 exports.deleteUser = catchAsync(async(req, res, next) => {
+    const socket = req.app.get("socket");
+    let userId = req.user["_id"].toString()
+
     const user = await userFeedingSchema.findOneAndDelete({userId: req.params.id})
 
     res.status(200).send({status: true, message: "User Deleted"})
+    return success(userId, ` deleted a user from database`, "Delete", socket)
+
 })
 
 
@@ -100,14 +126,21 @@ exports.postFilter = catchAsync(async(req, res, next) => {
 
 exports.validateUsers = catchAsync(async(req,res, next) => {
     let {userIds, feedingType, studentStatus} = req.body
+    let totalFeedingAmount = feedingType * 135000
+    const socket = req.app.get("socket");
+    let userId = req.user["_id"].toString()
     try{
-        let userUpdate = User.updateMany({$in: {"_id": userIds}}, {$set: {studentStatus: studentStatus}})
-        let feedingUpdate = userFeedingSchema.updateMany({$in: {userId: userIds}}, {$set: {feedingType: feedingType, studentStatus: studentStatus}})
+        let userUpdate = userSchema.updateMany({"_id": {$in: userIds}}, {$set: {studentStatus: studentStatus}})
+        let feedingUpdate = userFeedingSchema.updateMany({userId: {$in: userIds}}, {$set: {feedingType: feedingType, studentStatus: studentStatus, totalFeedingAmount: totalFeedingAmount}})
+        let newStudentAlert = utilsSchema.updateMany({}, {$set: {newStudentAlert: 0}})
     
-        let promises = [userUpdate, feedingUpdate]
+        let promises = [userUpdate, feedingUpdate, newStudentAlert]
     
         Promise.all(promises).then(results => {
             res.status(200).send({status: true, message:"Update Successful"})
+            return success(userId, ` validated ${results[0].modifiedCount} students`, "Update", socket)
+
+
         })
     }
     catch(err){
@@ -119,43 +152,63 @@ exports.validateUsers = catchAsync(async(req,res, next) => {
 
 exports.fundWallet = catchAsync(async(req, res, next) => {
     let {userIds} = req.body
-
+    const socket = req.app.get("socket");
+    let userId = req.user["_id"].toString()
     try{
 
         let todaysDate = new Date().toISOString()
     
         let user = await userFeedingSchema.updateMany(
-            {$in: {userId: userIds}, fundingStatus: false},
-            [{$set: {"previousBalance": '$balance', 'balance': { $multiply: [ 15000, "$feedingType" ] }, "lastFunding": todaysDate, fundingStatus: true}}], 
+            {fundingStatus: false, userId: {$in: userIds}},
+            [
+                {$set: {
+                    "previousBalance": '$balance', 
+                    'balance': { $multiply: [ 15000, "$feedingType" ] }, 
+                    "lastFunding": todaysDate, 
+                    'fundingStatus': true, 
+                    'totalAmountFunded': {$add: ["$totalAmountFunded", { $multiply: [ 15000, "$feedingType" ] }]},
+                    'numOfTimesFunded': {$add: ["$numOfTimesFunded", 1]},
+                    "amountLeft": {$subtract: ["$totalFeedingAmount", { $multiply: [ 15000, "$feedingType" ] }]}
+                    }
+                } 
+            ], 
             {multi: true}
         )
-                
+        
         let statistics = await userFeedingSchema.aggregate([
-            { $match: 
-                { 
-                    userId: {
-                        $in: userIds
-                    }
-
-                } 
-            }, 
             {
-                $group:
-                { 
-                    _id: null,
-                    amount: { $sum: "$balance" },
+              '$match': {
+                'userId': {
+                  '$in': userIds
+                },
+                "lastFunding": todaysDate
+              }
+            }, {
+              '$unwind': {
+                'path': '$userId', 
+                'preserveNullAndEmptyArrays': true
+              }
+            }, {
+              '$group': {
+                '_id': null, 
+                'amount': {
+                  '$sum': '$balance'
                 }
+              }
             }
-           
         ])
-
-        let totalAmount = (statistics[0].amount)
+        
+        
+        let totalAmount = (statistics[0]) ? statistics[0].amount : 0
         await disbursementSchema.create({
             amount: totalAmount,
             numberOfStudents: user.modifiedCount
         })
     
         res.status(200).send({status: true, message: "Update Successful"})
+
+        return success(userId, ` funded ${user.modifiedCount} students with total of ${totalAmount} naira`, "Update", socket)
+
     }
     catch(err){
         console.log(err)

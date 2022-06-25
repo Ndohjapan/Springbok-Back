@@ -1,28 +1,29 @@
-const config = require("config");
+const dotenv = require("dotenv")
+dotenv.config({path: "./config/config.env"})
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const User = require("../models/UserModel");
-const {userFeedingSchema} = require("../models/userFeedingModel");
+const {userFeedingSchema, utilsSchema, userSchema, adminSchema, restaurantSchema} = require("../models/mainModel");
 const AppError = require("../utils/appError");
 const generateOtp = require("../utils/generateOtp");
-const sendMail = require("../utils/sendMail");
+const {sendMail} = require("../utils/sendMail");
 const dates = require("../utils/dates");
 const catchAsync = require("../utils/catchAsync");
+const {success} = require("../utils/activityLogs")
 
 exports.signup = catchAsync(async (req, res, next) => {
   const { firstname, lastname, email, password, department, level, hostel, transactionPin, matricNumber } = req.body;
 
-  if (await User.findOne({ email }))
+  if (await userSchema.findOne({ email }))
     return next(new AppError("User already exists", 400));
 
   const otp = generateOtp();
-  const otpExpiresIn = dates.getFutureMinutes(config.get("otpMinutesLimit"));
+  const otpExpiresIn = dates.getFutureMinutes(process.env.otpMinutesLimit);
 
   const salt = await bcrypt.genSalt(10);
   const hashedPassword = await bcrypt.hash(password, salt);
   const hashedPin = await bcrypt.hash(transactionPin, salt)
 
-  const user = await User.create({
+  const user = await userSchema.create({
     firstname,
     lastname,
     email,
@@ -34,11 +35,14 @@ exports.signup = catchAsync(async (req, res, next) => {
     hostel,
     matricNumber
   });
-  await userFeedingSchema.create({userId: user["_id"].toString(), transactionPin: hashedPin })
+  await userFeedingSchema.create({userId: user["_id"].toString(), transactionPin: hashedPin, totalAmountFunded: 0, numOfTimesFunded: 0, amountLeft: 0, amountLeft: 0 })
   const token = await user.generateAuthToken();
   await sendMail(email, otp);
 
   res.status(201).json({ status: true, data: user, token });
+
+  await utilsSchema.updateMany({}, {$inc: {newStudentAlert: 1}})
+
 });
 
 exports.signin = catchAsync(async (req, res, next) => {
@@ -47,7 +51,7 @@ exports.signin = catchAsync(async (req, res, next) => {
   if (!email || !password)
     return next(new AppError("Provide an email and password", 400));
 
-  const user = await User.findOne({ email });
+  const user = await userSchema.findOne({ email });
   if (!user){
     return next(new AppError("User not found", 404));
   }
@@ -66,20 +70,110 @@ exports.signin = catchAsync(async (req, res, next) => {
 
 });
 
+exports.adminSignup = catchAsync(async (req, res, next) => {
+
+  const socket = req.app.get("socket");
+  let userId = req.user["_id"].toString()
+
+  const { firstname, lastname, email, password, number, role, permissions } = req.body;
+
+  if (await adminSchema.findOne({ email }))
+    return next(new AppError("User already exists", 400));
+
+  const salt = await bcrypt.genSalt(10);
+  const hashedPassword = await bcrypt.hash(password, salt);
+  try{
+
+    const user = await adminSchema.create({
+      firstname,
+      lastname,
+      email,
+      password: hashedPassword,
+      number, role, permissions
+    });
+  
+    const token = await user.generateAuthToken();
+  
+    res.status(201).json({ status: true, data: user, token });
+  
+    return success(userId, ` added ${user.firstname} ${user.lastname} as an admin`, "Create", socket)
+  }
+  catch(err){
+    return res.status(400).send({status:false, message: err.message})
+  }
+
+
+});
+
+exports.adminSignin = catchAsync(async (req, res, next) => {
+  const { email, password } = req.body;
+  const socket = req.app.get("socket");
+
+  if (!email || !password)
+    return next(new AppError("Provide an email and password", 400));
+
+    const user = await adminSchema.findOne({ email });
+    let userId = user["_id"].toString()
+  if (!user){
+    return next(new AppError("User not found", 404));
+  }
+  else{
+
+    const correctPassword = await user.checkPassword(password);
+    if (!correctPassword){
+
+      return next(new AppError("Incorrect email or password", 400));
+    }else{
+      const token = await user.generateAuthToken();
+      res.status(200).json({ status: true, token, payload: user });
+
+      return success(userId, ` just logged on to admin dashboard`, "Login", socket)
+
+    }
+
+  } 
+
+});
+
+exports.restaurantSignin = catchAsync(async (req, res, next) => {
+  const { email, password } = req.body;
+
+  if (!email || !password)
+    return next(new AppError("Provide an email and password", 400));
+
+  const restaurant = await restaurantSchema.findOne({ email });
+  if (!restaurant){
+    return next(new AppError("Restaurant not found", 404));
+  }
+  else{
+
+    const correctPassword = await restaurant.checkPassword(password);
+    if (!correctPassword){
+
+      return next(new AppError("Incorrect email or password", 400));
+    }else{
+      const token = await restaurant.generateAuthToken();
+      res.status(200).json({ status: true, token, payload: restaurant });
+    }
+
+  } 
+
+});
+
 exports.verify = catchAsync(async (req, res, next) => {
   const { otp, email } = req.body;
 
-  let user = await User.findOne({ email: email, otp: otp });
+  let user = await userSchema.findOne({ email: email, otp: otp });
   if (!user) return next(new AppError("Otp is invalid", 400));
 
   const currentDate = Date.now();
   const elapsed = dates.minuteDifference(currentDate, user.otpExpiresIn);
 
-  if (elapsed > config.get("otpMinutesLimit")){
+  if (elapsed > process.env.otpMinutesLimit){
     return next(new AppError("OTP expired", 400));
   }else{
     
-    user = await User.findOneAndUpdate({email:email}, {$set: {otp:"", verified: true, otpExpiresIn: null}}, {new: true})
+    user = await userSchema.findOneAndUpdate({email:email}, {$set: {otp:"", verified: true, otpExpiresIn: null}}, {new: true})
   
     res.status(200).json({ status: true, data: user });
   }
@@ -90,9 +184,9 @@ exports.resendOtp = catchAsync(async (req, res, next) => {
     return next(new AppError("user already verified", 400));
 
   const otp = generateOtp();
-  const otpExpiresIn = dates.getFutureMinutes(config.get("otpMinutesLimit"));
+  const otpExpiresIn = dates.getFutureMinutes(process.env.otpMinutesLimit);
 
-  await User.findByIdAndUpdate(req.user._id, { otp, otpExpiresIn });
+  await userSchema.findByIdAndUpdate(req.user._id, { otp, otpExpiresIn });
   await sendMail(req.user.email, otp);
 
   res.status(200).json({ status: true, data: "OTP re-sent" });
@@ -102,13 +196,13 @@ exports.resendOtp = catchAsync(async (req, res, next) => {
 exports.sendUserOTP = catchAsync(async(req, res, next) => {
   let {email} = req.body
 
-  let user = await User.findOne({email: email})
+  let user = await userSchema.findOne({email: email})
 
-  if(user.email){
+  if(user){
     const otp = generateOtp();
-    const otpExpiresIn = dates.getFutureMinutes(config.get("otpMinutesLimit"));
+    const otpExpiresIn = dates.getFutureMinutes(process.env.otpMinutesLimit);
 
-    await User.findOneAndUpdate({email:email}, {$set: {otp:otp, otpExpiresIn: otpExpiresIn}}, {new: true})
+    await userSchema.findOneAndUpdate({email:email}, {$set: {otp:otp, otpExpiresIn: otpExpiresIn}}, {new: true})
 
     await sendMail(email, otp)
     res.status(200).send({status: true, message: "Email Sent"})
@@ -126,33 +220,48 @@ exports.resetPassword = catchAsync(async(req, res, next) => {
   const salt = await bcrypt.genSalt(10);
   const hashedPassword = await bcrypt.hash(newPassword, salt);
 
-  await User.findOneAndUpdate({email: email}, {password: hashedPassword})
+  await userSchema.findOneAndUpdate({email: email}, {password: hashedPassword})
 
   res.status(200).send({status: true, message: "Password Set Successfully"})
 
 })
 
-exports.restrictTo = (...roles) => {
+exports.permissionTo = (...roles) => {
   return catchAsync((req, res, next) => {
-    if (!roles.includes(req.user.role))
-      return next(
-        new AppError("You do not have permission to perform this action", 403)
-      );
-    next();
+    if(req.user.role === "bursar"){
+      next()
+    }
+    else{
+      let userPermissions = req.user.permissions
+      let permission = userPermissions.join().includes(roles.join())
+      if (!permission)
+        return next(
+          new AppError("You do not have permission to perform this action", 403)
+        );
+      next();
+    }
   });
 };
 
 exports.protect = catchAsync(async (req, res, next) => {
   let token = req.header("x-auth-token");
   if(!token){
-        return res.status(403).send({success: false, message: "Unauthorized"})
-    }
+    return res.status(401).send({success: false, message: "Invalid Token"})
+  }
+  
   try{
-        const decoded = jwt.verify(token, config.get("jwtPrivateKey"))
-        req.user = await User.findById(decoded.id);;
-        return next()
+    const decoded = jwt.verify(token, process.env.jwtPrivateKey)
+    req.user = await userSchema.findById(decoded.id);
+    if(req.user){
+      return next()
     }
-    catch(err){
-        return res.status(401).send({success: false, message: "Invalid Token"})
+    else{
+      req.user = await adminSchema.findById(decoded.id)
+      req.user = req.user ? req.user : await restaurantSchema.findById(decoded.id)
+      return next()
     }
+  }
+  catch(err){
+    return res.status(401).send({success: false, message: "Invalid Token"})
+  }
 });

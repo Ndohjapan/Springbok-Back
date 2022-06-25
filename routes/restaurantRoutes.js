@@ -10,9 +10,10 @@ const {
   updateRestaurant,
   postFilter,restaurantTransactions, allTransactions
 } = require("../controllers/foodCollection/restaurantController");
+const {permissionTo} = require("../controllers/authController")
 
 // Create or Restaurant into the document
-router.route("/").post(postRestaurant);
+router.route("/").post(permissionTo("edit restaurant"), postRestaurant);
 
 // Get all from the collection
 router.route("/").get(getAllRestaurants);
@@ -21,10 +22,10 @@ router.route("/").get(getAllRestaurants);
 router.route("/:id").get(getRestaurant);
 
 // Delete
-router.route("/:id").delete(deleteRestaurant);
+router.route("/:id").delete(permissionTo("edit restaurant"), deleteRestaurant);
 
 // Put
-router.route("/:id").put(updateRestaurant);
+router.route("/:id").put(permissionTo("edit restaurant"), updateRestaurant);
 
 // Restaurant with filter
 router.route("/post/filter").post(postFilter);
