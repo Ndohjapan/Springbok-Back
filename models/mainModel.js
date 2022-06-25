@@ -299,8 +299,17 @@ const utilsSchema = new mongoose.Schema({
     type: [String], 
     default: ["Champions Hall", "Independence Hall", "Wisdom Hall", "Achievers Hostel", "Block L", "Block C", "Block U", "Block I", "Revelation Hall 1",
      "Revelation Hall 2", "Proverbs Hall 1", "Proverbs Hall 2", "Cam David 1", "Cam David 2", "Hibiscus Hall 1", "Hibiscus Hall 2", "Jackson Hall", "Peace Hall 1", "Peace Hall 2"]
-  }
+  },
 
+  departments: {
+    type: [String],
+    default:[
+      "B.Sc. Public Health","B. NSc.  Nursing","B.Sc.  Microbiology","B.Sc. Environmental Management & Toxicology","B.MLS. Medical Laboratory Science","B.Sc. Kinesiology & Sports Science","B.Sc. Health Education","B.Sc. Community Health","B.Sc. Environmental Health Science","B.Sc. Health Information Management","B.Sc. Computer Science","B.Sc. Computer and Information Science","B.Sc. Computer Science with Economics","B.Sc. Computer Science with Electronics","B.Sc. Business Computing","B.Sc. Information & Communication Technology","B.Sc. Biochemistry","B.Sc. Nutrition & Dietetics","B.Sc. Biological Sciences","B.Sc. Science Laboratory Technology","B.Sc. Anatomy","B.Sc. Physiology","B.Sc. Chemistry","B.Sc. Physics","B.Sc. Biology",
+      "B.Sc. Science Laboratory Technology","B.Sc Radiography","B.Sc Forensic Science", "Bachelor of Laws (LLB.)", "B.Sc. Banking and Finance","B. Sc. Business Administration","B.Sc. Criminology","B.Sc. Economics and Development Studies","B.Sc. Entrepreneurship","B.Sc. International Law and Diplomacy","B.Sc. International Politics and Diplomacy","B.Sc. International Relations","B.Sc. Management and Accounting","B.Sc. Marketing","B.Sc. Peace and Conflict Studies","B.Sc. Political Philosophy","B.Sc. Politics and International Relations","B.Sc. Politics, Law and Gender","B.Sc. Psychology","B.Sc. Public Administration","B.Sc. Social Work","B.Sc. Sociology","B.Sc. War and Strategic Studies",
+      "B.Sc. Ed. Physical Education","B. Sc. Health Education & Promotion","B.Sc. Ed. Biology","B.Sc. Ed. Chemistry","B.Sc. Ed. Physics","B.Sc. Ed. Mathematics","B.Sc. Ed. Computer Science","B.A (Ed.) English","B.Ed. Social Studies","B.Ed. Business Education","B.Ed. Educational Administration","B.Ed. Guidance & Counselling","B.A. Performing Arts & Film Studies","B. A English & Literary Studies"
+    ]
+  }
+  
 }, {timestamps: true})
 
 const activitySchema = new mongoose.Schema({

@@ -56,3 +56,10 @@ exports.getAllHostels = catchAsync(async(req, res, next) => {
     return res.status(200).send({status: true, message: "Successful", hostels: utils[0].hostels})
   
   })
+
+exports.getAllDepartmensts = catchAsync(async(req, res, next) => {
+    let utils = await utilsSchema.find({})
+  
+    return res.status(200).send({status: true, message: "Successful", hostels: utils[0].departments})
+  
+  })
