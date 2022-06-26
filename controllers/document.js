@@ -16,28 +16,50 @@ cloudinary.config({
     api_secret: process.env.CLOUDINARY_SECRET
 });
 
+const fs = require('fs');
+const AWS = require('aws-sdk');
+
+const s3 = new AWS.S3({
+    accessKeyId: process.env.accessKeyId,
+    secretAccessKey: process.env.secretAccessKey
+});
+
+const fileName = 'contacts.csv';
+
+const uploadFile = () => {
+  fs.readFile(fileName, (err, data) => {
+     if (err) throw err;
+     
+  });
+};
+
 exports.uploadDocument = catchAsync(async(req, res, next) => {
     
     const form = Formidable();
 
     form.parse(req, (err, fields, files) => {
 
-        // console.log(files)
         const fileName = randomFilename(files["document"].newFilename, files["document"].originalFilename)
 
-        cloudinary.uploader.upload((fileName, path.normalize(files["document"].filepath)), (result) => {
+        const fileStream = fs.createReadStream(path.normalize(files["document"].filepath))
 
-            
-            // This will return the output after the code is exercuted both in the terminal and web browser
-            // When successful, the output will consist of the metadata of the uploaded file one after the other. These include the name, type, size and many more.
-            if (result.public_id) {
-            
-                // The results in the web browser will be returned inform of plain text formart. We shall use the util that we required at the top of this code to do this.
-                return res.status(200).send({status: true, url: result.url})
-            }
+        const uploadParams = {
+            Bucket: "leadcity",
+            Body: fileStream,
+            Key: fileName
+        }
 
-            return res.status(400).send({status: false})
+        s3.upload(uploadParams, function(s3Err, data) {
+            if (s3Err){
+                
+                return next (new AppError(s3Err.message, 403))
+            } 
+            console.log(`File uploaded successfully at ${data}`)
+            return res.status(200).send({status: true, url: data.Location})
+    
         });
+        
+
     });
 
 })
