@@ -49,9 +49,11 @@ exports.updateUser = catchAsync(async(req, res, next) => {
 exports.deleteUser = catchAsync(async(req, res, next) => {
     let userId = req.params.id
     const user = await userSchema.findByIdAndDelete(req.params.id)
-    userFeedingSchema.findOneAndDelete({userId: userId})
-    transactionSchema.deleteMany({from: userId})
-    res.status(204).send({status: true, message: "User Deleted"})
+    let userFeeding = userFeedingSchema.findOneAndDelete({userId: userId})
+    let transactions = transactionSchema.deleteMany({from: userId})
+    Promise.all([userFeeding, transactions]).then(result => {
+        res.status(204).send({status: true, message: "User Deleted"})
+    })
 })
 
 
