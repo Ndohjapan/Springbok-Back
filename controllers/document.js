@@ -64,6 +64,31 @@ exports.uploadDocument = catchAsync(async(req, res, next) => {
 
 })
 
+exports.uploadFile = async(fileName) => {
+    return new Promise((resolve, reject) => {
+
+        let filePath = path.join(__dirname, "..", fileName)
+
+        const fileStream = fs.createReadStream(filePath)
+
+        const uploadParams = {
+            Bucket: "leadcity",
+            Body: fileStream,
+            Key: fileName
+        }
+
+        s3.upload(uploadParams, function(s3Err, data) {
+            if (s3Err){
+                
+                resolve( {status: 400, body: {success: false, message: s3Err.message}})
+
+            } 
+            console.log(`File uploaded successfully at ${data}`)
+            resolve( {status: 200, body: {success: true, url:data.Location}})
+    
+        });
+    })
+}
 
 function randomFilename(newFileName, mimetype){
     mimetype = mimetype.split(".")

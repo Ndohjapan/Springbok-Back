@@ -2,7 +2,7 @@ const express = require("express");
 
 const router = express.Router();
 
-const {getTransactionsDetails, getUsersDetails, getDisbursementDetails, updateAdmins, deleteAdmins, getAllAdmins, unreadNotifications, allPermissions, createAdmin} = require("../controllers/foodCollection/feedingDashboardController");
+const {getTransactionsDetails, getUsersDetails, getDisbursementDetails, updateAdmins, deleteAdmins, getAllAdmins, unreadNotifications, allPermissions, createAdmin, exportCSV} = require("../controllers/foodCollection/feedingDashboardController");
 const {permissionTo} = require("../controllers/authController")
 
 router
@@ -40,5 +40,9 @@ router
 router
     .route("/allPermissions")
     .get(allPermissions)
+
+router
+    .route("/exportCSV")
+    .post(exportCSV)
 
 module.exports = router;
