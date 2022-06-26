@@ -9,7 +9,7 @@ const userSchema = new mongoose.Schema(
     firstname: { type: String, required: true, trim: true },
     lastname: { type: String, required: true, trim: true },
     email: { type: String, required: true, trim: true, unique: true },
-    avatar: { type: String },
+    avatar: { type: String, default: "https://leadcity.s3.eu-west-2.amazonaws.com/1656238085089.png" },
     password: { type: String, required: true },
     verified: { type: Boolean, default: false },
     otp: { type: String },
@@ -100,7 +100,7 @@ const adminSchema = new mongoose.Schema(
     lastname: { type: String, required: true, trim: true },
     email: { type: String, required: true, trim: true, unique: true },
     number: { type: String, trim: true, unique: true },
-    avatar: { type: String, default: "https://oss.ban-qu.com/opportunity/startup3.png" },
+    avatar: { type: String, default: "https://leadcity.s3.eu-west-2.amazonaws.com/1656238739061.png" },
     password: { type: String, required: true },
     verified: { type: Boolean, default: false },
     role: {
@@ -150,7 +150,7 @@ const restaurantSchema = new mongoose.Schema(
     logo: {
       type: String,
       default:
-        "https://res.cloudinary.com/billingshq/image/upload/v1646363586/springsbok/restaurant_qzb7vt.png",
+        "https://leadcity.s3.eu-west-2.amazonaws.com/1656238457405.png",
     },
     balance: {
       type: Number,

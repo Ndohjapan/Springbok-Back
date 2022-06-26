@@ -9,6 +9,6 @@ router.route("/").get(protect, getUtils).put(protect, updateUtils);
 
 router.route("/getAllLevels").get(getAllLevels)
 router.route("/getAllHostels").get(getAllHostels)
-router.route("/getAllDepartmensts").get(getAllDepartmensts)
+router.route("/getAllDepartments").get(getAllDepartmensts)
 
 module.exports = router;
