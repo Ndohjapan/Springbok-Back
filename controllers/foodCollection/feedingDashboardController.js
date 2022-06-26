@@ -3,6 +3,8 @@ const AppError = require("../../utils/appError");
 const catchAsync = require("../../utils/catchAsync");
 const bcrypt = require("bcrypt");
 const {success} = require("../../utils/activityLogs")
+const path = require("path")
+const {Worker} = require("worker_threads")
 
 exports.getUsersDetails = catchAsync(async(req, res, next) => {
     let usersAggregate = [
@@ -238,6 +240,33 @@ exports.allPermissions = catchAsync(async(req, res, next) => {
   let utils = await utilsSchema.find({})
 
   return res.status(200).send({status: true, message: "Successful", permissions: utils[0].permissions})
+
+})
+
+exports.exportCSV = catchAsync(async(req, res, next) => {
+  if (!(req.body.from) || !(req.body.to)){
+      return next (new AppError("Some required parameters are missing", 400))
+  }
+  let restaurantId = req.body.restaurantId ? req.body.restaurantId : null
+
+  let workerData =  {from: req.body.from, to: req.body.to, restaurantId: restaurantId}
+
+  let thread = path.resolve(__dirname, "threads", "exportCSV.js")
+
+  const worker = new Worker(thread);
+  worker.on("message", (response) => {
+    res.status(response.status).send(response.body)
+  })
+
+  worker.on("error", err => {
+      return next (new AppError(err.message, 500))
+  });
+
+  worker.on("exit", exitCode => {
+    return next (new AppError(exitCode, 500))
+  })
+
+  worker.postMessage(workerData);
 
 })
 
