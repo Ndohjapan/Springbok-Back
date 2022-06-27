@@ -21,7 +21,12 @@ const server = app.listen(PORT, () =>
   console.log(`APP RUNNING ON PORT: ${PORT}`)
 );
 
-const io = socketio(server)
+const io = socketio(server, {
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST", "PUT", "DELETE", "PURGE"]
+  }
+})
 
 io.on("connection", (socket) => {
   app.set("socket", socket);
