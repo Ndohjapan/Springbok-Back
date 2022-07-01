@@ -51,7 +51,7 @@ async function exportCSV(from, to, restaurantId){
         });
         // file name
 
-        let transactions 
+        let transactions = []
         if(restaurantId){
             transactions = await transactionSchema.find({createdAt:{$gte:new Date(from),$lte:new Date(to)}, to: restaurantId}, null, {sort: {"createdAt": -1}}).populate(["from", "to"])
             
@@ -63,6 +63,10 @@ async function exportCSV(from, to, restaurantId){
 
 
         let datas = []
+        if(!transactions.length){
+            console.log("No transactions")
+            return ({status:400, body:{success: false, message:"There are no transactions"}})
+        }
         for(i=0; i<transactions.length; i++){
             let objectData = {}
 
@@ -83,7 +87,6 @@ async function exportCSV(from, to, restaurantId){
         console.log('The CSV file was written successfully')
         
         return new Promise((resolve, reject) => {
-
             uploadFile(name).then(result => {
                 resolve(result)
                 deleteCSV(name)
