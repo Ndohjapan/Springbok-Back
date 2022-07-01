@@ -2,7 +2,7 @@ const express = require("express")
 
 const router = express.Router()
 
-const {savePin, resetPin, deleteUser, getAllUsers, getUser, postFilter, validateUsers, fundWallet, confirmPin} = require("../controllers/foodCollection/userFeedingController")
+const {savePin, resetPin, deleteUser, getAllUsers, getUser, postFilter, validateUsers, invalidateUsers, fundWallet, confirmPin} = require("../controllers/foodCollection/userFeedingController")
 
 const {permissionTo} = require("../controllers/authController")
 
@@ -44,6 +44,9 @@ router
 
 // Validate Users 
 router.route("/validateUsers").post(permissionTo("validate users"), validateUsers)
+
+// Validate Users 
+router.route("/invalidateUsers").post(permissionTo("validate users"), invalidateUsers)
 
 
 //Fund students wallet

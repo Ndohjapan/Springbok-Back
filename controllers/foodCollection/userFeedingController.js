@@ -150,6 +150,32 @@ exports.validateUsers = catchAsync(async(req,res, next) => {
 
 }) 
 
+exports.invalidateUsers = catchAsync(async(req,res, next) => {
+    let {userIds, studentStatus} = req.body
+    let totalFeedingAmount = 0
+    const socket = req.app.get("socket");
+    let userId = req.user["_id"].toString()
+    try{
+        let userUpdate = userSchema.updateMany({"_id": {$in: userIds}}, {$set: {studentStatus: studentStatus}})
+        let feedingUpdate = userFeedingSchema.updateMany({userId: {$in: userIds}}, {$set: {feedingType: 2, studentStatus: studentStatus, totalFeedingAmount: totalFeedingAmount, fundingStatus: studentStatus, balance: 0, }})
+        let newStudentAlert = utilsSchema.updateMany({}, {$set: {newStudentAlert: 0}})
+    
+        let promises = [userUpdate, feedingUpdate, newStudentAlert]
+    
+        Promise.all(promises).then(results => {
+            res.status(200).send({status: true, message:"Update Successful"})
+            return success(userId, ` invalidated ${results[0].modifiedCount} students`, "Update", socket)
+
+
+        })
+    }
+    catch(err){
+        console.log(err)
+        return next(new AppError("Error in Update", 400));
+    }
+
+}) 
+
 exports.fundWallet = catchAsync(async(req, res, next) => {
     let {userIds} = req.body
     const socket = req.app.get("socket");
