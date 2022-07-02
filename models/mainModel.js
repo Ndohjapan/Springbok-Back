@@ -327,6 +327,17 @@ const activitySchema = new mongoose.Schema({
   }
 }, {timestamps: true})
 
+const errorSchema = new mongoose.Schema({
+  message: {
+    type: String
+  },
+  device: {
+    type: String
+  },
+  ip:{
+    type: String
+  }
+}, {timestamps: true})
 
 userSchema.methods.generateAuthToken = function () {
     return jwt.sign(
@@ -376,6 +387,7 @@ disbursementSchema.plugin(mongoosePaginate)
 userSchema.plugin(mongoosePaginate)
 adminSchema.plugin(mongoosePaginate)
 activitySchema.plugin(mongoosePaginate)
+errorSchema.plugin(mongoosePaginate)
   
 module.exports.userSchema = mongoose.model("user", userSchema);
 module.exports.adminSchema = mongoose.model("admins", adminSchema);
@@ -386,4 +398,5 @@ module.exports.foodSchema = mongoose.model("Food", foodSchema);
 module.exports.utilsSchema = mongoose.model("utils", utilsSchema);
 module.exports.restaurantSchema = mongoose.model("Restaurants", restaurantSchema);
 module.exports.orderSchema = mongoose.model("Order", orderSchema);
+module.exports.errorSchema = mongoose.model("Errors", errorSchema);
 module.exports.transactionSchema = mongoose.model("transactions", transactionSchema)

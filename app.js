@@ -13,6 +13,7 @@ const userRoutes = require("./routes/userRoutes")
 const activityRoutes = require("./routes/activityRoutes")
 const utilsRoutes = require("./routes/utilRoutes")
 const transactionRoute = require("./routes/transactionsRoute")
+const errorLogsRoute = require("./routes/errorLogsRoutes")
 const qrTransactions = require("./routes/qrTransaction/qrTreansaction")
 const userFeedingRoutes = require("./routes/userFeedingRoutes")
 const AppError = require("./utils/appError");
@@ -42,6 +43,7 @@ app.use(interceptorParam)
 
 app.use("/api/v1/users", authRoutes);
 app.use("/document", documentRoutes);
+app.use("/error", errorLogsRoute);
 app.use("/food", protect, foodRoutes)
 app.use("/transaction", protect, transactionRoute)
 app.use("/restaurant", fundingStatus, protect, restaurantRoutes)
