@@ -213,16 +213,16 @@ exports.allTransactions = catchAsync(async(req, res, next) => {
 })
 
 function dateFormat(from, to){
-    from = new Date(from)
-    from.setHours(0)
-    from.setMinutes(0)
-    from.setSeconds(0)
+    let _from = new Date(from)
+    _from.setHours(0)
+    _from.setMinutes(0)
+    _from.setSeconds(0)
     
-    to = new Date(to)
-    to.setDate(to.getDate() + 1)
-    to.setHours(1)
-    from.setMinutes(0)
-    from.setSeconds(0)
+    let _to = new Date(to)
+    _to.setDate(to.getDate() + 1)
+    _to.setHours(1)
+    _to.setMinutes(0)
+    _to.setSeconds(0)
 
-    return [from, to]
+    return [_from, _to]
 }

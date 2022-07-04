@@ -56,12 +56,12 @@ exports.doTransfer = catchAsync(async(req, res, next) => {
             return next(new AppError("Insufficient Funds", 400));
         }else{
 
-            let userUpdate = await userFeedingSchema.findOneAndUpdate({userId: userId}, {$inc :{"balance": -(amount) }, $set:  {"previousBalance": balance}})
-            let restaurantUpdate = await restaurantSchema.findByIdAndUpdate(restaurantId, {$inc :{"balance": amount }, $set: {"previousBalance": restaurantBalance}})
+            let userUpdate = await userFeedingSchema.findOneAndUpdate({userId: userId}, {$inc :{"balance": -(amount) }, $set:  {"previousBalance": balance}}, {new: true})
+            let restaurantUpdate = await restaurantSchema.findByIdAndUpdate(restaurantId, {$inc :{"balance": amount }, $set: {"previousBalance": restaurantBalance}}, {new: true})
 
             let transaction = await transactionSchema.create({
                 from: userId, to:restaurantId, amount: amount, restaurantPreviousBalance: restaurantBalance, restaurantCurrentBalance: (restaurantBalance + amount),
-                studentPreviousBalance: balance, studentCurrentBalance: (balance - amount)
+                studentPreviousBalance: balance, studentCurrentBalance: (userUpdate.balance)
             })
 
 
