@@ -138,10 +138,9 @@ function dateFormat(from, to){
     from.setSeconds(0)
     
     to = new Date(to)
-    to.setDate(to.getDate() + 1)
-    to.setHours(1)
-    from.setMinutes(0)
-    from.setSeconds(0)
+    to.setHours(23)
+    to.setMinutes(59)
+    to.setSeconds(59)
 
     return [from, to]
 }

@@ -219,10 +219,9 @@ function dateFormat(from, to){
     _from.setSeconds(0)
     
     let _to = new Date(to)
-    _to.setDate(to.getDate() + 1)
-    _to.setHours(1)
-    _to.setMinutes(0)
-    _to.setSeconds(0)
+    _to.setHours(23)
+    _to.setMinutes(59)
+    _to.setSeconds(59)
 
     return [_from, _to]
 }
