@@ -219,7 +219,7 @@ function dateFormat(from, to){
     from.setSeconds(0)
     
     to = new Date(to)
-    to.setDate(to.getDate + 1)
+    to.setDate(to.getDate() + 1)
     to.setHours(1)
     from.setMinutes(0)
     from.setSeconds(0)
