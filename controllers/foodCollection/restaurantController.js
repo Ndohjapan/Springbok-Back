@@ -16,7 +16,7 @@ exports.postRestaurant = catchAsync(async(req, res, next) => {
     let firstname = name.split(" ")[0]
     let lastname = name.split(" ").slice(1).join('') ?  name.split(" ").slice(1).join(' ') : "Restaurant"
     let email = name.split(" ").slice(1).join('') ?  name.split(" ")[0].toLowerCase()+name.split(" ")[1].toLowerCase()+"@lcu.edu.ng" : name.split(" ")[0].toLowerCase()+"@lcu.edu.ng"
-    let avatar = "https://res.cloudinary.com/billingshq/image/upload/v1646363586/springsbok/restaurant_qzb7vt.png"
+    let avatar = ""
 
     const salt = await bcrypt.genSalt(10);
     const password = await bcrypt.hash("12345678", salt);
@@ -107,7 +107,8 @@ exports.postFilter = catchAsync(async(req, res, next) => {
 exports.restaurantTransactions = catchAsync(async(req, res, next) => {
     try{
         let {restaurantId, from, to} = req.body
-    
+        from = dateFormat(from)
+        to = dateFormat(to)
         let statistics = await transactionSchema.aggregate([
             { $match: 
                 { 
@@ -132,7 +133,7 @@ exports.restaurantTransactions = catchAsync(async(req, res, next) => {
 
 
         let page = req.query.page ? req.query.page : 1
-        let limit = req.query.limit ? req.query.limit : 50
+        let limit = req.query.limit ? req.query.limit : 100
 
         
         const options = {
@@ -143,7 +144,7 @@ exports.restaurantTransactions = catchAsync(async(req, res, next) => {
         };
 
 
-        transactionSchema.paginate({createdAt:{$gte:new Date(from),$lte:new Date(to)}, to: restaurantId}, options, function(err, result) {
+        transactionSchema.paginate({createdAt:{$gte:from,$lte:to}, to: restaurantId}, options, function(err, result) {
             if(err){
                 return next(new AppError(err, 400));
 
@@ -163,7 +164,8 @@ exports.restaurantTransactions = catchAsync(async(req, res, next) => {
 exports.allTransactions = catchAsync(async(req, res, next) => {
     try{
         let {from, to} = req.body
-    
+        from = dateFormat(from)
+        to = dateFormat(to)
         let statistics = await transactionSchema.aggregate([
             { $match: 
                 { 
@@ -196,7 +198,7 @@ exports.allTransactions = catchAsync(async(req, res, next) => {
         };
         
 
-        transactionSchema.paginate({createdAt:{$gte:new Date(from),$lte:new Date(to)}}, options, function(err, result) {
+        transactionSchema.paginate({createdAt:{$gte:from,$lte:to}}, options, function(err, result) {
             if(err){
                 return next(new AppError(err, 400));
             }else{
@@ -210,3 +212,13 @@ exports.allTransactions = catchAsync(async(req, res, next) => {
     }
     
 })
+
+function dateFormat(time){
+    let currentFormat = new Date(time)
+    currentFormat.setHours(23)
+    currentFormat.setMinutes(59)
+    currentFormat.setSeconds(59)
+
+    let newFormat = new Date(currentFormat)
+    return newFormat
+}

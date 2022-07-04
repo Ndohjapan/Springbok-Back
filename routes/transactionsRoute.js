@@ -32,7 +32,7 @@ router
 // Transactions with filter
 router
     .route("/post/filter")
-    .post(permissionTo("all"), postFilter)
+    .post(postFilter)
 
 
 

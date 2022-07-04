@@ -59,7 +59,7 @@ exports.doTransfer = catchAsync(async(req, res, next) => {
             let restaurantUpdate = restaurantSchema.findByIdAndUpdate(restaurantId, {$inc :{"balance": amount }, $set: {"previousBalance": restaurantBalance}})
             let transaction = transactionSchema.create({
                 from: userId, to:restaurantId, amount: amount, restaurantPreviousBalance: restaurantBalance, restaurantCurrentBalance: (restaurantBalance + amount),
-                studentPreviousBalance: balance, studentCurrentBalance: (balance + amount)
+                studentPreviousBalance: balance, studentCurrentBalance: (balance - amount)
             })
 
             let promises = [userUpdate, restaurantUpdate, transaction]

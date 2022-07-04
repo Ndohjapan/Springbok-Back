@@ -32,7 +32,8 @@ async function connectDB(){
 }
 
 async function exportCSV(from, to, restaurantId){
-
+    from = dateFormat(from)
+    to = dateFormat(to)
     try{
 
         let name =  Date.now() + ".csv"
@@ -53,11 +54,11 @@ async function exportCSV(from, to, restaurantId){
 
         let transactions = []
         if(restaurantId){
-            transactions = await transactionSchema.find({createdAt:{$gte:new Date(from),$lte:new Date(to)}, to: restaurantId}, null, {sort: {"createdAt": -1}}).populate(["from", "to"])
+            transactions = await transactionSchema.find({createdAt:{$gte:from,$lte:to}, to: restaurantId}, null, {sort: {"createdAt": -1}}).populate(["from", "to"])
             
         }
         else{
-            transactions = await transactionSchema.find({createdAt:{$gte:new Date(from),$lte:new Date(to)}}, null, {sort: {"createdAt": -1}}).populate(["from", "to"])
+            transactions = await transactionSchema.find({createdAt:{$gte:from,$lte:to}}, null, {sort: {"createdAt": -1}}).populate(["from", "to"])
 
         }
 
@@ -129,3 +130,13 @@ parentPort.on("message", async(data) => {
     parentPort.postMessage(response);
     conn.disconnect()
 });
+
+function dateFormat(time){
+    let currentFormat = new Date(time)
+    currentFormat.setHours(23)
+    currentFormat.setMinutes(59)
+    currentFormat.setSeconds(59)
+
+    let newFormat = new Date(currentFormat)
+    return newFormat
+}
