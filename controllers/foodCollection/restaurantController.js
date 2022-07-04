@@ -16,7 +16,7 @@ exports.postRestaurant = catchAsync(async(req, res, next) => {
     let firstname = name.split(" ")[0]
     let lastname = name.split(" ").slice(1).join('') ?  name.split(" ").slice(1).join(' ') : "Restaurant"
     let email = name.split(" ").slice(1).join('') ?  name.split(" ")[0].toLowerCase()+name.split(" ")[1].toLowerCase()+"@lcu.edu.ng" : name.split(" ")[0].toLowerCase()+"@lcu.edu.ng"
-    let avatar = ""
+    let avatar = "https://leadcity.s3.eu-west-2.amazonaws.com/1656238457405.png"
 
     const salt = await bcrypt.genSalt(10);
     const password = await bcrypt.hash("12345678", salt);
@@ -107,8 +107,7 @@ exports.postFilter = catchAsync(async(req, res, next) => {
 exports.restaurantTransactions = catchAsync(async(req, res, next) => {
     try{
         let {restaurantId, from, to} = req.body
-        from = dateFormat(from)
-        to = dateFormat(to)
+        [from, to] = dateFormat(from, to)
         let statistics = await transactionSchema.aggregate([
             { $match: 
                 { 
@@ -164,8 +163,8 @@ exports.restaurantTransactions = catchAsync(async(req, res, next) => {
 exports.allTransactions = catchAsync(async(req, res, next) => {
     try{
         let {from, to} = req.body
-        from = dateFormat(from)
-        to = dateFormat(to)
+        [from, to] = dateFormat(from, to)
+
         let statistics = await transactionSchema.aggregate([
             { $match: 
                 { 
@@ -213,12 +212,17 @@ exports.allTransactions = catchAsync(async(req, res, next) => {
     
 })
 
-function dateFormat(time){
-    let currentFormat = new Date(time)
-    currentFormat.setHours(23)
-    currentFormat.setMinutes(59)
-    currentFormat.setSeconds(59)
+function dateFormat(from, to){
+    from = new Date(from)
+    from.setHours(0)
+    from.setMinutes(0)
+    from.setSeconds(0)
+    
+    to = new Date(to)
+    to.setDate(to.getDate + 1)
+    to.setHours(1)
+    from.setMinutes(0)
+    from.setSeconds(0)
 
-    let newFormat = new Date(currentFormat)
-    return newFormat
+    return [from, to]
 }

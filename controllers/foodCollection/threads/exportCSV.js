@@ -32,8 +32,7 @@ async function connectDB(){
 }
 
 async function exportCSV(from, to, restaurantId){
-    from = dateFormat(from)
-    to = dateFormat(to)
+    [from, to] = dateFormat(from, to)
     try{
 
         let name =  Date.now() + ".csv"
@@ -131,12 +130,18 @@ parentPort.on("message", async(data) => {
     conn.disconnect()
 });
 
-function dateFormat(time){
-    let currentFormat = new Date(time)
-    currentFormat.setHours(23)
-    currentFormat.setMinutes(59)
-    currentFormat.setSeconds(59)
 
-    let newFormat = new Date(currentFormat)
-    return newFormat
+function dateFormat(from, to){
+    from = new Date(from)
+    from.setHours(0)
+    from.setMinutes(0)
+    from.setSeconds(0)
+    
+    to = new Date(to)
+    to.setDate(to.getDate + 1)
+    to.setHours(1)
+    from.setMinutes(0)
+    from.setSeconds(0)
+
+    return [from, to]
 }
