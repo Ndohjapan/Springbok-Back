@@ -43,6 +43,7 @@ exports.doTransfer = catchAsync(async(req, res, next) => {
     const restaurant = await restaurantSchema.findById(restaurantId);
 
     let balance = parseInt(user.balance)
+
     let restaurantBalance = parseInt(restaurant.balance)
 
     const checkPin = await user.checkPin(transactionPin);
@@ -55,21 +56,18 @@ exports.doTransfer = catchAsync(async(req, res, next) => {
             return next(new AppError("Insufficient Funds", 400));
         }else{
 
-            let userUpdate = userFeedingSchema.findOneAndUpdate({userId: userId}, {$inc :{"balance": -(amount) }, $set:  {"previousBalance": balance}})
-            let restaurantUpdate = restaurantSchema.findByIdAndUpdate(restaurantId, {$inc :{"balance": amount }, $set: {"previousBalance": restaurantBalance}})
-            let transaction = transactionSchema.create({
+            let userUpdate = await userFeedingSchema.findOneAndUpdate({userId: userId}, {$inc :{"balance": -(amount) }, $set:  {"previousBalance": balance}}, {new: true})
+            let restaurantUpdate = await restaurantSchema.findByIdAndUpdate(restaurantId, {$inc :{"balance": amount }, $set: {"previousBalance": restaurantBalance}}, {new: true})
+
+            let transaction = await transactionSchema.create({
                 from: userId, to:restaurantId, amount: amount, restaurantPreviousBalance: restaurantBalance, restaurantCurrentBalance: (restaurantBalance + amount),
-                studentPreviousBalance: balance, studentCurrentBalance: (balance + amount)
+                studentPreviousBalance: balance, studentCurrentBalance: (userUpdate.balance)
             })
 
-            let promises = [userUpdate, restaurantUpdate, transaction]
 
-            Promise.all(promises).then(async(results) => {
-                transaction = await transactionSchema.findById(results[2]["_id"].toString()).populate(["from", "to"]).select("-updatedAt")
-
-                res.status(200).send({status: true, payload: transaction})
-
-            })
+            transaction = await transactionSchema.findById(transaction["_id"].toString()).populate(["from", "to"]).select("-updatedAt")
+            res.status(200).send({status: true, payload: transaction})
+            
 
 
         }
