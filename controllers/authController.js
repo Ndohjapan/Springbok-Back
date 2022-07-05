@@ -11,7 +11,7 @@ const catchAsync = require("../utils/catchAsync");
 const {success} = require("../utils/activityLogs")
 
 exports.signup = catchAsync(async (req, res, next) => {
-  const { firstname, lastname, email, password, department, level, hostel, transactionPin, matricNumber } = req.body;
+  const { firstname, lastname, middlename, email, password, department, level, hostel, transactionPin, matricNumber } = req.body;
 
   if (await userSchema.findOne({ email }))
     return next(new AppError("User already exists", 400));
@@ -26,6 +26,7 @@ exports.signup = catchAsync(async (req, res, next) => {
   const user = await userSchema.create({
     firstname,
     lastname,
+    middlename,
     email,
     otp,
     otpExpiresIn,
