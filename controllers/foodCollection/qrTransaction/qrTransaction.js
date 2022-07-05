@@ -1,186 +1,250 @@
-const {restaurantSchema, transactionSchema, userFeedingSchema} = require("../../../models/mainModel")
+const moment = require("moment");
+const {
+  restaurantSchema,
+  transactionSchema,
+  userFeedingSchema,
+  utilsSchema,
+} = require("../../../models/mainModel");
 const AppError = require("../../../utils/appError");
 const catchAsync = require("../../../utils/catchAsync");
-const ObjectId = require('mongoose').Types.ObjectId;
+const ObjectId = require("mongoose").Types.ObjectId;
 
-exports.checkBalance = catchAsync(async(req, res, next) => {
-    let userId = req.user["_id"].toString()
-    const result = await userFeedingSchema.findOne({userId: userId})
+exports.checkBalance = catchAsync(async (req, res, next) => {
+  let userId = req.user["_id"].toString();
+  const result = await userFeedingSchema.findOne({ userId: userId });
 
-    res.status(200).send({status: true, balance: result.balance})
-    
-})
+  res.status(200).send({ status: true, balance: result.balance });
+});
 
-exports.confirmRestaurant = catchAsync(async(req, res, next) => {
-    let restaurantId = req.params.id
+exports.confirmRestaurant = catchAsync(async (req, res, next) => {
+  let restaurantId = req.params.id;
 
-    
-    if(ObjectId.isValid(restaurantId)){
-        if((String)(new ObjectId(restaurantId)) === restaurantId){
-            const restaurant = await restaurantSchema.findById(restaurantId).select("-balance -previousBalance")
-            if(restaurant.name){
-                res.status(200).send({status: true, data: restaurant})
-            }else{
-                return next(new AppError("Invalid Restaurant ID", 400));
-            }
-        }
+  if (ObjectId.isValid(restaurantId)) {
+    if (String(new ObjectId(restaurantId)) === restaurantId) {
+      const restaurant = await restaurantSchema
+        .findById(restaurantId)
+        .select("-balance -previousBalance");
+      if (restaurant.name) {
+        res.status(200).send({ status: true, data: restaurant });
+      } else {
         return next(new AppError("Invalid Restaurant ID", 400));
-    }else{
-        return next(new AppError("Invalid Restaurant ID", 400));
+      }
     }
-    
-})
+    return next(new AppError("Invalid Restaurant ID", 400));
+  } else {
+    return next(new AppError("Invalid Restaurant ID", 400));
+  }
+});
 
-exports.doTransfer = catchAsync(async(req, res, next) => {
-    let userId = req.user["_id"].toString()
-    let {transactionPin, amount, restaurantId} = req.body
+exports.doTransfer = catchAsync(async (req, res, next) => {
+  let userId = req.user["_id"].toString();
+  let { transactionPin, amount, restaurantId } = req.body;
 
-    amount = parseInt(amount)
+  amount = parseInt(amount);
 
-    const user = await userFeedingSchema.findOne({userId: userId});
-    const restaurant = await restaurantSchema.findById(restaurantId);
+  const user = await userFeedingSchema.findOne({ userId: userId });
+  const restaurant = await restaurantSchema.findById(restaurantId);
 
-    let balance = parseInt(user.balance)
+  // Get user and restaurants balance.
+  let balance = parseInt(user.balance);
+  let restaurantBalance = parseInt(restaurant.balance);
 
-    let restaurantBalance = parseInt(restaurant.balance)
+  // Confirm the user pin
+  const checkPin = await user.checkPin(transactionPin);
 
-    const checkPin = await user.checkPin(transactionPin);
+  if (!checkPin) {
+    return next(new AppError("Wrong Pin", 400));
+  } else {
+    if (balance < amount || amount < 1) {
+      return next(new AppError("Insufficient Funds", 400));
+    } else {
+      let [limit, errText] = await weeklyLimit(user, amount);
+      if (!limit) {
+        return next(new AppError(errText, 400));
+      }
 
-    if(!checkPin){
-        return next(new AppError("Wrong Pin", 400));
+      let userUpdate = await userFeedingSchema.findOneAndUpdate(
+        { userId: userId },
+        { $inc: { balance: -amount }, $set: { previousBalance: balance } },
+        { new: true }
+      );
+      let restaurantUpdate = await restaurantSchema.findByIdAndUpdate(
+        restaurantId,
+        {
+          $inc: { balance: amount },
+          $set: { previousBalance: restaurantBalance },
+        },
+        { new: true }
+      );
+
+      let transaction = await transactionSchema.create({
+        from: userId,
+        to: restaurantId,
+        amount: amount,
+        restaurantPreviousBalance: restaurantBalance,
+        restaurantCurrentBalance: restaurantBalance + amount,
+        studentPreviousBalance: balance,
+        studentCurrentBalance: userUpdate.balance,
+      });
+
+      transaction = await transactionSchema
+        .findById(transaction["_id"].toString())
+        .populate(["from", "to"])
+        .select("-updatedAt");
+
+      return res.status(200).send({ status: true, payload: transaction });
     }
-    else{
-        if(balance < amount || amount < 1){
-            return next(new AppError("Insufficient Funds", 400));
-        }else{
+  }
 
-            let limit = await weeklyLimit(user, amount)
-            if(!limit){
-                return next(new AppError(`You cannot spend more than ${user.feedingType * 500 * 7} per week`, 400));
-            }
+  // Check the pin
+  // add money to restauant, remove money from student
+  // create transaction document
+});
 
-            let userUpdate = await userFeedingSchema.findOneAndUpdate({userId: userId}, {$inc :{"balance": -(amount) }, $set:  {"previousBalance": balance}}, {new: true})
-            let restaurantUpdate = await restaurantSchema.findByIdAndUpdate(restaurantId, {$inc :{"balance": amount }, $set: {"previousBalance": restaurantBalance}}, {new: true})
+exports.confirmPinandBalance = catchAsync(async (req, res, next) => {
+  let userId = req.user["_id"].toString();
+  let { transactionPin, amount } = req.body;
 
-            let transaction = await transactionSchema.create({
-                from: userId, to:restaurantId, amount: amount, restaurantPreviousBalance: restaurantBalance, restaurantCurrentBalance: (restaurantBalance + amount),
-                studentPreviousBalance: balance, studentCurrentBalance: (userUpdate.balance)
-            })
+  const user = await userFeedingSchema.findOne({ userId: userId });
 
+  let balance = user.balance;
 
-            transaction = await transactionSchema.findById(transaction["_id"].toString()).populate(["from", "to"]).select("-updatedAt")
-            return res.status(200).send({status: true, payload: transaction})
-            
-
-
-        }
+  const checkPin = await user.checkPin(transactionPin);
+  if (!checkPin) {
+    return next(new AppError("Wrong Pin", 400));
+  } else {
+    if (await confirm(balance, amount)) {
+      return res
+        .status(200)
+        .send({ status: true, message: "Confirmation Successful" });
+    } else {
+      return next(new AppError("Insufficient Funds", 400));
     }
-  
-    // Check the pin
-    // add money to restauant, remove money from student
-    // create transaction document
-    
-})
+  }
+});
 
+exports.restaurantDoTransfer = catchAsync(async (req, res, next) => {
+  let { userId, amount } = req.body;
+  let restaurantId = req.user["_id"].toString();
 
-exports.confirmPinandBalance = catchAsync(async(req, res, next) => {
-    let userId = req.user["_id"].toString()
-    let {transactionPin, amount} = req.body
+  const restaurant = await restaurantSchema.findOne({ userId: restaurantId });
+  const user = await userFeedingSchema
+    .findOne({ userId: userId })
+    .populate(["userId"]);
 
-    const user = await userFeedingSchema.findOne({userId: userId});
+  let balance = user.balance;
+  let restaurantBalance = restaurant.balance;
 
-    let balance = user.balance
-    
-    const checkPin = await user.checkPin(transactionPin);
-    if(!checkPin){
-        return next(new AppError("Wrong Pin", 400));
-    }
-    else{
-        if(await confirm(balance, amount)){
-            return res.status(200).send({status: true, message: "Confirmation Successful"})
-        }else{
-            return next(new AppError("Insufficient Funds", 400));
-        }
-    }
-})
+  if (await confirm(balance, amount)) {
+    let userUpdate = userFeedingSchema.findOneAndUpdate(
+      { userId: userId },
+      { $inc: { balance: -amount }, $set: { previousBalance: balance } }
+    );
+    let restaurantUpdate = restaurantSchema.findByIdAndUpdate(restaurantId, {
+      $inc: { balance: amount },
+      $set: { previousBalance: restaurantBalance },
+    });
+    let transaction = transactionSchema.create({
+      from: userId,
+      to: restaurantId,
+      amount: amount,
+      restaurantPreviousBalance: restaurantBalance,
+      restaurantCurrentBalance: restaurantBalance + amount,
+      studentPreviousBalance: balance,
+      studentCurrentBalance: balance + amount,
+    });
 
-exports.restaurantDoTransfer = catchAsync(async(req, res, next) => {
-    let {userId, amount} = req.body
-    let restaurantId = req.user["_id"].toString()
+    let promises = [userUpdate, restaurantUpdate, transaction];
 
-    const restaurant = await restaurantSchema.findOne({userId: restaurantId});
-    const user = await userFeedingSchema.findOne({userId: userId}).populate(["userId"]);
+    Promise.all(promises).then(async (results) => {
+      transaction = await transactionSchema
+        .findById(results[2]["_id"].toString())
+        .populate(["from", "to"])
+        .select("-updatedAt");
 
-    let balance = user.balance
-    let restaurantBalance = restaurant.balance
+      return res.status(200).send({ status: true, payload: transaction });
+    });
+  } else {
+    let message = `${user.userId.firstname} ${user.userId.lastname} has Insufficeint Balance`;
+    return next(new AppError(message, 400));
+  }
+});
 
-    if(await confirm(balance, amount)){
-        let userUpdate = userFeedingSchema.findOneAndUpdate({userId: userId}, {$inc :{"balance": -(amount) }, $set:  {"previousBalance": balance}})
-        let restaurantUpdate = restaurantSchema.findByIdAndUpdate(restaurantId, {$inc :{"balance": amount }, $set: {"previousBalance": restaurantBalance}})
-        let transaction = transactionSchema.create({
-            from: userId, to:restaurantId, amount: amount, restaurantPreviousBalance: restaurantBalance, restaurantCurrentBalance: (restaurantBalance + amount),
-            studentPreviousBalance: balance, studentCurrentBalance: (balance + amount)
-        })
+exports.validateTransaction = catchAsync(async (req, res, next) => {
+  return res.send({ status: true });
+});
 
-        let promises = [userUpdate, restaurantUpdate, transaction]
-
-        Promise.all(promises).then(async(results) => {
-            transaction = await transactionSchema.findById(results[2]["_id"].toString()).populate(["from", "to"]).select("-updatedAt")
-
-            return res.status(200).send({status: true, payload: transaction})
-
-        })
-    }else{
-        let message = `${user.userId.firstname} ${user.userId.lastname} has Insufficeint Balance`
-        return next(new AppError(message, 400));
-    }
-
-})
-
-exports.validateTransaction = catchAsync(async(req, res, next) => {
-    return res.send({status: true})
-})
-
-async function confirm(balance, amount){
-    if(balance < amount || amount < 1){
-        return false;
-    }else{
-        return true
-    }
+async function confirm(balance, amount) {
+  if (balance < amount || amount < 1) {
+    return false;
+  } else {
+    return true;
+  }
 }
 
-async function weeklyLimit(userInfo, amount){
-    let now = new Date();
-    let day = now.getDay() - 1
-    const backdate = new Date(now.setDate(now.getDate() - day));
-    backdate.setHours(0)
-    backdate.setMinutes(0)
-    backdate.setSeconds(0)
-    console.log(backdate)
+async function weeklyLimit(userInfo, amount) {
+  /**
+   * @params
+   * userInfo: user object in the request.user
+   * amount: amount to spend by current user
+   *
+   * @returns
+   * return [true, errorText]
+   * 'returns an array of transaction status as well as error text to send to the user.'
+   */
 
-    let statistics = await transactionSchema.aggregate([
-        { $match: 
-            { 
-                createdAt: {
-                    $gte: backdate,
-                    $lte: now
-                },
-                from : userInfo.userId 
+  const [settings] = await utilsSchema.find();
 
-            } 
-        }, 
-        {
-            $group:
-            { 
-                _id: null,
-                amount: { $sum: "$amount" }
-            }
-        }
-    
-    ])
+  // Get date for this transaction
+  const today = moment();
 
+  // Moment is mutable, so don't work with a date you have previously stored.
 
-    let dataResult = statistics[0] ? statistics[0].amount : 0
+  // Store beginning of week from current transaction date in a variable - beginningOfWeek
+  const beginningOfWeek = moment().startOf("isoWeek").startOf("day");
 
-    return (dataResult + amount <= userInfo.feedingType * 500 * 7)
+  // Get all transactions from beginning of week to current date
+  const transactions = await transactionSchema.find({
+    from: userInfo.userId,
+    createdAt: { $gte: beginningOfWeek.toDate(), $lte: today.toDate() },
+  });
+
+  // Sum all amounts and store in - amount spent this week
+  let amountSpentThisWeek = 0;
+  if (transactions && transactions.length > 0) {
+    transactions.map((t) => (amountSpentThisWeek += t.amount));
+  }
+
+  // Check if weeklyAmountSpent + (amount of current transaction) exceeds users weekly feeding limit
+  const usersWeeklyLimit =
+    userInfo.feedingType === 2
+      ? settings.feedingPlanLimits.twoMeals
+      : settings.feedingPlanLimits.threeMeals;
+
+  if (amount > usersWeeklyLimit)
+    return [
+      false,
+      `Sorry, you can't spend more than #${usersWeeklyLimit} weekly.`,
+    ];
+
+  // if it does exceed, return a transaction is invalid error
+  if (
+    parseInt(amountSpentThisWeek) + parseInt(amount) >
+    parseInt(usersWeeklyLimit)
+  ) {
+    let errText = "";
+    const amountLeftToSpendThisWeek = usersWeeklyLimit - amountSpentThisWeek;
+
+    if (amountLeftToSpendThisWeek <= 0) {
+      errText =
+        "That's it, you have exceeded your weekly limit.\nYour limit resets next week monday.";
+    } else {
+      errText = `Sorry, You have only #${amountLeftToSpendThisWeek} left to spend this week.`;
+    }
+
+    return [false, errText];
+  }
+
+  // User has not reached limit if checks reach here
+  return [true, "Success"];
 }
