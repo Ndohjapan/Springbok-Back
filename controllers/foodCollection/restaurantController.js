@@ -8,10 +8,10 @@ const {success} = require("../../utils/activityLogs")
 exports.postRestaurant = catchAsync(async(req, res, next) => {
 
     const socket = req.app.get("socket");
-    let userId = req.user["_id"].toString()
+    let userId = req.user["id"].toString()
 
     const {name, number} = req.body
-    const createdBy = req.user["_id"]
+    const createdBy = req.user["id"]
 
     let firstname = name.split(" ")[0]
     let lastname = name.split(" ").slice(1).join('') ?  name.split(" ").slice(1).join(' ') : "Restaurant"
@@ -48,7 +48,7 @@ exports.updateRestaurant = catchAsync(async(req, res, next) => {
     let updateData = {}
 
     const socket = req.app.get("socket");
-    let userId = req.user["_id"].toString()
+    let userId = req.user["id"].toString()
 
     let activityMessage = []
 
@@ -59,14 +59,16 @@ exports.updateRestaurant = catchAsync(async(req, res, next) => {
             activityMessage.push(key)
         }
     })
-    activityMessage.push("password")
+    
+    if(updateData["password"]){
+        const salt = await bcrypt.genSalt(10);
+        let password = updateData["password"]
+        updateData["password"] = await bcrypt.hash(password, salt);
+        activityMessage.push("password")
+    }
     activityMessage = activityMessage.join(", ")
     
-    const salt = await bcrypt.genSalt(10);
-    let password = "springbok123"
-    updateData["password"] = await bcrypt.hash(password, salt);
-    
-    let restaurant = await restaurantSchema.findOneAndUpdate({_id: req.params.id}, updateData, {new: false}).select("-balance -previousBalance")
+    let restaurant = await restaurantSchema.findOneAndUpdate({id: req.params.id}, updateData, {new: false}).select("-balance -previousBalance")
 
     res.status(200).send({status: true, message: "Restaurant Updated"})
 
@@ -76,7 +78,7 @@ exports.updateRestaurant = catchAsync(async(req, res, next) => {
 
 exports.deleteRestaurant = catchAsync(async(req, res, next) => {
     const socket = req.app.get("socket");
-    let userId = req.user["_id"].toString()
+    let userId = req.user["id"].toString()
     
     let restaurantId = req.params.id
     
@@ -106,30 +108,35 @@ exports.postFilter = catchAsync(async(req, res, next) => {
 
 exports.restaurantTransactions = catchAsync(async(req, res, next) => {
     try{
-        let {restaurantId, from, to} = req.body
-        [from, to] = dateFormat(from, to)
-        let statistics = await transactionSchema.aggregate([
-            { $match: 
-                { 
-                    createdAt: {
-                        $gte: new Date(from),
-                        $lte: new Date(to)
-                    },
-                    to: restaurantId
+        let {restaurantId, from, to} = req.body;
+        let response = dateFormat(from, to)
+        from = response[0]
+        to = response[1]
 
-                } 
-            }, 
+        console.log(restaurantId)
+        let statistics = await transactionSchema.aggregate([
             {
-                $group:
-                { 
-                    _id: null,
-                    amount: { $sum: "$amount" },
-                    transactions: {$sum: 1}
+                '$match': {
+                    'to': `${restaurantId}`,
+                    'createdAt': {
+                        '$gte': from, 
+                        '$lte': to
+                    }
                 }
-            }
+              },
+            {
+                '$group': {
+                  '_id': null, 
+                  'amount': {
+                    '$sum': '$amount'
+                  }, 
+                  'transactions': {
+                    '$sum': 1
+                  }
+                }
+              }
         
         ])
-
 
         let page = req.query.page ? req.query.page : 1
         let limit = req.query.limit ? req.query.limit : 100
@@ -163,27 +170,30 @@ exports.restaurantTransactions = catchAsync(async(req, res, next) => {
 exports.allTransactions = catchAsync(async(req, res, next) => {
     try{
         let {from, to} = req.body
-        [from, to] = dateFormat(from, to)
+        let response = dateFormat(from, to)
+        from = response[0]
+        to = response[1]
 
         let statistics = await transactionSchema.aggregate([
-            { $match: 
-                { 
-                    createdAt: {
-                        $gte: new Date(from),
-                        $lte: new Date(to)
-                    }
-                } 
-            }, 
             {
-                $group:
-                { 
-                    _id: null,
-                    amount: { $sum: "$amount" },
-                    transactions: {$sum: 1}
+              '$match': {
+                'createdAt': {
+                  '$gte': from, 
+                  '$lte': to
                 }
+              }
+            }, {
+              '$group': {
+                '_id': null, 
+                'amount': {
+                  '$sum': '$amount'
+                }, 
+                'transactions': {
+                  '$sum': 1
+                }
+              }
             }
-        
-        ])
+          ])
 
 
         let page = req.query.page ? req.query.page : 1
@@ -213,15 +223,15 @@ exports.allTransactions = catchAsync(async(req, res, next) => {
 })
 
 function dateFormat(from, to){
-    let _from = new Date(from)
-    _from.setHours(0)
-    _from.setMinutes(0)
-    _from.setSeconds(0)
+    from = new Date(from)
+    from.setHours(1)
+    from.setMinutes(0)
+    from.setSeconds(0)
     
-    let _to = new Date(to)
-    _to.setHours(23)
-    _to.setMinutes(59)
-    _to.setSeconds(59)
+    to = new Date(to)
+    to.setHours(24)
+    to.setMinutes(59)
+    to.setSeconds(59)
 
-    return [_from, _to]
+    return [from, to]
 }
