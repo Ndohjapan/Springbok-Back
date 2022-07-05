@@ -28,8 +28,6 @@ exports.confirmRestaurant = catchAsync(async(req, res, next) => {
     }else{
         return next(new AppError("Invalid Restaurant ID", 400));
     }
-
-
     
 })
 
@@ -56,6 +54,11 @@ exports.doTransfer = catchAsync(async(req, res, next) => {
             return next(new AppError("Insufficient Funds", 400));
         }else{
 
+            let limit = await weeklyLimit(user, amount)
+            if(!limit){
+                return next(new AppError(`You cannot spend more than ${user.feedingType * 500 * 7} per week`, 400));
+            }
+
             let userUpdate = await userFeedingSchema.findOneAndUpdate({userId: userId}, {$inc :{"balance": -(amount) }, $set:  {"previousBalance": balance}}, {new: true})
             let restaurantUpdate = await restaurantSchema.findByIdAndUpdate(restaurantId, {$inc :{"balance": amount }, $set: {"previousBalance": restaurantBalance}}, {new: true})
 
@@ -66,7 +69,7 @@ exports.doTransfer = catchAsync(async(req, res, next) => {
 
 
             transaction = await transactionSchema.findById(transaction["_id"].toString()).populate(["from", "to"]).select("-updatedAt")
-            res.status(200).send({status: true, payload: transaction})
+            return res.status(200).send({status: true, payload: transaction})
             
 
 
@@ -146,3 +149,38 @@ async function confirm(balance, amount){
     }
 }
 
+async function weeklyLimit(userInfo, amount){
+    let now = new Date();
+    let day = now.getDay() - 1
+    const backdate = new Date(now.setDate(now.getDate() - day));
+    backdate.setHours(0)
+    backdate.setMinutes(0)
+    backdate.setSeconds(0)
+    console.log(backdate)
+
+    let statistics = await transactionSchema.aggregate([
+        { $match: 
+            { 
+                createdAt: {
+                    $gte: backdate,
+                    $lte: now
+                },
+                from : userInfo.userId 
+
+            } 
+        }, 
+        {
+            $group:
+            { 
+                _id: null,
+                amount: { $sum: "$amount" }
+            }
+        }
+    
+    ])
+
+
+    let dataResult = statistics[0] ? statistics[0].amount : 0
+
+    return (dataResult + amount <= userInfo.feedingType * 500 * 7)
+}

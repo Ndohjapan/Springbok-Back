@@ -133,15 +133,14 @@ parentPort.on("message", async(data) => {
 
 function dateFormat(from, to){
     from = new Date(from)
-    from.setHours(0)
+    from.setHours(1)
     from.setMinutes(0)
     from.setSeconds(0)
     
     to = new Date(to)
-    to.setDate(to.getDate() + 1)
-    to.setHours(1)
-    from.setMinutes(0)
-    from.setSeconds(0)
+    to.setHours(24)
+    to.setMinutes(59)
+    to.setSeconds(59)
 
     return [from, to]
 }
