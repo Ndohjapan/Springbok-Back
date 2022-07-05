@@ -6,7 +6,7 @@ const {userFeedingSchema, userSchema, transactionSchema} = require("../models/ma
 exports.getAllUsers = catchAsync(async(req, res, next) => {
 
     let page = req.query.page ? req.query.page : 1
-    let limit = req.query.limit ? req.query.limit : 10
+    let limit = req.query.limit ? req.query.limit : 10000000
 
     const options = {
         page: page,
