@@ -7,7 +7,7 @@ const userSchema = new mongoose.Schema(
   {
     firstname: { type: String, required: true, trim: true },
     lastname: { type: String, required: true, trim: true },
-    middlename: {type: String, trim: true, default: ""},
+    middlename: { type: String, trim: true, default: "" },
     email: { type: String, required: true, trim: true, unique: true },
     avatar: {
       type: String,
@@ -120,6 +120,8 @@ const adminSchema = new mongoose.Schema(
           enum: [
             "all",
             "fund wallet",
+            "delete users",
+            "invalidate users",
             "validate users",
             "create admin",
             "edit restaurant",
@@ -317,6 +319,8 @@ const utilsSchema = new mongoose.Schema(
       default: [
         "all",
         "fund wallet",
+        "delete users",
+        "invalidate users",
         "validate users",
         "create admin",
         "edit restaurant",

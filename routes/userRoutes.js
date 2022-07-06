@@ -12,13 +12,13 @@ const {
 const { protect, permissionTo } = require("../controllers/authController");
 
 // Get all from the collection
-router.route("/").get(permissionTo("edit users"), getAllUsers);
+router.route("/").get(getAllUsers);
 
 // Get by id
 router.route("/:id").get(getUser);
 
 // Delete
-router.route("/").delete(permissionTo("edit users"), deleteUser);
+router.route("/").delete(permissionTo("delete users"), deleteUser);
 
 // Put
 router.route("/:id").put(updateUser);

@@ -1,56 +1,53 @@
-const express = require("express")
+const express = require("express");
 
-const router = express.Router()
+const router = express.Router();
 
-const {savePin, resetPin, deleteUser, getAllUsers, getUser, postFilter, validateUsers, invalidateUsers, fundWallet, confirmPin} = require("../controllers/foodCollection/userFeedingController")
+const {
+  savePin,
+  resetPin,
+  deleteUser,
+  getAllUsers,
+  getUser,
+  postFilter,
+  validateUsers,
+  invalidateUsers,
+  fundWallet,
+  confirmPin,
+} = require("../controllers/foodCollection/userFeedingController");
 
-const {permissionTo} = require("../controllers/authController")
+const { permissionTo } = require("../controllers/authController");
 
 // Save Users Transaction Pin
-router
-    .route("/")
-    .post(savePin)
+router.route("/").post(savePin);
 
 // Get all from the collection
-router
-    .route("/")
-    .get( getAllUsers)    
+router.route("/").get(getAllUsers);
 
 // Get by id
-router
-    .route("/:id")
-    .get(getUser)
+router.route("/:id").get(getUser);
 
 // Delete
-router
-    .route("/:id")
-    .delete(permissionTo("all"), deleteUser)
+router.route("/:id").delete(permissionTo("all"), deleteUser);
 
-router
-    .route("/confirmPin")
-    .post(confirmPin)
+router.route("/confirmPin").post(confirmPin);
 
 // Put
-router
-    .route("/resetPin")
-    .post(resetPin)
-
+router.route("/resetPin").post(resetPin);
 
 // User eith filter
+router.route("/post/filter").post(postFilter);
+
+// Validate Users
 router
-    .route("/post/filter")
-    .post(postFilter)
+  .route("/validateUsers")
+  .post(permissionTo("validate users"), validateUsers);
 
-
-// Validate Users 
-router.route("/validateUsers").post(permissionTo("validate users"), validateUsers)
-
-// Validate Users 
-router.route("/invalidateUsers").post(permissionTo("validate users"), invalidateUsers)
-
+// Validate Users
+router
+  .route("/invalidateUsers")
+  .post(permissionTo("validate users", "invalidate users"), invalidateUsers);
 
 //Fund students wallet
-router
-    .route("/fundWallet").post(permissionTo("fund wallet"), fundWallet)
+router.route("/fundWallet").post(permissionTo("fund wallet"), fundWallet);
 
-module.exports = router
+module.exports = router;
