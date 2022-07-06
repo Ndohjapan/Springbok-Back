@@ -1,73 +1,82 @@
 const AppError = require("../utils/appError");
 const catchAsync = require("../utils/catchAsync");
-const {userFeedingSchema, userSchema, transactionSchema} = require("../models/mainModel")
+const {
+  userFeedingSchema,
+  userSchema,
+  transactionSchema,
+} = require("../models/mainModel");
 
+exports.getAllUsers = catchAsync(async (req, res, next) => {
+  let page = req.query.page ? req.query.page : 1;
+  let limit = req.query.limit ? req.query.limit : 10000000;
 
-exports.getAllUsers = catchAsync(async(req, res, next) => {
+  const options = {
+    page: page,
+    limit: limit,
+    sort: { createdAt: -1 },
+  };
 
-    let page = req.query.page ? req.query.page : 1
-    let limit = req.query.limit ? req.query.limit : 10000000
+  userSchema.paginate(
+    { role: { $ne: "restaurant" } },
+    options,
+    function (err, result) {
+      if (err) {
+        console.log(err);
+        res.status(400).send(err);
+      } else {
+        res
+          .status(200)
+          .send({ status: true, message: "Successful", payload: result.docs });
+      }
+    }
+  );
+});
 
-    const options = {
-        page: page,
-        limit: limit,
-        sort: {"createdAt": -1},
-        
-    };
+exports.getUser = catchAsync(async (req, res, next) => {
+  const user = await userSchema.findById(req.params.id);
 
-    userSchema.paginate({role: {$ne: "restaurant"}}, options, function(err, result) {
-        if(err){
-            console.log(err)
-            res.status(400).send(err)
-        }else{
-            res.status(200).send({status: true, message: "Successful", payload: result.docs})
-        }
-    })
-})
+  res.status(200).send({ status: true, message: "Successful", data: user });
+});
 
-exports.getUser = catchAsync(async(req, res, next) => {
-    const user = await userSchema.findById(req.params.id)
+exports.updateUser = catchAsync(async (req, res, next) => {
+  let data = req.body;
+  let updateData = {};
 
-    res.status(200).send({status: true, message: "Successful", data: user})
-})
+  Object.entries(data).forEach(([key, value]) => {
+    if (value != "") {
+      updateData[key] = value;
+    }
+  });
 
-exports.updateUser = catchAsync(async(req, res, next) => {
-    let data = req.body
-    let updateData = {}
+  let user = await userSchema.findByIdAndUpdate(req.params.id, updateData, {
+    new: true,
+  });
 
-    Object.entries(data).forEach(([key, value]) => {
-        if(value != ""){
-            updateData[key] = value
-        }
-    })
+  res.status(200).send({ status: true, message: "User Updated", data: user });
+});
 
-    let user = await userSchema.findByIdAndUpdate(req.params.id, updateData, {new: true})
+exports.deleteUser = catchAsync(async (req, res, next) => {
+  let userId = req.params.id;
+  let userIds = req.params.userIds;
+  const user = await userSchema.deleteMany({ _id: { $in: userIds } });
+  let userFeeding = userFeedingSchema.deleteOne({ userId: { $in: userIds } });
+  let transactions = transactionSchema.deleteMany({ from: { $in: userIds } });
+  Promise.all([userFeeding, transactions]).then((result) => {
+    res.status(204).send({ status: true, message: "User Deleted" });
+  });
+});
 
-    res.status(200).send({status: true, message: "User Updated", data: user})
-})
+exports.postFilter = catchAsync(async (req, res, next) => {
+  let data = req.body;
+  let updateData = {};
 
-exports.deleteUser = catchAsync(async(req, res, next) => {
-    let userId = req.params.id
-    const user = await userSchema.findByIdAndDelete(req.params.id)
-    let userFeeding = userFeedingSchema.findOneAndDelete({userId: userId})
-    let transactions = transactionSchema.deleteMany({from: userId})
-    Promise.all([userFeeding, transactions]).then(result => {
-        res.status(204).send({status: true, message: "User Deleted"})
-    })
-})
+  Object.entries(data).forEach(([key, value]) => {
+    if (value != "") {
+      updateData[key] = value;
+    }
+  });
 
+  let user = await userSchema.find({ updateData, role: { $ne: "restaurant" } });
 
-exports.postFilter = catchAsync(async(req, res, next) => {
-    let data = req.body
-    let updateData = {}
-
-    Object.entries(data).forEach(([key, value]) => {
-        if(value != ""){
-            updateData[key] = value
-        }
-    })
-
-    let user = await userSchema.find({updateData, role: {$ne:"restaurant"}})
-
-    res.status(200).send({status: true, message: "Successful", data: user})
-})
+  res.status(200).send({ status: true, message: "Successful", data: user });
+});
