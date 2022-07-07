@@ -8,7 +8,7 @@ const {success} = require("../../utils/activityLogs")
 exports.getAllTransactions = catchAsync(async(req, res, next) => {
 
     let page = req.query.page ? req.query.page : 1
-    let limit = req.query.limit ? req.query.limit : 1000000
+    let limit = req.query.limit ? req.query.limit : 100000000
 
     const options = {
         page: page,
@@ -31,7 +31,7 @@ exports.getUserTransactions = catchAsync(async(req, res, next) => {
 
     let userId = req.user["_id"].toString()
     let page = req.query.page ? req.query.page : 1
-    let limit = req.query.limit ? req.query.limit : 1000000
+    let limit = req.query.limit ? req.query.limit : 100000000
 
     const options = {
         page: page,
@@ -82,7 +82,7 @@ exports.postFilter = catchAsync(async(req, res, next) => {
 
 
     let page = req.query.page ? req.query.page : 1
-    let limit = req.query.limit ? req.query.limit : 50
+    let limit = req.query.limit ? req.query.limit : 10000000
 
     const options = {
         page: page,

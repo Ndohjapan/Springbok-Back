@@ -139,7 +139,7 @@ exports.restaurantTransactions = catchAsync(async(req, res, next) => {
         ])
 
         let page = req.query.page ? req.query.page : 1
-        let limit = req.query.limit ? req.query.limit : 100
+        let limit = req.query.limit ? req.query.limit : 1000000000
 
         
         const options = {
@@ -197,7 +197,7 @@ exports.allTransactions = catchAsync(async(req, res, next) => {
 
 
         let page = req.query.page ? req.query.page : 1
-        let limit = req.query.limit ? req.query.limit : 50
+        let limit = req.query.limit ? req.query.limit : 100000000000
 
         const options = {
             page: page,
