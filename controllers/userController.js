@@ -17,7 +17,7 @@ exports.getAllUsers = catchAsync(async (req, res, next) => {
   };
 
   userSchema.paginate(
-    { role: { $ne: "restaurant" } },
+    { role: { $ne: "restaurant" }, verified: true },
     options,
     function (err, result) {
       if (err) {
@@ -48,9 +48,16 @@ exports.updateUser = catchAsync(async (req, res, next) => {
     }
   });
 
-  let user = await userSchema.findByIdAndUpdate(req.params.id, updateData, {
+  let user = await userSchema.updateOne({_id: req.params.id, studentStatus: false}, updateData, {
     new: true,
   });
+
+  if(user.matchedCount != 1){
+    return next(new AppError("You cannot update your profile", 400));
+
+  }
+
+  user = await userSchema.findById(req.params.id);
 
   res.status(200).send({ status: true, message: "User Updated", data: user });
 });
