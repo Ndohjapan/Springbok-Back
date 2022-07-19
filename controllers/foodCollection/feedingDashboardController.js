@@ -1,4 +1,5 @@
-const {utilsSchema, userFeedingSchema, transactionSchema, disbursementSchema, adminSchema, recordsSchema, userSchema} = require("../../models/mainModel")
+const {utilsSchema, userFeedingSchema, transactionSchema, 
+  disbursementSchema, adminSchema, recordsSchema, userSchema, restaurantSchema} = require("../../models/mainModel")
 const AppError = require("../../utils/appError");
 const moment = require("moment")
 const mongoose = require("mongoose")
@@ -370,10 +371,11 @@ exports.endSession = catchAsync(async(req, res, next) => {
   let records = await recordsSchema.create(constructor)
 
   let userUpdate = userSchema.updateMany({}, {$set: {studentStatus: false}})
-  let feedingUpdate = userFeedingSchema.updateMany({}, {$set: {feedingType: 2, studentStatus: false, totalFeedingAmount: 0, fundingStatus: false, balance: 0 }})
+  let feedingUpdate = userFeedingSchema.updateMany({}, {$set: {feedingType: 2, studentStatus: false, totalFeedingAmount: 0, fundingStatus: false, balance: 0, previousBalance: 0, amountLeft: 0, numOfTimesFunded: 0 }})
   let newStudentAlert = utilsSchema.updateMany({}, {$set: {newStudentAlert: 0}})
+  let restaurants = restaurantSchema.updateMany({}, {$set: {balance: 0, previousBalance: 0}})
   await mongoose.connection.db.dropCollection("transactions")
-  let promises = [userUpdate, feedingUpdate, newStudentAlert]
+  let promises = [userUpdate, feedingUpdate, newStudentAlert, restaurants]
 
   Promise.all(promises).then(results => {
     res.status(200).send({status: true, message:"Session Ended", data: records})
