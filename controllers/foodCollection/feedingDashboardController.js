@@ -1,5 +1,8 @@
-const {utilsSchema, userFeedingSchema, transactionSchema, disbursementSchema, adminSchema} = require("../../models/mainModel")
+const {utilsSchema, userFeedingSchema, transactionSchema, 
+  disbursementSchema, adminSchema, recordsSchema, userSchema, restaurantSchema} = require("../../models/mainModel")
 const AppError = require("../../utils/appError");
+const moment = require("moment")
+const mongoose = require("mongoose")
 const catchAsync = require("../../utils/catchAsync");
 const bcrypt = require("bcrypt");
 const {success} = require("../../utils/activityLogs")
@@ -225,6 +228,159 @@ exports.deleteAdmins = catchAsync(async(req, res, next) => {
     return success(userId, ` deleted an admin from database`, "Delete", socket)
     
   }
+
+
+})
+
+exports.endSession = catchAsync(async(req, res, next) => {
+  let userId = req.user["_id"].toString()
+  const socket = req.app.get("socket");
+  let restaurantAggregate = [
+    {
+      '$addFields': {
+        'toId': {
+          '$toObjectId': '$to'
+        }
+      }
+    }, {
+      '$lookup': {
+        'from': 'restaurants', 
+        'localField': 'toId', 
+        'foreignField': '_id', 
+        'as': 'restaurant'
+      }
+    }, {
+      '$unwind': {
+        'path': '$restaurant', 
+        'preserveNullAndEmptyArrays': true
+      }
+    }, {
+      '$group': {
+        '_id': 0, 
+        'docs': {
+          '$push': '$$ROOT'
+        }, 
+        'totalTransactions': {
+          '$count': {}
+        }, 
+        'totalAmount': {
+          '$sum': '$amount'
+        }, 
+        'first': {
+          '$first': '$$ROOT.createdAt'
+        }, 
+        'last': {
+          '$last': '$$ROOT.createdAt'
+        }
+      }
+    }, {
+      '$unwind': {
+        'path': '$docs'
+      }
+    }, {
+      '$group': {
+        '_id': '$docs.to', 
+        'transactions': {
+          '$count': {}
+        }, 
+        'amount': {
+          '$sum': '$docs.amount'
+        }, 
+        'restaurantName': {
+          '$first': '$docs.restaurant.name'
+        }, 
+        'totalTransactions': {
+          '$first': '$totalTransactions'
+        }, 
+        'totalAmount': {
+          '$first': '$totalAmount'
+        }, 
+        'first': {
+          '$first': '$first'
+        }, 
+        'last': {
+          '$first': '$last'
+        }
+      }
+    }
+  ]
+
+  let disbursementAggregate = [
+    {
+      '$group': {
+        '_id': 0, 
+        'totalAmount': {
+          '$sum': '$amount'
+        }
+      }
+    }, {
+      '$project': {
+        '_id': 0
+      }
+    }
+  ]
+
+  let studentAggregate = [
+    {
+      '$match': {
+        'studentStatus': true
+      }
+    }, {
+      '$group': {
+        '_id': null, 
+        'totalStudents': {
+          '$count': {}
+        }
+      }
+    }
+  ]
+ 
+  let userData = await userSchema.aggregate(studentAggregate)
+
+  let disbursementData = await disbursementSchema.aggregate(disbursementAggregate)
+
+  let transactionDetails = await transactionSchema.aggregate(restaurantAggregate)
+
+  let from = moment(transactionDetails[0].last, "YYYY-MM-DD")
+  let to = moment(transactionDetails[0].first, "YYYY-MM-DD")
+
+  let duration = Math.round(moment.duration(from.diff(to)).asDays())
+
+  let restaurantTransactions = []
+
+  for(i=0; i<transactionDetails.length; i++){
+    restaurantTransactions.push({
+      "transactions": transactionDetails[i].transactions,
+      "amount": transactionDetails[i].amount,
+      "restaurantName": transactionDetails[i].restaurantName,
+    })
+  }
+
+  let constructor = {
+    name: req.body.name,
+    numberOfStudents: userData[0].totalStudents,
+    amountDisbursed: disbursementData[0].totalAmount,
+    amountSpent: transactionDetails[0].totalAmount,
+    totalTransactions: transactionDetails[0].totalTransactions,
+    restaurants : restaurantTransactions,
+    from: transactionDetails[0].first,
+    to: transactionDetails[0].last,
+    days: duration
+  }  
+
+  let records = await recordsSchema.create(constructor)
+
+  let userUpdate = userSchema.updateMany({}, {$set: {studentStatus: false}})
+  let feedingUpdate = userFeedingSchema.updateMany({}, {$set: {feedingType: 2, studentStatus: false, totalFeedingAmount: 0, fundingStatus: false, balance: 0, previousBalance: 0, amountLeft: 0, numOfTimesFunded: 0 }})
+  let newStudentAlert = utilsSchema.updateMany({}, {$set: {newStudentAlert: 0}})
+  let restaurants = restaurantSchema.updateMany({}, {$set: {balance: 0, previousBalance: 0}})
+  await mongoose.connection.db.dropCollection("transactions")
+  let promises = [userUpdate, feedingUpdate, newStudentAlert, restaurants]
+
+  Promise.all(promises).then(results => {
+    res.status(200).send({status: true, message:"Session Ended", data: records})
+    return success(userId, ` ended the session`, "Update", socket)
+  })
 
 
 })

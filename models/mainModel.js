@@ -465,6 +465,37 @@ const activitySchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+const recordsSchema = new mongoose.Schema(
+  {
+    name: {
+      type: String
+    },
+    numberOfStudents:{
+      type: Number,
+      default: 0
+    },
+    amountDisbursed: {
+      type: Number,
+      default: 0
+    },
+    amountSpent: {
+      type: Number,
+      default: 0
+    },
+    totalTransactions: {
+      type: Number,
+      default: 0
+    },
+    restaurants :{
+      type: [{type: Object}]
+    },
+    from: String,
+    to: String,
+    days: Number
+  },
+  {timestamps: true}
+)
+
 const errorSchema = new mongoose.Schema(
   {
     message: {
@@ -546,6 +577,7 @@ module.exports.restaurantSchema = mongoose.model(
 );
 module.exports.orderSchema = mongoose.model("Order", orderSchema);
 module.exports.errorSchema = mongoose.model("Errors", errorSchema);
+module.exports.recordsSchema = mongoose.model("Records", recordsSchema);
 module.exports.transactionSchema = mongoose.model(
   "transactions",
   transactionSchema
