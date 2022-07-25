@@ -9,7 +9,7 @@ const fundingStatus = async(req, res, next) => {
     let status = isExpiryDate(new Date, utils.fundDate)
     console.log(status)
     if(status){
-        userFeedingSchema.updateMany({}, {fundingStatus: false})
+        userFeedingSchema.updateMany({}, {$set: {fundingStatus: false}})
     }
     return next()
 
