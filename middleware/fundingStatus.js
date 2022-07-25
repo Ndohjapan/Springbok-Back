@@ -7,6 +7,7 @@ const fundingStatus = async(req, res, next) => {
     
     let utils = await utilsSchema.findById("6283ecbcffda06c1fd477266")
     let status = isExpiryDate(new Date, utils.fundDate)
+    console.log(status)
     if(status){
         userFeedingSchema.updateMany({}, {fundingStatus: false})
     }
