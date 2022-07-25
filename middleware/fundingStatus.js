@@ -10,7 +10,9 @@ const fundingStatus = async(req, res, next) => {
     console.log(status)
     if(status){
         console.log("Funding Date is Due!" + " \n" +"Funding Date = "+ status)
-        userFeedingSchema.updateMany({}, {$set: {fundingStatus: false}})
+        let response = await userFeedingSchema.updateMany({}, {$set: {fundingStatus: false}})
+        console.log(response)
+ 
     }
     return next()
 
