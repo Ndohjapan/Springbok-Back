@@ -557,6 +557,7 @@ userSchema.plugin(mongoosePaginate);
 adminSchema.plugin(mongoosePaginate);
 activitySchema.plugin(mongoosePaginate);
 errorSchema.plugin(mongoosePaginate);
+recordsSchema.plugin(mongoosePaginate);
 
 module.exports.userSchema = mongoose.model("user", userSchema);
 module.exports.adminSchema = mongoose.model("admins", adminSchema);
