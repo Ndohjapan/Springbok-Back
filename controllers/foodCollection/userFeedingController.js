@@ -207,7 +207,7 @@ exports.fundWallet = catchAsync(async(req, res, next) => {
         user = await userFeedingSchema.updateMany(
             {fundingStatus: false, userId: {$in: userIds}},
             [
-                {$set: {
+                {$inc: {
                     'balance': { $multiply: [ feedingAmount, "$feedingType" ] }
                     }
                 }
