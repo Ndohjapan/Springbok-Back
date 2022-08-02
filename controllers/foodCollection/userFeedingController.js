@@ -206,13 +206,12 @@ exports.fundWallet = catchAsync(async(req, res, next) => {
         
         user = await userFeedingSchema.updateMany(
             {fundingStatus: false, userId: {$in: userIds}},
-            [
-                {$inc: {
-                    'balance': { $multiply: [ feedingAmount, "$feedingType" ] }, 
-                    },
-                }
-            ], 
-            {multi: true}
+         
+            {$inc: {
+                'balance': { $multiply: [ feedingAmount, "$feedingType" ] }, 
+                },
+            },
+            {new: true}
         )
         
         let statistics = await userFeedingSchema.aggregate([
