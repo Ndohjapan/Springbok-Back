@@ -190,20 +190,28 @@ exports.fundWallet = catchAsync(async(req, res, next) => {
     
         let user = await userFeedingSchema.updateMany(
             {fundingStatus: false, userId: {$in: userIds}},
-            
-            {$set: {
-                "previousBalance": '$balance',
-                "lastFunding": todaysDate, 
-                'fundingStatus': true, 
-                'totalAmountFunded': {$add: ["$totalAmountFunded", { $multiply: [ feedingAmount, "$feedingType" ] }]},
-                'numOfTimesFunded': {$add: ["$numOfTimesFunded", 1]},
-                "amountLeft": {$subtract: ["$totalFeedingAmount", { $multiply: [ feedingAmount, "$feedingType" ] }]}
-                },
-             $inc: {
-                'balance': { $multiply: [ feedingAmount, "$feedingType" ] }, 
+            [
+                {$set: {
+                    "previousBalance": '$balance',
+                    "lastFunding": todaysDate, 
+                    'fundingStatus': true, 
+                    'totalAmountFunded': {$add: ["$totalAmountFunded", { $multiply: [ feedingAmount, "$feedingType" ] }]},
+                    'numOfTimesFunded': {$add: ["$numOfTimesFunded", 1]},
+                    "amountLeft": {$subtract: ["$totalFeedingAmount", { $multiply: [ feedingAmount, "$feedingType" ] }]}
+                    },
                 }
-            }
-            , 
+            ], 
+            {multi: true}
+        )
+        
+        user = await userFeedingSchema.updateMany(
+            {fundingStatus: false, userId: {$in: userIds}},
+            [
+                {$inc: {
+                    'balance': { $multiply: [ feedingAmount, "$feedingType" ] }, 
+                    },
+                }
+            ], 
             {multi: true}
         )
         
