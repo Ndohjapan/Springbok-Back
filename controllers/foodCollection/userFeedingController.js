@@ -196,7 +196,7 @@ exports.fundWallet = catchAsync(async(req, res, next) => {
                     "lastFunding": todaysDate, 
                     'fundingStatus': true, 
                     'totalAmountFunded': {$add: ["$totalAmountFunded", { $multiply: [ feedingAmount, "$feedingType" ] }]},
-                    'balance': {$add: ["balance", { $multiply: [ feedingAmount, "$feedingType" ] }]},
+                    'balance': {$add: ["$balance", { $multiply: [ feedingAmount, "$feedingType" ] }]},
                     'numOfTimesFunded': {$add: ["$numOfTimesFunded", 1]},
                     "amountLeft": {$subtract: ["$totalFeedingAmount", { $multiply: [ feedingAmount, "$feedingType" ] }]}
                     },
