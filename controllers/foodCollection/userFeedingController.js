@@ -180,6 +180,10 @@ exports.fundWallet = catchAsync(async(req, res, next) => {
     let {userIds} = req.body
     const socket = req.app.get("socket");
     let userId = req.user["_id"].toString()
+    
+    let feedingAmount = await utilsSchema.find()
+    feedingAmount = feedingAmount[0].feedingAmount
+    
     try{
 
         let todaysDate = new Date().toISOString()
@@ -188,15 +192,15 @@ exports.fundWallet = catchAsync(async(req, res, next) => {
             {fundingStatus: false, userId: {$in: userIds}},
             [
                 {$set: {
-                    "previousBalance": '$balance', 
-                    'balance': { $multiply: [ 15000, "$feedingType" ] }, 
+                    "previousBalance": '$balance',
                     "lastFunding": todaysDate, 
                     'fundingStatus': true, 
-                    'totalAmountFunded': {$add: ["$totalAmountFunded", { $multiply: [ 15000, "$feedingType" ] }]},
+                    'totalAmountFunded': {$add: ["$totalAmountFunded", { $multiply: [ feedingAmount, "$feedingType" ] }]},
+                    'balance': {$add: ["$balance", { $multiply: [ feedingAmount, "$feedingType" ] }]},
                     'numOfTimesFunded': {$add: ["$numOfTimesFunded", 1]},
-                    "amountLeft": {$subtract: ["$totalFeedingAmount", { $multiply: [ 15000, "$feedingType" ] }]}
-                    }
-                } 
+                    "amountLeft": {$subtract: ["$totalFeedingAmount", { $multiply: [ feedingAmount, "$feedingType" ] }]}
+                    },
+                }
             ], 
             {multi: true}
         )
