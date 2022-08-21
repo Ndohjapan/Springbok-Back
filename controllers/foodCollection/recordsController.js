@@ -7,12 +7,10 @@ const {success} = require("../../utils/activityLogs")
 
 exports.getAllRecords = catchAsync(async(req, res, next) => {
 
-    let page = req.query.page ? req.query.page : 1
-    let limit = req.query.limit ? req.query.limit : 100000000
+    // let page = req.query.page ? req.query.page : 1
+    // let limit = req.query.limit ? req.query.limit : 100000000
 
     const options = {
-        page: page,
-        limit: limit,
         sort: {"createdAt": -1}
         
     };
@@ -58,12 +56,10 @@ exports.postFilter = catchAsync(async(req, res, next) => {
     })
 
 
-    let page = req.query.page ? req.query.page : 1
-    let limit = req.query.limit ? req.query.limit : 10000000
+    // let page = req.query.page ? req.query.page : 1
+    // let limit = req.query.limit ? req.query.limit : 10000000
 
     const options = {
-        page: page,
-        limit: limit,
         sort: {"createdAt": -1}
         
     };

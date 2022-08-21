@@ -7,12 +7,10 @@ const {
 } = require("../models/mainModel");
 
 exports.getAllUsers = catchAsync(async (req, res, next) => {
-  let page = req.query.page ? req.query.page : 1;
-  let limit = req.query.limit ? req.query.limit : 10000000;
+  // let page = req.query.page ? req.query.page : 1;
+  // let limit = req.query.limit ? req.query.limit : 10000000;
 
   const options = {
-    page: page,
-    limit: limit,
     sort: { createdAt: -1 },
   };
 

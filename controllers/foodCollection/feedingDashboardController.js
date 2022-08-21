@@ -341,7 +341,11 @@ exports.endSession = catchAsync(async(req, res, next) => {
     let disbursementData = await disbursementSchema.aggregate(disbursementAggregate)
   
     let transactionDetails = await transactionSchema.aggregate(restaurantAggregate)
-  
+    console.log(transactionDetails)
+    if(transactionDetails.length === 0){
+      return res.status(400).send({status: false, message:"No Transactions Within This Period"})
+    }
+
     let from = moment(transactionDetails[0].last, "YYYY-MM-DD")
     let to = moment(transactionDetails[0].first, "YYYY-MM-DD")
   
@@ -376,6 +380,7 @@ exports.endSession = catchAsync(async(req, res, next) => {
     let newStudentAlert = utilsSchema.updateMany({}, {$set: {newStudentAlert: 0}})
     let restaurants = restaurantSchema.updateMany({}, {$set: {balance: 0, previousBalance: 0}})
     await mongoose.connection.db.dropCollection("transactions")
+    await mongoose.connection.db.dropCollection("disbursements")
     let promises = [userUpdate, feedingUpdate, newStudentAlert, restaurants]
   
     Promise.all(promises).then(results => {
