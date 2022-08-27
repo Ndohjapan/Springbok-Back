@@ -105,7 +105,7 @@ exports.postFilter = catchAsync(async(req, res, next) => {
     })
 
     let page = req.query.page ? req.query.page : 1
-    let limit = req.query.limit ? req.query.limit : 100000
+    let limit = req.query.limit ? req.query.limit : 1000000
 
     const options = {
         page: page,
