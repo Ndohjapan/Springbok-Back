@@ -2,7 +2,7 @@ const express = require("express");
 
 const router = express.Router();
 
-const {getTransactionsDetails, getUsersDetails, getDisbursementDetails, updateAdmins, deleteAdmins, getAllAdmins, unreadNotifications, allPermissions, createAdmin, exportCSV, endSession} = require("../controllers/foodCollection/feedingDashboardController");
+const {resetStudentPin, resetStudentPassword, getTransactionsDetails, getUsersDetails, getDisbursementDetails, updateAdmins, deleteAdmins, getAllAdmins, unreadNotifications, allPermissions, createAdmin, exportCSV, endSession} = require("../controllers/foodCollection/feedingDashboardController");
 const {permissionTo} = require("../controllers/authController")
 
 router
@@ -20,6 +20,14 @@ router
 router
     .route("/createAdmin")
     .post(permissionTo("all", "create admin"), createAdmin);
+
+router
+    .route("/resetStudentPin")
+    .post(permissionTo("all", "edit users"), resetStudentPin);
+
+router
+    .route("/resetStudentPassword")
+    .post(permissionTo("all", "edit users"), resetStudentPassword);
 
 router
     .route("/getAllAdmins")

@@ -438,3 +438,26 @@ exports.exportCSV = catchAsync(async(req, res, next) => {
 
 })
 
+exports.resetStudentPin = catchAsync(async(req, res, next) => {
+    
+  let {newTransactionPin, userId} = req.body
+
+  newTransactionPin = bcrypt.hashSync(newTransactionPin, 10)
+
+  await userFeedingSchema.findOneAndUpdate({userId: userId}, {transactionPin: newTransactionPin}, {new: true})
+
+  res.status(200).send({status: true, message: "Successful"})
+})
+
+exports.resetStudentPassword = catchAsync(async(req, res, next) => {
+    
+  let {userId, newPassword} = req.body
+
+  const salt = await bcrypt.genSalt(10);
+  const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+  await userSchema.findOneAndUpdate({_id: userId}, {password: hashedPassword})
+
+  res.status(200).send({status: true, message: "Password Set Successfully"})
+})
+

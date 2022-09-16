@@ -92,6 +92,10 @@ const userFeedingSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    lastFundingDay: {
+      type: String,
+      default: "2022-09-17"
+    }
   },
   { timestamps: true }
 );

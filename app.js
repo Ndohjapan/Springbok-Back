@@ -43,7 +43,7 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use(interceptorParam)
 
-app.use("/api/v1/users", authRoutes);
+app.use("/api/v1/users", fundingStatus, authRoutes);
 app.use("/document", documentRoutes);
 app.use("/error", errorLogsRoute);
 app.use("/food", protect, foodRoutes)

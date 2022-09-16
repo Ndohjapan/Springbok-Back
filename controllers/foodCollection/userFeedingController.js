@@ -2,6 +2,7 @@ const {utilsSchema, transactionSchema, restaurantSchema, userFeedingSchema, disb
 const AppError = require("../../utils/appError");
 const catchAsync = require("../../utils/catchAsync");
 const bcrypt = require("bcrypt")
+const moment = require("moment")
 const {success} = require("../../utils/activityLogs")
     
 
@@ -10,7 +11,7 @@ exports.savePin = catchAsync(async(req, res, next) => {
     let userId = req.user["_id"]
     transactionPin = bcrypt.hashSync(transactionPin, 10)
 
-    const user = await userFeedingModel.create({
+    const user = await userFeedingSchema.create({
       userId, transactionPin  
     })
 
@@ -187,16 +188,18 @@ exports.fundWallet = catchAsync(async(req, res, next) => {
     try{
 
         let todaysDate = new Date().toISOString()
+        let fundingDay = moment(todaysDate, 'YYYY-MM-DD').format("YYYY-MM-DD");
     
         let user = await userFeedingSchema.updateMany(
             {fundingStatus: false, userId: {$in: userIds}},
             [
                 {$set: {
                     "previousBalance": '$balance',
+                    "lastFundingDay": fundingDay,
                     "lastFunding": todaysDate, 
                     'fundingStatus': true, 
                     'totalAmountFunded': {$add: ["$totalAmountFunded", { $multiply: [ feedingAmount, "$feedingType" ] }]},
-                    'balance': {$add: ["$balance", { $multiply: [ feedingAmount, "$feedingType" ] }]},
+                    'balance': {$add: [0, { $multiply: [ feedingAmount, "$feedingType" ] }]},
                     'numOfTimesFunded': {$add: ["$numOfTimesFunded", 1]},
                     "amountLeft": {$subtract: ["$totalFeedingAmount", { $multiply: [ feedingAmount, "$feedingType" ] }]}
                     },
@@ -238,6 +241,75 @@ exports.fundWallet = catchAsync(async(req, res, next) => {
         res.status(200).send({status: true, message: "Update Successful"})
 
         return success(userId, ` funded ${user.modifiedCount} students with total of ${totalAmount} naira`, "Update", socket)
+
+    }
+    catch(err){
+        console.log(err)
+        return next(new AppError("Error In Update", 400));
+    }
+
+})
+
+exports.fundAllLegibleWallets = catchAsync(async(req, res, next) => {
+    const socket = req.app.get("socket");
+    let userId = req.user["_id"].toString()
+    
+    let feedingAmount = await utilsSchema.find()
+    feedingAmount = feedingAmount[0].feedingAmount
+    
+    try{
+
+        let todaysDate = new Date().toISOString()
+        let fundingDay = moment(todaysDate, 'YYYY-MM-DD');
+    
+        let user = await userFeedingSchema.updateMany(
+            {fundingStatus: false},
+            [
+                {$set: {
+                    "previousBalance": '$balance',
+                    "lastFundingDay": fundingDay,
+                    "lastFunding": todaysDate, 
+                    'fundingStatus': true, 
+                    'totalAmountFunded': {$add: ["$totalAmountFunded", { $multiply: [ feedingAmount, "$feedingType" ] }]},
+                    'balance': {$add: [0, { $multiply: [ feedingAmount, "$feedingType" ] }]},
+                    'numOfTimesFunded': {$add: ["$numOfTimesFunded", 1]},
+                    "amountLeft": {$subtract: ["$totalFeedingAmount", { $multiply: [ feedingAmount, "$feedingType" ] }]}
+                    },
+                }
+            ], 
+            {multi: true}
+        )
+        
+        let statistics = await userFeedingSchema.aggregate([
+            {
+              '$match': {
+                "lastFunding": todaysDate
+              }
+            }, {
+              '$unwind': {
+                'path': '$userId', 
+                'preserveNullAndEmptyArrays': true
+              }
+            }, {
+              '$group': {
+                '_id': null, 
+                'amount': {
+                  '$sum': '$balance'
+                }
+              }
+            }
+        ])
+        
+        
+        let totalAmount = (statistics[0]) ? statistics[0].amount : 0
+        await disbursementSchema.create({
+            amount: totalAmount,
+            numberOfStudents: user.modifiedCount
+        })
+    
+        res.status(200).send({status: true, message: "Update Successful"})
+
+        return success(userId, ` funded ${user.modifiedCount} students who are legible after 30 days with total of ${totalAmount} naira`, "Update", socket)
 
     }
     catch(err){
