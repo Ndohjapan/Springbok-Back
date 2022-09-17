@@ -8,6 +8,7 @@ const {
   deleteUser,
   updateUser,
   postFilter,
+  getAllUserData
 } = require("../controllers/userController");
 const { protect, permissionTo } = require("../controllers/authController");
 
@@ -16,6 +17,9 @@ router.route("/").get(getAllUsers);
 
 // Get by id
 router.route("/:id").get(getUser);
+
+// Get all users data
+router.route("/all/:id").get(getAllUserData);
 
 // Delete
 router.route("/").delete(permissionTo("delete users"), deleteUser);
