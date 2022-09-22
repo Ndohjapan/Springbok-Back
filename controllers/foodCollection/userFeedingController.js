@@ -191,7 +191,7 @@ exports.fundWallet = catchAsync(async(req, res, next) => {
         let fundingDay = moment(todaysDate, 'YYYY-MM-DD').format("YYYY-MM-DD");
     
         let user = await userFeedingSchema.updateMany(
-            {fundingStatus: false, userId: {$in: userIds}},
+            {fundingStatus: false, userId: {$in: userIds}, studentStatus: true},
             [
                 {$set: {
                     "previousBalance": '$balance',
@@ -263,7 +263,7 @@ exports.fundAllLegibleWallets = catchAsync(async(req, res, next) => {
         let fundingDay = moment(todaysDate, 'YYYY-MM-DD');
     
         let user = await userFeedingSchema.updateMany(
-            {fundingStatus: false},
+            {fundingStatus: false, studentStatus: true},
             [
                 {$set: {
                     "previousBalance": '$balance',
