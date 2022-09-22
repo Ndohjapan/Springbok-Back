@@ -36,6 +36,13 @@ exports.getUser = catchAsync(async (req, res, next) => {
   res.status(200).send({ status: true, message: "Successful", data: user });
 });
 
+exports.getAllUserData = catchAsync(async (req, res, next) => {
+  const userProfileData = await userSchema.findById(req.params.id);
+  const userFeedingData = await userFeedingSchema.findOne({userId: req.params.id})
+
+  res.status(200).send({ status: true, message: "Successful", profileData: userProfileData, feedingData: userFeedingData });
+});
+
 exports.updateUser = catchAsync(async (req, res, next) => {
   let data = req.body;
   let updateData = {};

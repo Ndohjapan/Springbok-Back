@@ -12,6 +12,7 @@ const {
   validateUsers,
   invalidateUsers,
   fundWallet,
+  fundAllLegibleWallets,
   confirmPin,
 } = require("../controllers/foodCollection/userFeedingController");
 
@@ -49,5 +50,8 @@ router
 
 //Fund students wallet
 router.route("/fundWallet").post(permissionTo("fund wallet"), fundWallet);
+
+//Fund all legible students wallet
+router.route("/fundAllLegibleWallets").post(permissionTo("fund wallet"), fundAllLegibleWallets);
 
 module.exports = router;
