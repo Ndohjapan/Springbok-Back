@@ -46,7 +46,7 @@ router
 // Validate Users
 router
   .route("/invalidateUsers")
-  .post(permissionTo("validate users", "invalidate users"), invalidateUsers);
+  .post(permissionTo("validate users"), invalidateUsers);
 
 //Fund students wallet
 router.route("/fundWallet").post(permissionTo("fund wallet"), fundWallet);

@@ -376,7 +376,7 @@ exports.endSession = catchAsync(async(req, res, next) => {
     let records = await recordsSchema.create(constructor)
   
     let userUpdate = userSchema.updateMany({}, {$set: {studentStatus: false}})
-    let feedingUpdate = userFeedingSchema.updateMany({}, {$set: {feedingType: 2, studentStatus: false, totalFeedingAmount: 0, fundingStatus: false, balance: 0, previousBalance: 0, amountLeft: 0, numOfTimesFunded: 0 }})
+    let feedingUpdate = userFeedingSchema.updateMany({}, {$set: {feedingType: 2, studentStatus: false, totalAmountFunded: 0, totalFeedingAmount: 0, fundingStatus: false, balance: 0, previousBalance: 0, amountLeft: 0, numOfTimesFunded: 0 }})
     let newStudentAlert = utilsSchema.updateMany({}, {$set: {newStudentAlert: 0}})
     let restaurants = restaurantSchema.updateMany({}, {$set: {balance: 0, previousBalance: 0}})
     await mongoose.connection.db.dropCollection("transactions")
