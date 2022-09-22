@@ -23,11 +23,11 @@ router
 
 router
     .route("/resetStudentPin")
-    .post(permissionTo("all", "edit users"), resetStudentPin);
+    .post(permissionTo("edit users"), resetStudentPin);
 
 router
     .route("/resetStudentPassword")
-    .post(permissionTo("all", "edit users"), resetStudentPassword);
+    .post(permissionTo("edit users"), resetStudentPassword);
 
 router
     .route("/getAllAdmins")
