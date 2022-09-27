@@ -69,8 +69,8 @@ const userFeedingSchema = new mongoose.Schema(
       default: 2,
     },
     lastFunding: {
-      type: Date,
-      default: new Date().toISOString(),
+      type: String,
+      default: "2022-09-17"
     },
     studentStatus: {
       type: Boolean,
