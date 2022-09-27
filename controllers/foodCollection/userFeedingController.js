@@ -195,8 +195,8 @@ exports.fundWallet = catchAsync(async(req, res, next) => {
             [
                 {$set: {
                     "previousBalance": '$balance',
+                    "lastFunding": fundingDay, 
                     "lastFundingDay": fundingDay,
-                    "lastFunding": todaysDate, 
                     'fundingStatus': true, 
                     'totalAmountFunded': {$add: ["$totalAmountFunded", { $multiply: [ feedingAmount, "$feedingType" ] }]},
                     'balance': {$add: [0, { $multiply: [ feedingAmount, "$feedingType" ] }]},
@@ -259,7 +259,7 @@ exports.fundAllLegibleWallets = catchAsync(async(req, res, next) => {
     
     try{
 
-        let todaysDate = new Date().toISOString()
+        let todaysDate = new Date().toISOString().substring(0, 10)
         let fundingDay = moment(todaysDate, 'YYYY-MM-DD');
     
         let user = await userFeedingSchema.updateMany(
@@ -267,8 +267,8 @@ exports.fundAllLegibleWallets = catchAsync(async(req, res, next) => {
             [
                 {$set: {
                     "previousBalance": '$balance',
+                    "lastFunding": fundingDay, 
                     "lastFundingDay": fundingDay,
-                    "lastFunding": todaysDate, 
                     'fundingStatus': true, 
                     'totalAmountFunded': {$add: ["$totalAmountFunded", { $multiply: [ feedingAmount, "$feedingType" ] }]},
                     'balance': {$add: [0, { $multiply: [ feedingAmount, "$feedingType" ] }]},

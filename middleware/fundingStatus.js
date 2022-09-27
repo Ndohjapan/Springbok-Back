@@ -7,7 +7,7 @@ const fundingStatus = async(req, res, next) => {
     const token = req.headers["authorization"]
     
     let thirtyDaysAgo = moment().subtract(30, "days").format("YYYY-MM-DD")
-    await userFeedingSchema.updateMany({lastFundingDay: thirtyDaysAgo}, {$set: {fundingStatus: false}})
+    await userFeedingSchema.updateMany({lastFunding: thirtyDaysAgo}, {$set: {fundingStatus: false}})
     return next()
 
 }
