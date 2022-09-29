@@ -126,13 +126,13 @@ exports.postFilter = catchAsync(async(req, res, next) => {
 })
 
 exports.validateUsers = catchAsync(async(req,res, next) => {
-    let {userIds, feedingType, studentStatus} = req.body
-    let totalFeedingAmount = feedingType * 135000
+    let {userIds, feedingType, studentStatus, amountPaid} = req.body
+    let totalFeedingAmount = amountPaid
     const socket = req.app.get("socket");
     let userId = req.user["_id"].toString()
     try{
         let userUpdate = userSchema.updateMany({"_id": {$in: userIds}}, {$set: {studentStatus: studentStatus}})
-        let feedingUpdate = userFeedingSchema.updateMany({userId: {$in: userIds}}, {$set: {feedingType: feedingType, studentStatus: studentStatus, totalFeedingAmount: totalFeedingAmount}})
+        let feedingUpdate = userFeedingSchema.updateMany({userId: {$in: userIds}}, {$set: {feedingType: feedingType, studentStatus: studentStatus, totalFeedingAmount: totalFeedingAmount, amountLeft: totalFeedingAmount}})
         let newStudentAlert = utilsSchema.updateMany({}, {$set: {newStudentAlert: 0}})
     
         let promises = [userUpdate, feedingUpdate, newStudentAlert]
@@ -151,6 +151,31 @@ exports.validateUsers = catchAsync(async(req,res, next) => {
 
 }) 
 
+exports.editTotalFunds = catchAsync(async(req,res, next) => {
+    let {newTotalAmount, userId} = req.body
+    try{
+        let feedingUpdate = await userFeedingSchema.updateMany({userId: {$in: userId}}, 
+            [
+                {$set: {
+                    "totalFeedingAmount": newTotalAmount,
+                    "amountLeft": {$subtract: [newTotalAmount, "$totalAmountFunded"]},
+                    "fundingStatus": false
+                    },
+                }
+            ], 
+            {multi: true}
+        )
+    
+        return res.status(200).send({status: true, message:"Update Successful"})
+    
+    }
+    catch(err){
+        console.log(err)
+        return next(new AppError("Error in Update", 400));
+    }
+
+}) 
+
 exports.invalidateUsers = catchAsync(async(req,res, next) => {
     let {userIds, studentStatus} = req.body
     let totalFeedingAmount = 0
@@ -158,7 +183,7 @@ exports.invalidateUsers = catchAsync(async(req,res, next) => {
     let userId = req.user["_id"].toString()
     try{
         let userUpdate = userSchema.updateMany({"_id": {$in: userIds}}, {$set: {studentStatus: studentStatus}})
-        let feedingUpdate = userFeedingSchema.updateMany({userId: {$in: userIds}}, {$set: {feedingType: 2, studentStatus: studentStatus, totalFeedingAmount: totalFeedingAmount, fundingStatus: studentStatus, balance: 0, }})
+        let feedingUpdate = userFeedingSchema.updateMany({userId: {$in: userIds}}, {$set: {feedingType: 2, studentStatus: studentStatus, totalFeedingAmount: totalFeedingAmount, fundingStatus: studentStatus, balance: 0, previousBalance: 0, totalAmountFunded: 0}})
         let newStudentAlert = utilsSchema.updateMany({}, {$set: {newStudentAlert: 0}})
     
         let promises = [userUpdate, feedingUpdate, newStudentAlert]
@@ -190,23 +215,16 @@ exports.fundWallet = catchAsync(async(req, res, next) => {
         let todaysDate = new Date().toISOString()
         let fundingDay = moment(todaysDate, 'YYYY-MM-DD').format("YYYY-MM-DD");
     
-        let user = await userFeedingSchema.updateMany(
-            {fundingStatus: false, userId: {$in: userIds}, studentStatus: true},
-            [
-                {$set: {
-                    "previousBalance": '$balance',
-                    "lastFunding": fundingDay, 
-                    "lastFundingDay": fundingDay,
-                    'fundingStatus': true, 
-                    'totalAmountFunded': {$add: ["$totalAmountFunded", { $multiply: [ feedingAmount, "$feedingType" ] }]},
-                    'balance': {$add: [0, { $multiply: [ feedingAmount, "$feedingType" ] }]},
-                    'numOfTimesFunded': {$add: ["$numOfTimesFunded", 1]},
-                    "amountLeft": {$subtract: ["$totalFeedingAmount", { $multiply: [ feedingAmount, "$feedingType" ] }]}
-                    },
+        let canBeFunded = await checkIfStudentCanBeFunded(userIds, feedingAmount)
+        let negativeStudents = await fundAllNegativeStudents(userIds, fundingDay, feedingAmount)
+        let positiveStudents = await fundAllPositiveStudents(userIds, fundingDay, feedingAmount)
+
+        let user = { "acknowledged": true,
+                    "insertedId": null,
+                    "matchedCount": positiveStudents.matchedCount + negativeStudents.matchedCount,
+                    "modifiedCount": positiveStudents.modifiedCount + negativeStudents.modifiedCount,
+                    "upsertedCount": positiveStudents.upsertedCount + negativeStudents.upsertedCount
                 }
-            ], 
-            {multi: true}
-        )
         
         let statistics = await userFeedingSchema.aggregate([
             {
@@ -262,23 +280,16 @@ exports.fundAllLegibleWallets = catchAsync(async(req, res, next) => {
         let todaysDate = new Date().toISOString().substring(0, 10)
         let fundingDay = moment(todaysDate, 'YYYY-MM-DD');
     
-        let user = await userFeedingSchema.updateMany(
-            {fundingStatus: false, studentStatus: true},
-            [
-                {$set: {
-                    "previousBalance": '$balance',
-                    "lastFunding": fundingDay, 
-                    "lastFundingDay": fundingDay,
-                    'fundingStatus': true, 
-                    'totalAmountFunded': {$add: ["$totalAmountFunded", { $multiply: [ feedingAmount, "$feedingType" ] }]},
-                    'balance': {$add: [0, { $multiply: [ feedingAmount, "$feedingType" ] }]},
-                    'numOfTimesFunded': {$add: ["$numOfTimesFunded", 1]},
-                    "amountLeft": {$subtract: ["$totalFeedingAmount", { $multiply: [ feedingAmount, "$feedingType" ] }]}
-                    },
+        await checkIfStudentCanBeFundedToday(feedingAmount)
+        let negativeStudents = await fundAllNegativeStudentsToday(fundingDay, feedingAmount)
+        let positiveStudents = await fundAllPositiveStudentsToday(fundingDay, feedingAmount)
+
+        let user = { "acknowledged": true,
+                    "insertedId": null,
+                    "matchedCount": positiveStudents.matchedCount + negativeStudents.matchedCount,
+                    "modifiedCount": positiveStudents.modifiedCount + negativeStudents.modifiedCount,
+                    "upsertedCount": positiveStudents.upsertedCount + negativeStudents.upsertedCount
                 }
-            ], 
-            {multi: true}
-        )
         
         let statistics = await userFeedingSchema.aggregate([
             {
@@ -326,3 +337,120 @@ exports.totalDisbursed = catchAsync(async(req, res, next) => {
 // Save Hashed Pin
 // Reset Pin
 
+async function checkIfStudentCanBeFunded(userIds, feedingAmount){
+    let user = await userFeedingSchema.updateMany(
+        {fundingStatus: false, userId: {$in: userIds}, studentStatus: true}, 
+        [
+            {$set: {
+                'fundingCheck': {$subtract: ["$amountLeft", { $multiply: [ feedingAmount, "$feedingType" ] }]}
+                },
+            }
+        ], 
+        {multi: true}
+    )
+
+    return user
+}
+
+async function checkIfStudentCanBeFundedToday(feedingAmount){
+    let user = await userFeedingSchema.updateMany(
+        {fundingStatus: false, studentStatus: true}, 
+        [
+            {$set: {
+                'fundingCheck': {$subtract: ["$amountLeft", { $multiply: [ feedingAmount, "$feedingType" ] }]}
+                },
+            }
+        ], 
+        {multi: true}
+    )
+
+    return user
+}
+
+async function fundAllPositiveStudentsToday(fundingDay, feedingAmount){
+    let user = await userFeedingSchema.updateMany(
+        {fundingStatus: false, studentStatus: true, fundingCheck: {$gt: 0}}, 
+        [
+            {$set: {
+                "previousBalance": '$balance',
+                "lastFunding": fundingDay, 
+                "lastFundingDay": fundingDay,
+                'fundingStatus': true, 
+                'totalAmountFunded': {$add: ["$totalAmountFunded", { $multiply: [ feedingAmount, "$feedingType" ] }]},
+                'balance': { $multiply: [ feedingAmount, "$feedingType" ] },
+                'numOfTimesFunded': {$add: ["$numOfTimesFunded", 1]},
+                "amountLeft": {$subtract: ["$totalFeedingAmount",  {$add: ["$totalAmountFunded", { $multiply: [ feedingAmount, "$feedingType" ] }]}]}
+                },
+            }
+        ], 
+        {multi: true}
+    )
+
+    return user
+}
+
+async function fundAllNegativeStudentsToday(fundingDay, feedingAmount){
+    let user = await userFeedingSchema.updateMany(
+        {fundingCheck: {$lte: 0}, fundingStatus: false, studentStatus: true}, 
+        [
+            {$set: {
+                "previousBalance": '$balance',
+                "lastFunding": fundingDay, 
+                "lastFundingDay": fundingDay,
+                'fundingStatus': true, 
+                'totalAmountFunded': {$add: ["$totalAmountFunded", "$amountLeft"]},
+                'numOfTimesFunded': {$add: ["$numOfTimesFunded", 1]},
+                'balance': "$amountLeft",
+                "amountLeft": 0 
+                },
+            }
+        ], 
+        {multi: true}
+    )
+
+    return user
+}
+
+async function fundAllPositiveStudents(userIds, fundingDay, feedingAmount){
+    let user = await userFeedingSchema.updateMany(
+        {fundingCheck: {$gt: 0}, fundingStatus: false, userId: {$in: userIds}}, 
+        [
+            {$set: {
+                "previousBalance": '$balance',
+                "lastFunding": fundingDay, 
+                "lastFundingDay": fundingDay,
+                'fundingStatus': true, 
+                'totalAmountFunded': {$add: ["$totalAmountFunded", { $multiply: [ feedingAmount, "$feedingType" ] }]},
+                'balance': { $multiply: [ feedingAmount, "$feedingType" ] },
+                'numOfTimesFunded': {$add: ["$numOfTimesFunded", 1]},
+                "amountLeft": {$subtract: ["$totalFeedingAmount",  {$add: ["$totalAmountFunded", { $multiply: [ feedingAmount, "$feedingType" ] }]}]}
+                },
+            }
+        ], 
+        {multi: true}
+    )
+
+    return user
+}
+
+async function fundAllNegativeStudents(userIds, fundingDay, feedingAmount){
+    let user = await userFeedingSchema.updateMany(
+        {fundingCheck: {$lte: 0}, fundingStatus: false, userId: {$in: userIds}}, 
+        [
+            {$set: {
+                "previousBalance": '$balance',
+                "lastFunding": fundingDay, 
+                "lastFundingDay": fundingDay,
+                'fundingStatus': true, 
+                'totalAmountFunded': {$add: ["$totalAmountFunded", "$amountLeft"]},
+                'numOfTimesFunded': {$add: ["$numOfTimesFunded", 1]},
+                'balance': "$amountLeft",
+                "amountLeft": 0 
+                },
+            }
+        ], 
+        {multi: true}
+    )
+
+    return user
+}

@@ -13,6 +13,7 @@ const {
   invalidateUsers,
   fundWallet,
   fundAllLegibleWallets,
+  editTotalFunds,
   confirmPin,
 } = require("../controllers/foodCollection/userFeedingController");
 
@@ -47,6 +48,11 @@ router
 router
   .route("/invalidateUsers")
   .post(permissionTo("validate users"), invalidateUsers);
+
+ // Edit users total feeding money
+router
+  .route("/editTotalFunds")
+  .post(permissionTo("validate users"), editTotalFunds);
 
 //Fund students wallet
 router.route("/fundWallet").post(permissionTo("fund wallet"), fundWallet);

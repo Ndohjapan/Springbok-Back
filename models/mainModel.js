@@ -95,6 +95,10 @@ const userFeedingSchema = new mongoose.Schema(
     lastFundingDay: {
       type: String,
       default: "2022-09-17"
+    },
+    fundingCheck: {
+      type: Number,
+      default: 0
     }
   },
   { timestamps: true }
