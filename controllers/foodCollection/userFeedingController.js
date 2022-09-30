@@ -132,7 +132,7 @@ exports.validateUsers = catchAsync(async(req,res, next) => {
     let userId = req.user["_id"].toString()
     try{
         let userUpdate = userSchema.updateMany({"_id": {$in: userIds}}, {$set: {studentStatus: studentStatus}})
-        let feedingUpdate = userFeedingSchema.updateMany({userId: {$in: userIds}}, {$set: {feedingType: feedingType, studentStatus: studentStatus, totalFeedingAmount: totalFeedingAmount, amountLeft: totalFeedingAmount}})
+        let feedingUpdate = userFeedingSchema.updateMany({userId: {$in: userIds}, studentStatus: false}, {$set: {feedingType: feedingType, studentStatus: studentStatus, totalFeedingAmount: totalFeedingAmount, amountLeft: totalFeedingAmount}})
         let newStudentAlert = utilsSchema.updateMany({}, {$set: {newStudentAlert: 0}})
     
         let promises = [userUpdate, feedingUpdate, newStudentAlert]
