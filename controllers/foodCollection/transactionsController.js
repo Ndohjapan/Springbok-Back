@@ -25,12 +25,14 @@ exports.getAllTransactions = catchAsync(async(req, res, next) => {
 exports.getUserTransactions = catchAsync(async(req, res, next) => {
 
     let userId = req.user["_id"].toString()
-    // let page = req.query.page ? req.query.page : 1
-    // let limit = req.query.limit ? req.query.limit : 100000000
+    let page = req.query.page ? req.query.page : 1
+    let limit = req.query.limit ? req.query.limit : 100000000
 
     const options = {
         sort: {"createdAt": -1},
-        populate: ["from", "to"]
+        populate: ["from", "to"],
+        page: page,
+        limit: limit
     };
 
     transactionSchema.paginate({from: userId}, options, function(err, result) {
