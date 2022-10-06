@@ -377,7 +377,7 @@ async function fundAllPositiveStudentsToday(fundingDay, feedingAmount){
                 "lastFundingDay": fundingDay,
                 'fundingStatus': true, 
                 'totalAmountFunded': {$add: ["$totalAmountFunded", { $multiply: [ feedingAmount, "$feedingType" ] }]},
-                'balance': { $multiply: [ feedingAmount, "$feedingType" ] },
+                'balance': {$add: ["$balance", { $multiply: [ feedingAmount, "$feedingType" ] }]},
                 'numOfTimesFunded': {$add: ["$numOfTimesFunded", 1]},
                 "amountLeft": {$subtract: ["$totalFeedingAmount",  {$add: ["$totalAmountFunded", { $multiply: [ feedingAmount, "$feedingType" ] }]}]}
                 },
@@ -400,7 +400,7 @@ async function fundAllNegativeStudentsToday(fundingDay, feedingAmount){
                 'fundingStatus': true, 
                 'totalAmountFunded': {$add: ["$totalAmountFunded", "$amountLeft"]},
                 'numOfTimesFunded': {$add: ["$numOfTimesFunded", 1]},
-                'balance': "$amountLeft",
+                'balance': {$add: ["$amountLeft", "$balance"]},
                 "amountLeft": 0 
                 },
             }
@@ -421,7 +421,7 @@ async function fundAllPositiveStudents(userIds, fundingDay, feedingAmount){
                 "lastFundingDay": fundingDay,
                 'fundingStatus': true, 
                 'totalAmountFunded': {$add: ["$totalAmountFunded", { $multiply: [ feedingAmount, "$feedingType" ] }]},
-                'balance': { $multiply: [ feedingAmount, "$feedingType" ] },
+                'balance':  {$add: ["$balance", { $multiply: [ feedingAmount, "$feedingType" ] }]},
                 'numOfTimesFunded': {$add: ["$numOfTimesFunded", 1]},
                 "amountLeft": {$subtract: ["$totalFeedingAmount",  {$add: ["$totalAmountFunded", { $multiply: [ feedingAmount, "$feedingType" ] }]}]}
                 },
@@ -444,7 +444,7 @@ async function fundAllNegativeStudents(userIds, fundingDay, feedingAmount){
                 'fundingStatus': true, 
                 'totalAmountFunded': {$add: ["$totalAmountFunded", "$amountLeft"]},
                 'numOfTimesFunded': {$add: ["$numOfTimesFunded", 1]},
-                'balance': "$amountLeft",
+                'balance': {$add: ["$amountLeft", "$balance"]},
                 "amountLeft": 0 
                 },
             }
