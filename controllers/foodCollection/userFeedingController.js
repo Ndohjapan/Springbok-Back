@@ -83,6 +83,22 @@ exports.confirmPin = catchAsync(async(req, res, next) => {
     
 })
 
+exports.updateUser = catchAsync(async (req, res, next) => { 
+    let data = req.body; 
+    let updateData = {}; 
+    Object.entries(data).forEach(([key, value]) => { 
+        
+        if (value != "") { 
+            updateData[key] = value; 
+        } 
+    }); 
+    
+    let user = await userFeedingSchema.updateOne({userId: req.params.id}, updateData, { new: true, }); 
+    
+    user = await userFeedingSchema.findOne({userId: req.params.id}); 
+    
+    res.status(200).send({ status: true, message: "User Updated", data: user });});
+
 exports.deleteUser = catchAsync(async(req, res, next) => {
     const socket = req.app.get("socket");
     let userId = req.user["_id"].toString()
@@ -158,8 +174,7 @@ exports.editTotalFunds = catchAsync(async(req,res, next) => {
             [
                 {$set: {
                     "totalFeedingAmount": newTotalAmount,
-                    "amountLeft": {$subtract: [newTotalAmount, "$totalAmountFunded"]},
-                    "fundingStatus": false
+                    "amountLeft": {$subtract: [newTotalAmount, "$totalAmountFunded"]}
                     },
                 }
             ], 
