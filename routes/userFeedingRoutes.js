@@ -6,6 +6,7 @@ const {
   savePin,
   resetPin,
   deleteUser,
+  updateUser,
   getAllUsers,
   getUser,
   postFilter,
@@ -27,6 +28,9 @@ router.route("/").get(getAllUsers);
 
 // Get by id
 router.route("/:id").get(getUser);
+
+// Update User Feeding Profile
+router.route("/updateUser/:id").post(updateUser)
 
 // Delete
 router.route("/:id").delete(permissionTo("all"), deleteUser);
