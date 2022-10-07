@@ -174,8 +174,7 @@ exports.editTotalFunds = catchAsync(async(req,res, next) => {
             [
                 {$set: {
                     "totalFeedingAmount": newTotalAmount,
-                    "amountLeft": {$subtract: [newTotalAmount, "$totalAmountFunded"]},
-                    "fundingStatus": false
+                    "amountLeft": {$subtract: [newTotalAmount, "$totalAmountFunded"]}
                     },
                 }
             ], 
