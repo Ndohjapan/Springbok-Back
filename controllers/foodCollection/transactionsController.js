@@ -6,10 +6,15 @@ const {success} = require("../../utils/activityLogs")
 
 
 exports.getAllTransactions = catchAsync(async(req, res, next) => {
-
+    
+    let page = req.query.page ? req.query.page : 1
+    let limit = req.query.limit ? req.query.limit : 100000000
+    
     const options = {
         sort: {"createdAt": -1},
-        populate: ["from", "to"]
+        populate: ["from", "to"],
+        page: page,
+        limit: limit
     };
 
     transactionSchema.paginate({}, options, function(err, result) {
@@ -68,6 +73,9 @@ exports.deleteTransaction = catchAsync(async(req, res, next) => {
 exports.postFilter = catchAsync(async(req, res, next) => {
     let data = req.body
     let updateData = {}
+    
+    let page = req.query.page ? req.query.page : 1
+    let limit = req.query.limit ? req.query.limit : 100000000
 
     Object.entries(data).forEach(([key, value]) => {
         if(value != ""){
@@ -78,7 +86,9 @@ exports.postFilter = catchAsync(async(req, res, next) => {
 
     const options = {
         sort: {"createdAt": -1},
-        populate: ["from", "to"]
+        populate: ["from", "to"],
+        page: page,
+        limit: limit
     };
 
     transactionSchema.paginate(updateData, options, function(err, result) {
