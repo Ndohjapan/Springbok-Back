@@ -119,23 +119,22 @@ exports.getDisbursementDetails = catchAsync(async(req, res, next) => {
 
   let disbursementAggregate = [
     {
-      '$group': {
-        '_id': 0, 
-        'totalAmount': {
-          '$sum': '$amount'
-        }, 
-        'lastupdate': {
-          '$max': '$createdAt'
+      '$match': {
+        'numOfTimesFunded': {
+          '$gt': 0
         }
       }
     }, {
-      '$project': {
-        '_id': 0
+      '$group': {
+        '_id': null, 
+        'totalAmount': {
+          '$sum': '$totalAmountFunded'
+        }
       }
     }
   ]
 
-  let disbursementData = await disbursementSchema.aggregate(disbursementAggregate)
+  let disbursementData = await userFeedingSchema.aggregate(disbursementAggregate)
   res.status(200).send({status: true, message:"Successful", data: disbursementData})
 
 })
