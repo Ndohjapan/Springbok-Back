@@ -247,7 +247,7 @@ exports.fundWallet = catchAsync(async(req, res, next) => {
                 'userId': {
                   '$in': userIds
                 },
-                "lastFunding": todaysDate
+                "lastFunding": fundingDay
               }
             }, {
               '$unwind': {
@@ -309,7 +309,7 @@ exports.fundAllLegibleWallets = catchAsync(async(req, res, next) => {
         let statistics = await userFeedingSchema.aggregate([
             {
               '$match': {
-                "lastFunding": todaysDate
+                "lastFunding": fundingDay
               }
             }, {
               '$unwind': {
@@ -383,6 +383,7 @@ async function checkIfStudentCanBeFundedToday(feedingAmount){
 }
 
 async function fundAllPositiveStudentsToday(fundingDay, feedingAmount){
+    console.log(fundingDay)
     let user = await userFeedingSchema.updateMany(
         {fundingStatus: false, studentStatus: true, fundingCheck: {$gt: 0}}, 
         [
@@ -405,6 +406,7 @@ async function fundAllPositiveStudentsToday(fundingDay, feedingAmount){
 }
 
 async function fundAllNegativeStudentsToday(fundingDay, feedingAmount){
+    console.log(fundingDay)
     let user = await userFeedingSchema.updateMany(
         {fundingCheck: {$lte: 0}, fundingStatus: false, studentStatus: true}, 
         [
@@ -427,6 +429,7 @@ async function fundAllNegativeStudentsToday(fundingDay, feedingAmount){
 }
 
 async function fundAllPositiveStudents(userIds, fundingDay, feedingAmount){
+    console.log(fundingDay)
     let user = await userFeedingSchema.updateMany(
         {fundingCheck: {$gt: 0}, fundingStatus: false, userId: {$in: userIds}}, 
         [
@@ -449,6 +452,7 @@ async function fundAllPositiveStudents(userIds, fundingDay, feedingAmount){
 }
 
 async function fundAllNegativeStudents(userIds, fundingDay, feedingAmount){
+    console.log(fundingDay)
     let user = await userFeedingSchema.updateMany(
         {fundingCheck: {$lte: 0}, fundingStatus: false, userId: {$in: userIds}}, 
         [
