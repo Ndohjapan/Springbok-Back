@@ -10,11 +10,18 @@ const fundingStatus = async(req, res, next) => {
             return err
         }
         for(i=0; i<docs.length; i++){
-            console.log(docs[i].userId)
-            let lastFundingDay = docs[i].lastFundingDay
-            lastFundingDay = new Date(lastFundingDay).toISOString().substring(0, 10)
-            
-            await userFeedingSchema.updateMany({userId: docs[i].userId}, {$set: {lastFunding: lastFundingDay}})
+            try{
+                console.log(docs[i].userId)
+                let lastFundingDay = docs[i].lastFundingDay
+                lastFundingDay = new Date(lastFundingDay).toISOString().substring(0, 10)
+
+                await userFeedingSchema.updateMany({userId: docs[i].userId}, {$set: {lastFunding: lastFundingDay}})
+            }
+            catch(err){
+                console.log(err)
+                continue;
+            }
+
     
         }
                 
