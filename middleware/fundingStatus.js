@@ -7,7 +7,7 @@ const fundingStatus = async(req, res, next) => {
     const token = req.headers["authorization"]
     userFeedingSchema.find({}, async function(err, docs){
         if(err){
-            console.log(err)
+            console.log(docs[i].userId)
             return err
         }
         for(i=0; i<docs.length; i++){
