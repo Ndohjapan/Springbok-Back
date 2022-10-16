@@ -292,8 +292,8 @@ exports.fundAllLegibleWallets = catchAsync(async(req, res, next) => {
     
     try{
 
-        let todaysDate = new Date().toISOString().substring(0, 10)
-        let fundingDay = moment(todaysDate, 'YYYY-MM-DD');
+        let todaysDate = new Date().toISOString()
+        let fundingDay = moment(todaysDate, 'YYYY-MM-DD').format("YYYY-MM-DD");
     
         await checkIfStudentCanBeFundedToday(feedingAmount)
         let negativeStudents = await fundAllNegativeStudentsToday(fundingDay, feedingAmount)
