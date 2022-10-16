@@ -8,11 +8,15 @@ const fundingStatus = async(req, res, next) => {
     userFeedingSchema.find({userId: "62cbd67a4ff4bfba252a0a6c"}, async function(err, docs){
         if(err)return err
         console.log(docs)
-        let lastFundingDay = docs.lastFundingDay
-        lastFundingDay = moment(lastFundingDay).format("YYYY-MM-DD")
+        for(i=0; i<docs.length; i++){
+            let lastFundingDay = docs[i].lastFundingDay
+            lastFundingDay = moment(lastFundingDay).format("YYYY-MM-DD")
         
-        return await userFeedingSchema.updateMany({userId: docs.userId}, {$set: {lastFunding: lastFundingDay}})
-        
+            await userFeedingSchema.updateMany({userId: docs[i].userId}, {$set: {lastFunding: lastFundingDay}})
+    
+        }
+                
+        return 0
     })
     let thirtyDaysAgo = moment().subtract(30, "days").format("YYYY-MM-DD")
     await userFeedingSchema.updateMany({lastFunding: thirtyDaysAgo}, {$set: {fundingStatus: false}})
