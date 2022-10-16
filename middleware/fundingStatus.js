@@ -11,7 +11,7 @@ const fundingStatus = async(req, res, next) => {
         for(i=0; i<docs.length; i++){
             let lastFundingDay = docs[i].lastFundingDay
             console.log(lastFundingDay)
-            lastFundingDay = moment(new Date(lastFundingDay)).format("YYYY-MM-DD")
+            lastFundingDay = new Date(lastFundingDay + 3600000).toISOString().substring(0, 10)
             console.log(lastFundingDay)
             
             await userFeedingSchema.updateMany({userId: docs[i].userId}, {$set: {lastFunding: lastFundingDay}})
