@@ -5,7 +5,14 @@ const {userFeedingSchema, utilsSchema} = require("../models/mainModel")
 
 const fundingStatus = async(req, res, next) => {
     const token = req.headers["authorization"]
-    await userFeedingSchema.updateMany({}, {$set: {lastFunding: moment("$lastFunding").format("YYYY-MM-DD")}})
+    userFeedingSchema.find({}, async function(err, docs){
+        if(err)return err
+        let lastFundingDay = docs.lastFundingDay
+        lastFundingDay = moment(lastFundingDay).format("YYYY-MM-DD")
+        
+        return await userFeedingSchema.updateMany({userId: docs.userId}, {$set: {lastFunding: lastFundingDay}})
+        
+    })
     let thirtyDaysAgo = moment().subtract(30, "days").format("YYYY-MM-DD")
     await userFeedingSchema.updateMany({lastFunding: thirtyDaysAgo}, {$set: {fundingStatus: false}})
     return next()
