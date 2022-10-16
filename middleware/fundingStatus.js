@@ -6,7 +6,10 @@ const {userFeedingSchema, utilsSchema} = require("../models/mainModel")
 const fundingStatus = async(req, res, next) => {
     const token = req.headers["authorization"]
     userFeedingSchema.find({}, async function(err, docs){
-        if(err)return err
+        if(err){
+            console.log(err)
+            return err
+        }
         for(i=0; i<docs.length; i++){
             let lastFundingDay = docs[i].lastFundingDay
             lastFundingDay = new Date(lastFundingDay).toISOString().substring(0, 10)
