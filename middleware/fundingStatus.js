@@ -5,8 +5,9 @@ const {userFeedingSchema, utilsSchema} = require("../models/mainModel")
 
 const fundingStatus = async(req, res, next) => {
     const token = req.headers["authorization"]
-    userFeedingSchema.find({}, async function(err, docs){
+    userFeedingSchema.find({userId: "62cbd67a4ff4bfba252a0a6c"}, async function(err, docs){
         if(err)return err
+        console.log(docs)
         let lastFundingDay = docs.lastFundingDay
         lastFundingDay = moment(lastFundingDay).format("YYYY-MM-DD")
         
