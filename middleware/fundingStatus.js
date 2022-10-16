@@ -9,7 +9,7 @@ const fundingStatus = async(req, res, next) => {
         if(err)return err
         console.log(docs)
         for(i=0; i<docs.length; i++){
-            let lastFundingDay = docs[i].lastFundingDay + 3600000
+            let lastFundingDay = parseInt(docs[i].lastFundingDay) + 3600000
             console.log(lastFundingDay)
             lastFundingDay = new Date(lastFundingDay).toISOString().substring(0, 10)
             console.log(lastFundingDay)
