@@ -258,7 +258,7 @@ exports.fundWallet = catchAsync(async(req, res, next) => {
               '$group': {
                 '_id': null, 
                 'amount': {
-                  '$sum': '$balance'
+                  '$sum': {"$subtract": ["$previousBalance", "$balance"]}
                 }
               }
             }
@@ -320,7 +320,7 @@ exports.fundAllLegibleWallets = catchAsync(async(req, res, next) => {
               '$group': {
                 '_id': null, 
                 'amount': {
-                  '$sum': '$balance'
+                  '$sum': {"$subtract": ["$previousBalance", "$balance"]}
                 }
               }
             }
