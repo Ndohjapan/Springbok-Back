@@ -72,7 +72,11 @@ exports.getTransactionsDetails = catchAsync(async(req, res, next) => {
             'path': '$restaurant', 
             'preserveNullAndEmptyArrays': true
           }
-        }, {
+        }, 
+        {
+          "$sort": {createdAt: 1}
+        },
+        {
           '$group': {
             '_id': 0, 
             'docs': {
@@ -89,7 +93,11 @@ exports.getTransactionsDetails = catchAsync(async(req, res, next) => {
           '$unwind': {
             'path': '$docs'
           }
-        }, {
+        }, 
+        {
+          "$sort": {to: 1}
+        },
+        {
           '$group': {
             '_id': '$docs.to', 
             'transactions': {
