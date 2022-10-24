@@ -12,42 +12,40 @@ const {Worker} = require("worker_threads")
 
 exports.getUsersDetails = catchAsync(async(req, res, next) => {
     let usersAggregate = [
-        {
-          '$group': {
-            '_id': '0', 
-            'docs': {
-              '$push': '$$ROOT'
-            }, 
-            'totalUsers': {
-              '$count': {}
-            }
-          }
-        }, {
-          '$unwind': {
-            'path': '$docs', 
-            'preserveNullAndEmptyArrays': true
-          }
-        }, {
-          '$group': {
-            '_id': '$docs.studentStatus', 
-            'studentStatus': {
-              '$first': '$docs.studentStatus'
-            }, 
-            'Students': {
-              '$count': {}
-            }, 
-            'totalUsers': {
-              '$first': '$totalUsers'
-            }
-          }
-        }, {
-          '$project': {
-            '_id': 0
+      {
+        '$group': {
+          '_id': '$studentStatus', 
+          'Students': {
+            '$count': {}
+          }, 
+          'studentStatus': {
+            '$first': '$studentStatus'
           }
         }
+      }, {
+        '$project': {
+          '_id': 0
+        }
+      }
+    ]
+    let totalUsersAggregate = [
+      {
+        '$group': {
+          '_id': null, 
+          'totalUsers': {
+            '$count': {}
+          }
+        }
+      }
     ]
 
     let userData = await userFeedingSchema.aggregate(usersAggregate)
+    let totalUserData = await userFeedingSchema.aggregate(totalUsersAggregate)
+
+    for(i=0; i<userData.length; i++){
+      userData[i]["totalUsers"] = totalUserData[0]["totalUsers"]
+    }
+
     let newUserAlert = await utilsSchema.find({}).select({_id: 0, newStudentAlert: 1})
 
     return res.status(200).send({status: true, message: "Successfull", userData, newUserAlert})
