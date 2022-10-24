@@ -111,7 +111,7 @@ exports.getTransactionsDetails = catchAsync(async(req, res, next) => {
         }
     ]
 
-    let transactionData = await transactionSchema.aggregate(transactionAgreggate)
+    let transactionData = await transactionSchema.aggregate(transactionAgreggate, {allowDiskUse: true})
     return res.status(200).send({status: true, message: "Succssful", data: transactionData})
 })
 
