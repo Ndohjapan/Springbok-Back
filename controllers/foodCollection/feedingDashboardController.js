@@ -53,74 +53,64 @@ exports.getUsersDetails = catchAsync(async(req, res, next) => {
 })
 
 exports.getTransactionsDetails = catchAsync(async(req, res, next) => {
-    let transactionAgreggate = [
-        {
-          '$addFields': {
-            'toId': {
-              '$toObjectId': '$to'
-            }
-          }
-        }, {
-          '$lookup': {
-            'from': 'restaurants', 
-            'localField': 'toId', 
-            'foreignField': '_id', 
-            'as': 'restaurant'
-          }
-        }, {
-          '$unwind': {
-            'path': '$restaurant', 
-            'preserveNullAndEmptyArrays': true
-          }
-        }, 
-        {
-          "$sort": {createdAt: 1}
-        },
-        {
-          '$group': {
-            '_id': 0, 
-            'docs': {
-              '$push': '$$ROOT'
-            }, 
-            'totalTransactions': {
-              '$count': {}
-            }, 
-            'totalAmount': {
-              '$sum': '$amount'
-            }
-          }
-        }, {
-          '$unwind': {
-            'path': '$docs'
-          }
-        }, 
-        {
-          "$sort": {to: 1}
-        },
-        {
-          '$group': {
-            '_id': '$docs.to', 
-            'transactions': {
-              '$count': {}
-            }, 
-            'amount': {
-              '$sum': '$docs.amount'
-            }, 
-            'restaurantName': {
-              '$first': '$docs.restaurant.name'
-            }, 
-            'totalTransactions': {
-              '$first': '$totalTransactions'
-            }, 
-            'totalAmount': {
-              '$first': '$totalAmount'
-            }
+    let transactionAgreggate = [ 
+      {
+        '$group': {
+          _id: null,
+          totalTransactions: {
+            $count: {}
+          },
+          totalAmount: {
+            $sum: "$amount"
           }
         }
+      }
+    ]
+
+    let restuarantAggregate = [
+      {
+        '$addFields': {
+          'toId': {
+            '$toObjectId': '$to'
+          }
+        }
+      }, {
+        '$lookup': {
+          'from': 'restaurants', 
+          'localField': 'toId', 
+          'foreignField': '_id', 
+          'as': 'restaurant'
+        }
+      }, {
+        '$unwind': {
+          'path': '$restaurant', 
+          'preserveNullAndEmptyArrays': true
+        }
+      }, {
+        '$group': {
+          '_id': '$to', 
+          'transactions': {
+            '$count': {}
+          }, 
+          'amount': {
+            '$sum': '$amount'
+          }, 
+          'restaurantName': {
+            '$first': '$restaurant.name'
+          }
+        }
+      }
     ]
 
     let transactionData = await transactionSchema.aggregate(transactionAgreggate, {allowDiskUse: true})
-    return res.status(200).send({status: true, message: "Succssful", data: transactionData})
+    let restaurantData = await transactionSchema.aggregate(restuarantAggregate, {allowDiskUse: true})
+    
+    for(i=0; i<restaurantData.length; i++){
+      restaurantData[i]["totalTransactions"] = transactionData[0]["totalTransactions"]
+      restaurantData[i]["totalAmount"] = transactionData[0]["totalAmount"]
+    }
+
+    return res.status(200).send({status: true, message: "Succssful", data: restaurantData})
 })
 
 exports.getDisbursementDetails = catchAsync(async(req, res, next) => {
