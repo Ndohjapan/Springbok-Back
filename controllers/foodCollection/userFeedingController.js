@@ -2,6 +2,7 @@ const {utilsSchema, transactionSchema, restaurantSchema, userFeedingSchema, disb
 const AppError = require("../../utils/appError");
 const catchAsync = require("../../utils/catchAsync");
 const bcrypt = require("bcrypt")
+const client = require("../../utils/client")
 const moment = require("moment")
 const {success} = require("../../utils/activityLogs")
     
