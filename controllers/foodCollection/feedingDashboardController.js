@@ -7,6 +7,7 @@ const catchAsync = require("../../utils/catchAsync");
 const bcrypt = require("bcrypt");
 const {success} = require("../../utils/activityLogs")
 const path = require("path")
+const {client, getCachedData} = require("../../utils/client")
 const {Worker} = require("worker_threads")
 
 exports.getUsersDetails = catchAsync(async(req, res, next) => {

@@ -4,6 +4,20 @@ client.on('error', (err) => console.log('Redis Client Error', err));
 
 client.connect();
 
-module.exports = client
+exports.client = client
+
+async function getCachedData(key){
+    let cachedData = client.get(key)
+
+    console.log(cachedData)
+
+    if(!cachedData){
+        return false
+    }
+    return cachedData
+
+}
+
+exports.getCachedData = getCachedData
 
 

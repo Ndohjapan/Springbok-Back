@@ -15,7 +15,7 @@ exports.userSearch = catchAsync(async(req, res, next) => {
         };
 
         userSchema.paginate(
-            {$or:[{firstname: regex}, {lastname: regex}, {middlename: regex}], verified: true},
+            {$or:[{firstname: regex}, {lastname: regex}, {middlename: regex}, {matricNumber: regex}, {email: regex}], verified: true},
             options,
             function (err, result) {
               if (err) {
