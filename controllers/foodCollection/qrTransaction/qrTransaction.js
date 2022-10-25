@@ -7,6 +7,7 @@ const {
 } = require("../../../models/mainModel");
 const AppError = require("../../../utils/appError");
 const catchAsync = require("../../../utils/catchAsync");
+const {getCachedData, setCacheData} = require("../../../utils/client")
 const ObjectId = require("mongoose").Types.ObjectId;
 
 exports.checkBalance = catchAsync(async (req, res, next) => {
@@ -92,7 +93,8 @@ exports.doTransfer = catchAsync(async (req, res, next) => {
         .populate(["from", "to"])
         .select("-updatedAt");
 
-      return res.status(200).send({ status: true, payload: transaction });
+      res.status(200).send({ status: true, payload: transaction });
+      return await setCacheData("transactionDetails", "", 10)
     }
   }
 

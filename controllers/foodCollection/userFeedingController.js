@@ -31,7 +31,7 @@ exports.getAllUsers = catchAsync(async(req, res, next) => {
         populate: ["userId"]
     };
 
-    // let cachedResponse = await getCachedData("allUsers"+page+query)
+    let cachedResponse = await getCachedData("allUsers")
 
     if(!cachedResponse){
 
@@ -286,6 +286,8 @@ exports.fundWallet = catchAsync(async(req, res, next) => {
     
         res.status(200).send({status: true, message: "Update Successful"})
 
+        await setCacheData("disbursementDetails", "", 10)
+
         return success(userId, ` funded ${user.modifiedCount} students with total of ${totalAmount} naira`, "Update", socket)
 
     }
@@ -347,6 +349,8 @@ exports.fundAllLegibleWallets = catchAsync(async(req, res, next) => {
         })
     
         res.status(200).send({status: true, message: "Update Successful"})
+
+        await setCacheData("disbursementDetails", "", 10)
 
         return success(userId, ` funded ${user.modifiedCount} students who are legible after 30 days with total of ${totalAmount} naira`, "Update", socket)
 
