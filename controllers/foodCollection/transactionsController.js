@@ -2,6 +2,7 @@ const {userSchema, restaurantSchema, transactionSchema} = require("../../models/
 const AppError = require("../../utils/appError");
 const catchAsync = require("../../utils/catchAsync");
 const bcrypt = require("bcrypt")
+const {getCachedData, setCacheData} = require("../../utils/client")
 const {success} = require("../../utils/activityLogs")
 
 
@@ -10,6 +11,8 @@ exports.getAllTransactions = catchAsync(async(req, res, next) => {
     let page = req.query.page ? req.query.page : 1
     let limit = req.query.limit ? req.query.limit : 100000000
     
+    // let cachedResponse = await getCachedData("alltransactions"+page+query)
+
     const options = {
         sort: {"createdAt": -1},
         populate: ["from", "to"],
@@ -22,6 +25,7 @@ exports.getAllTransactions = catchAsync(async(req, res, next) => {
             console.log(err)
             res.status(400).send(err)
         }else{
+            // await setCacheData("alltransactions"+page+query, result.docs, 300)
             res.status(200).send({status: true, message: "Successful", data: result.docs})
         }
     })

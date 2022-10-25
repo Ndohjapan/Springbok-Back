@@ -7,7 +7,7 @@ const catchAsync = require("../../utils/catchAsync");
 const bcrypt = require("bcrypt");
 const {success} = require("../../utils/activityLogs")
 const path = require("path")
-const {client, getCachedData} = require("../../utils/client")
+const {getCachedData, setCacheData} = require("../../utils/client")
 const {Worker} = require("worker_threads")
 
 exports.getUsersDetails = catchAsync(async(req, res, next) => {
@@ -39,77 +39,95 @@ exports.getUsersDetails = catchAsync(async(req, res, next) => {
       }
     ]
 
-    let userData = await userFeedingSchema.aggregate(usersAggregate)
-    let totalUserData = await userFeedingSchema.aggregate(totalUsersAggregate)
+    let cachedResponse = await getCachedData("userDetails")
+    let userData = cachedResponse
 
-    for(i=0; i<userData.length; i++){
-      userData[i]["totalUsers"] = totalUserData[0]["totalUsers"]
+    if(!cachedResponse){
+
+      userData = await userFeedingSchema.aggregate(usersAggregate)
+      let totalUserData = await userFeedingSchema.aggregate(totalUsersAggregate)
+      
+      for(i=0; i<userData.length; i++){
+        userData[i]["totalUsers"] = totalUserData[0]["totalUsers"]
+      }
+      
+      await setCacheData("userDetails", userData, 900)     
     }
 
     let newUserAlert = await utilsSchema.find({}).select({_id: 0, newStudentAlert: 1})
-
     return res.status(200).send({status: true, message: "Successfull", userData, newUserAlert})
+      
+
 })
 
 exports.getTransactionsDetails = catchAsync(async(req, res, next) => {
-    let transactionAgreggate = [ 
-      {
-        '$group': {
-          _id: null,
-          totalTransactions: {
-            $count: {}
-          },
-          totalAmount: {
-            $sum: "$amount"
-          }
+  let transactionAgreggate = [ 
+    {
+      '$group': {
+        _id: null,
+        totalTransactions: {
+          $count: {}
+        },
+        totalAmount: {
+          $sum: "$amount"
         }
       }
-    ]
+    }
+  ]
 
-    let restuarantAggregate = [
-      {
-        '$addFields': {
-          'toId': {
-            '$toObjectId': '$to'
-          }
-        }
-      }, {
-        '$lookup': {
-          'from': 'restaurants', 
-          'localField': 'toId', 
-          'foreignField': '_id', 
-          'as': 'restaurant'
-        }
-      }, {
-        '$unwind': {
-          'path': '$restaurant', 
-          'preserveNullAndEmptyArrays': true
-        }
-      }, {
-        '$group': {
-          '_id': '$to', 
-          'transactions': {
-            '$count': {}
-          }, 
-          'amount': {
-            '$sum': '$amount'
-          }, 
-          'restaurantName': {
-            '$first': '$restaurant.name'
-          }
+  let restuarantAggregate = [
+    {
+      '$addFields': {
+        'toId': {
+          '$toObjectId': '$to'
         }
       }
-    ]
+    }, {
+      '$lookup': {
+        'from': 'restaurants', 
+        'localField': 'toId', 
+        'foreignField': '_id', 
+        'as': 'restaurant'
+      }
+    }, {
+      '$unwind': {
+        'path': '$restaurant', 
+        'preserveNullAndEmptyArrays': true
+      }
+    }, {
+      '$group': {
+        '_id': '$to', 
+        'transactions': {
+          '$count': {}
+        }, 
+        'amount': {
+          '$sum': '$amount'
+        }, 
+        'restaurantName': {
+          '$first': '$restaurant.name'
+        }
+      }
+    }
+  ]
+
+  let cachedResponse = await getCachedData("transactionDetails")
+  let restaurantData = cachedResponse
+
+  if(!cachedResponse){
 
     let transactionData = await transactionSchema.aggregate(transactionAgreggate, {allowDiskUse: true})
-    let restaurantData = await transactionSchema.aggregate(restuarantAggregate, {allowDiskUse: true})
+    restaurantData = await transactionSchema.aggregate(restuarantAggregate, {allowDiskUse: true})
     
     for(i=0; i<restaurantData.length; i++){
       restaurantData[i]["totalTransactions"] = transactionData[0]["totalTransactions"]
       restaurantData[i]["totalAmount"] = transactionData[0]["totalAmount"]
     }
 
-    return res.status(200).send({status: true, message: "Succssful", data: restaurantData})
+    await setCacheData("transactionDetails", restaurantData, 900)    
+
+  }
+
+  return res.status(200).send({status: true, message: "Succssful", data: restaurantData})
 })
 
 exports.getDisbursementDetails = catchAsync(async(req, res, next) => {
@@ -131,7 +149,16 @@ exports.getDisbursementDetails = catchAsync(async(req, res, next) => {
     }
   ]
 
-  let disbursementData = await userFeedingSchema.aggregate(disbursementAggregate)
+  let cachedResponse = await getCachedData("disbursementDetails")
+  let disbursementData = cachedResponse
+
+  if(!cachedResponse){
+    disbursementData = await userFeedingSchema.aggregate(disbursementAggregate)
+    
+    await setCacheData("disbursementDetails", disbursementData, 900)
+
+  }
+
   res.status(200).send({status: true, message:"Successful", data: disbursementData})
 
 })

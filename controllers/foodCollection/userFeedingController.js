@@ -2,7 +2,7 @@ const {utilsSchema, transactionSchema, restaurantSchema, userFeedingSchema, disb
 const AppError = require("../../utils/appError");
 const catchAsync = require("../../utils/catchAsync");
 const bcrypt = require("bcrypt")
-const client = require("../../utils/client")
+const {getCachedData, setCacheData} = require("../../utils/client")
 const moment = require("moment")
 const {success} = require("../../utils/activityLogs")
     
@@ -31,14 +31,26 @@ exports.getAllUsers = catchAsync(async(req, res, next) => {
         populate: ["userId"]
     };
 
-    userFeedingSchema.paginate({}, options, function(err, result) {
-        if(err){
-            console.log(err)
-            res.status(400).send(err)
-        }else{
-            res.status(200).send({status: true, message: "Successful", payload: result.docs})
-        }
-    })
+    // let cachedResponse = await getCachedData("allUsers"+page+query)
+
+    if(!cachedResponse){
+
+        userFeedingSchema.paginate({}, options, async function(err, result) {
+            if(err){
+                console.log(err)
+                return res.status(400).send(err)
+            }else{
+                // await setCacheData("allUsers"+page+query, result.docs, 300)
+                return res.status(200).send({status: true, message: "Successful", payload: result.docs})
+            }
+        })
+    }
+    else{
+
+        return res.status(200).send({status: true, message: "Successful", payload: cachedResponse})
+    }
+
+    
 })
 
 exports.getUser = catchAsync(async(req, res, next) => {
