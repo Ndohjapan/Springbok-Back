@@ -31,7 +31,8 @@ exports.getAllUsers = catchAsync(async(req, res, next) => {
         populate: ["userId"]
     };
 
-    let cachedResponse = await getCachedData("allUsers")
+    
+    let cachedResponse = await getCachedData("allUsers"+page+limit)
 
     if(!cachedResponse){
 
@@ -40,7 +41,7 @@ exports.getAllUsers = catchAsync(async(req, res, next) => {
                 console.log(err)
                 return res.status(400).send(err)
             }else{
-                // await setCacheData("allUsers"+page+query, result.docs, 300)
+                await setCacheData("allUsers"+page+limit, result.docs, 300)
                 return res.status(200).send({status: true, message: "Successful", payload: result.docs})
             }
         })
