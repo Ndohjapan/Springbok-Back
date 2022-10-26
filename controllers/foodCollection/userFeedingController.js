@@ -118,7 +118,7 @@ exports.deleteUser = catchAsync(async(req, res, next) => {
     let userId = req.user["_id"].toString()
 
     const user = await userFeedingSchema.findOneAndDelete({userId: req.params.id})
-
+    await setCacheData("allUsers", "", 10)
     res.status(200).send({status: true, message: "User Deleted"})
     return success(userId, ` deleted a user from database`, "Delete", socket)
 
@@ -167,7 +167,8 @@ exports.validateUsers = catchAsync(async(req,res, next) => {
     
         let promises = [userUpdate, feedingUpdate, newStudentAlert]
     
-        Promise.all(promises).then(results => {
+        Promise.all(promises).then(async results => {
+            await setCacheData("allUsers", "", 0)
             res.status(200).send({status: true, message:"Update Successful"})
             return success(userId, ` validated ${results[0].modifiedCount} students`, "Update", socket)
 
@@ -217,7 +218,8 @@ exports.invalidateUsers = catchAsync(async(req,res, next) => {
     
         let promises = [userUpdate, feedingUpdate, newStudentAlert]
     
-        Promise.all(promises).then(results => {
+        Promise.all(promises).then(async results => {
+            await setCacheData("allUsers", "", 10)
             res.status(200).send({status: true, message:"Update Successful"})
             return success(userId, ` invalidated ${results[0].modifiedCount} students`, "Update", socket)
 
