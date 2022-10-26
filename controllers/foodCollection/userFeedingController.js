@@ -168,7 +168,7 @@ exports.validateUsers = catchAsync(async(req,res, next) => {
         let promises = [userUpdate, feedingUpdate, newStudentAlert]
     
         Promise.all(promises).then(async results => {
-            await setCacheData("allUsers", "", 0)
+            await setCacheData("allUsers", "", 10)
             res.status(200).send({status: true, message:"Update Successful"})
             return success(userId, ` validated ${results[0].modifiedCount} students`, "Update", socket)
 
