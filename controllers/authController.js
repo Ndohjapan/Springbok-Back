@@ -9,6 +9,8 @@ const {sendMail} = require("../utils/sendMail");
 const dates = require("../utils/dates");
 const catchAsync = require("../utils/catchAsync");
 const {success} = require("../utils/activityLogs")
+const {getCachedData, setCacheData} = require("../utils/client")
+
 
 exports.signup = catchAsync(async (req, res, next) => {
   const { firstname, lastname, middlename, email, password, department, level, hostel, transactionPin, matricNumber } = req.body;
@@ -41,8 +43,6 @@ exports.signup = catchAsync(async (req, res, next) => {
   await sendMail(email, otp);
 
   res.status(201).json({ status: true, data: user, token });
-
-  await utilsSchema.updateMany({}, {$inc: {newStudentAlert: 1}})
 
 });
 
@@ -175,8 +175,12 @@ exports.verify = catchAsync(async (req, res, next) => {
   }else{
     
     user = await userSchema.findOneAndUpdate({email:email}, {$set: {otp:"", verified: true, otpExpiresIn: null}}, {new: true})
-  
+    
     res.status(200).json({ status: true, data: user });
+    
+    await utilsSchema.updateMany({}, {$inc: {newStudentAlert: 1}})
+  
+    return await setCacheData("allUsers", "", 10)
   }
 });
 

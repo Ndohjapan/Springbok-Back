@@ -32,7 +32,7 @@ exports.getAllUsers = catchAsync(async(req, res, next) => {
     };
 
     
-    let cachedResponse = await getCachedData("allUsers"+page+limit)
+    let cachedResponse = await getCachedData("allUsers")
 
     if(!cachedResponse){
 
@@ -41,7 +41,7 @@ exports.getAllUsers = catchAsync(async(req, res, next) => {
                 console.log(err)
                 return res.status(400).send(err)
             }else{
-                await setCacheData("allUsers"+page+limit, result.docs, 300)
+                await setCacheData("allUsers", result.docs, 900)
                 return res.status(200).send({status: true, message: "Successful", payload: result.docs})
             }
         })
