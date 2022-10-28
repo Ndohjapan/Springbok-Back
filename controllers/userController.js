@@ -5,6 +5,7 @@ const {
   userSchema,
   transactionSchema,
 } = require("../models/mainModel");
+const {getCachedData, setCacheData} = require("../utils/client")
 
 exports.getAllUsers = catchAsync(async (req, res, next) => {
   // let page = req.query.page ? req.query.page : 1;
@@ -73,7 +74,8 @@ exports.deleteUser = catchAsync(async (req, res, next) => {
   const user = await userSchema.deleteMany({ _id: { $in: userIds } });
   let userFeeding = userFeedingSchema.deleteMany({ userId: { $in: userIds } });
   let transactions = transactionSchema.deleteMany({ from: { $in: userIds } });
-  Promise.all([userFeeding, transactions]).then((result) => {
+  Promise.all([userFeeding, transactions]).then(async (result) => {
+    await setCacheData("allUsers", "", 10)
     res.status(204).send({ status: true, message: "User Deleted" });
   });
 });
