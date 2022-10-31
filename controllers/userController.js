@@ -76,6 +76,7 @@ exports.deleteUser = catchAsync(async (req, res, next) => {
   let transactions = transactionSchema.deleteMany({ from: { $in: userIds } });
   Promise.all([userFeeding, transactions]).then(async (result) => {
     await setCacheData("allUsers", "", 10)
+    await setCacheData("legibleUsers", "", 10)
     res.status(204).send({ status: true, message: "User Deleted" });
   });
 });

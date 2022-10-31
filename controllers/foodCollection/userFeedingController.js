@@ -32,7 +32,7 @@ exports.getAllUsers = catchAsync(async(req, res, next) => {
     };
 
     
-    let cachedResponse = await getCachedData("allUsers")
+    let cachedResponse = await getCachedData("allUser", parseInt(req.query.page), parseInt(req.query.limit))
 
     if(!cachedResponse){
 
@@ -41,7 +41,8 @@ exports.getAllUsers = catchAsync(async(req, res, next) => {
                 console.log(err)
                 return res.status(400).send(err)
             }else{
-                await setCacheData("allUsers", result.docs, 900)
+                let allUsers = await userFeedingSchema.find({}).sort({ createdAt: -1 }).populate("userId")
+                await setCacheData("allUser", allUsers, 3600)
                 return res.status(200).send({status: true, message: "Successful", payload: result.docs})
             }
         })
@@ -138,6 +139,7 @@ exports.postFilter = catchAsync(async(req, res, next) => {
     let page = req.query.page ? req.query.page : 1
     let limit = req.query.limit ? req.query.limit : 1000000
 
+    
     const options = {
         page: page,
         limit: limit,
@@ -145,14 +147,34 @@ exports.postFilter = catchAsync(async(req, res, next) => {
         populate: ["userId"]
     };
 
-    userFeedingSchema.paginate(updateData, options, function(err, result) {
-        if(err){
-            console.log(err)
-            res.status(400).send(err)
-        }else{
-            res.status(200).send({status: true, message: "Successful", data: result.docs})
-        }
-    })
+    let cachedResponse = null
+    let fundWalletPage = JSON.stringify(updateData) === JSON.stringify({ studentStatus: true })
+
+    if(fundWalletPage){
+
+        cachedResponse = await getCachedData("legibleUsers", parseInt(req.query.page), parseInt(req.query.limit))
+    }
+
+    
+    if(!cachedResponse){
+        userFeedingSchema.paginate(updateData, options, async function(err, result) {
+            if(err){
+                console.log(err)
+                res.status(400).send(err)
+            }else{
+                if(fundWalletPage){
+                    let allUsers = await userFeedingSchema.find({updateData}).sort({ createdAt: -1 }).populate("userId")
+                    await setCacheData("legibleUsers", allUsers, 120)
+                }
+                res.status(200).send({status: true, message: "Successful", data: result.docs})
+            }
+        })
+
+    }
+    else{
+        return res.status(200).send({status: true, message: "Successful", data: cachedResponse})
+    }
+    
 })
 
 exports.validateUsers = catchAsync(async(req,res, next) => {
@@ -169,6 +191,7 @@ exports.validateUsers = catchAsync(async(req,res, next) => {
     
         Promise.all(promises).then(async results => {
             await setCacheData("allUsers", "", 10)
+            await setCacheData("legibleUsers", "", 10)
             res.status(200).send({status: true, message:"Update Successful"})
             return success(userId, ` validated ${results[0].modifiedCount} students`, "Update", socket)
 
@@ -219,6 +242,7 @@ exports.invalidateUsers = catchAsync(async(req,res, next) => {
         let promises = [userUpdate, feedingUpdate, newStudentAlert]
     
         Promise.all(promises).then(async results => {
+            await setCacheData("legibleUsers", "", 10)
             await setCacheData("allUsers", "", 10)
             res.status(200).send({status: true, message:"Update Successful"})
             return success(userId, ` invalidated ${results[0].modifiedCount} students`, "Update", socket)
@@ -290,6 +314,7 @@ exports.fundWallet = catchAsync(async(req, res, next) => {
         res.status(200).send({status: true, message: "Update Successful"})
 
         await setCacheData("disbursementDetails", "", 10)
+        await setCacheData("legibleUsers", "", 10)
 
         return success(userId, ` funded ${user.modifiedCount} students with total of ${totalAmount} naira`, "Update", socket)
 
@@ -354,6 +379,7 @@ exports.fundAllLegibleWallets = catchAsync(async(req, res, next) => {
         res.status(200).send({status: true, message: "Update Successful"})
 
         await setCacheData("disbursementDetails", "", 10)
+        await setCacheData("legibleUsers", "", 10)
 
         return success(userId, ` funded ${user.modifiedCount} students who are legible after 30 days with total of ${totalAmount} naira`, "Update", socket)
 

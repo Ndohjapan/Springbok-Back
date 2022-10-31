@@ -11,7 +11,9 @@ exports.userSearch = catchAsync(async(req, res, next) => {
         // Get all campgrounds from DB
 
         const options = {
-            sort: { createdAt: -1 },
+          sort: { createdAt: -1 },
+          populate: ["userId"]
+
         };
 
         userSchema.paginate(
