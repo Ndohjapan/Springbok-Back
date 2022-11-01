@@ -2,11 +2,11 @@ const Redis = require('ioredis');
 
 async function getCachedData(key, page=0, limit=0){
     let redisClient = await connectToRedis()    
-    const cachedResponse = await redisClient.get(key)
+    let cachedResponse = await redisClient.get(key) 
 
     redisClient.quit();
 
-    if(page > 0 && cachedResponse != null){
+    if(page > 0 && cachedResponse){
         let jsonResponse = JSON.parse(cachedResponse)
 
         return jsonResponse.slice((page-1)*limit, ((page-1)*limit)+limit)
@@ -23,6 +23,16 @@ async function setCacheData(key, value, time){
     let redisClient = await connectToRedis()
 
     const cachedData = await redisClient.set(key, value, "ex", time)
+
+    redisClient.quit();
+
+    return cachedData
+}
+
+async function delcacheData(key){
+    let redisClient = await connectToRedis()
+
+    const cachedData = await redisClient.del(key)
 
     redisClient.quit();
 

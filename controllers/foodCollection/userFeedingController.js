@@ -2,7 +2,7 @@ const {utilsSchema, transactionSchema, restaurantSchema, userFeedingSchema, disb
 const AppError = require("../../utils/appError");
 const catchAsync = require("../../utils/catchAsync");
 const bcrypt = require("bcrypt")
-const {getCachedData, setCacheData} = require("../../utils/client")
+const {getCachedData, setCacheData, delcacheData} = require("../../utils/client")
 const moment = require("moment")
 const {success} = require("../../utils/activityLogs")
     
@@ -32,22 +32,24 @@ exports.getAllUsers = catchAsync(async(req, res, next) => {
     };
 
     
-    let cachedResponse = await getCachedData("allUser", parseInt(req.query.page), parseInt(req.query.limit))
+    let cachedResponse = await getCachedData("allUsers", parseInt(req.query.page), parseInt(req.query.limit))
 
+    
     if(!cachedResponse){
-
+        
         userFeedingSchema.paginate({}, options, async function(err, result) {
             if(err){
                 console.log(err)
                 return res.status(400).send(err)
             }else{
                 let allUsers = await userFeedingSchema.find({}).sort({ createdAt: -1 }).populate("userId")
-                await setCacheData("allUser", allUsers, 3600)
+                await setCacheData("allUsers", allUsers, 3600)
                 return res.status(200).send({status: true, message: "Successful", payload: result})
             }
         })
     }
     else{
+        console.log("There is something in cache")
 
         return res.status(200).send({status: true, message: "Successful", payload: cachedResponse})
     }
@@ -119,7 +121,7 @@ exports.deleteUser = catchAsync(async(req, res, next) => {
     let userId = req.user["_id"].toString()
 
     const user = await userFeedingSchema.findOneAndDelete({userId: req.params.id})
-    await setCacheData("allUsers", "", 10)
+    await delcacheData("allUsers")
     res.status(200).send({status: true, message: "User Deleted"})
     return success(userId, ` deleted a user from database`, "Delete", socket)
 
@@ -190,8 +192,8 @@ exports.validateUsers = catchAsync(async(req,res, next) => {
         let promises = [userUpdate, feedingUpdate, newStudentAlert]
     
         Promise.all(promises).then(async results => {
-            await setCacheData("allUsers", "", 10)
-            await setCacheData("legibleUsers", "", 10)
+            await delcacheData("allUsers")
+            await delcacheData("legibleUsers")
             res.status(200).send({status: true, message:"Update Successful"})
             return success(userId, ` validated ${results[0].modifiedCount} students`, "Update", socket)
 
@@ -242,8 +244,8 @@ exports.invalidateUsers = catchAsync(async(req,res, next) => {
         let promises = [userUpdate, feedingUpdate, newStudentAlert]
     
         Promise.all(promises).then(async results => {
-            await setCacheData("legibleUsers", "", 10)
-            await setCacheData("allUsers", "", 10)
+            await delcacheData("legibleUsers")
+            await delcacheData("allUsers")
             res.status(200).send({status: true, message:"Update Successful"})
             return success(userId, ` invalidated ${results[0].modifiedCount} students`, "Update", socket)
 
@@ -313,8 +315,8 @@ exports.fundWallet = catchAsync(async(req, res, next) => {
     
         res.status(200).send({status: true, message: "Update Successful"})
 
-        await setCacheData("disbursementDetails", "", 10)
-        await setCacheData("legibleUsers", "", 10)
+        await delcacheData("disbursementDetails")
+        await delcacheData("legibleUsers")
 
         return success(userId, ` funded ${user.modifiedCount} students with total of ${totalAmount} naira`, "Update", socket)
 
@@ -378,8 +380,8 @@ exports.fundAllLegibleWallets = catchAsync(async(req, res, next) => {
     
         res.status(200).send({status: true, message: "Update Successful"})
 
-        await setCacheData("disbursementDetails", "", 10)
-        await setCacheData("legibleUsers", "", 10)
+        await delcacheData("disbursementDetails")
+        await delcacheData("legibleUsers")
 
         return success(userId, ` funded ${user.modifiedCount} students who are legible after 30 days with total of ${totalAmount} naira`, "Update", socket)
 

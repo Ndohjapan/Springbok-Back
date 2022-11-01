@@ -9,7 +9,6 @@ const {sendMail} = require("../utils/sendMail");
 const dates = require("../utils/dates");
 const catchAsync = require("../utils/catchAsync");
 const {success} = require("../utils/activityLogs")
-const {getCachedData, setCacheData} = require("../utils/client")
 
 
 exports.signup = catchAsync(async (req, res, next) => {
