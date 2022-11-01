@@ -43,7 +43,7 @@ exports.getAllUsers = catchAsync(async(req, res, next) => {
             }else{
                 let allUsers = await userFeedingSchema.find({}).sort({ createdAt: -1 }).populate("userId")
                 await setCacheData("allUser", allUsers, 3600)
-                return res.status(200).send({status: true, message: "Successful", payload: result.docs})
+                return res.status(200).send({status: true, message: "Successful", payload: result})
             }
         })
     }
@@ -166,7 +166,7 @@ exports.postFilter = catchAsync(async(req, res, next) => {
                     let allUsers = await userFeedingSchema.find({updateData}).sort({ createdAt: -1 }).populate("userId")
                     await setCacheData("legibleUsers", allUsers, 120)
                 }
-                res.status(200).send({status: true, message: "Successful", data: result.docs})
+                res.status(200).send({status: true, message: "Successful", data: result})
             }
         })
 
