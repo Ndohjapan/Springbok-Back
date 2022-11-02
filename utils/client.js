@@ -10,7 +10,8 @@ async function getCachedData(key, page=0, limit=0){
         let jsonResponse = JSON.parse(cachedResponse)
 
         if(jsonResponse.docs){
-            return jsonResponse.docs.slice((page-1)*limit, ((page-1)*limit)+limit)
+            jsonResponse.docs = jsonResponse.docs.slice((page-1)*limit, ((page-1)*limit)+limit) 
+            return jsonResponse
         }
         else{
             return jsonResponse.slice((page-1)*limit, ((page-1)*limit)+limit)

@@ -171,18 +171,23 @@ exports.postFilter = catchAsync(async(req, res, next) => {
                 console.log(err)
                 res.status(400).send(err)
             }else{
-                if(fundWalletPage){
-                    userFeedingSchema.paginate({updateData}, {sort: {"createdAt": -1}, populate: ["userId"], pagination: false}, async (err, allUsers) => {
-                        if(err){
-                            console.log(err)
-                            return res.status(400).send(err)
-                        }
-                        await setCacheData("legibleUsers", allUsers, 3600)
-                    })
-                }
-                return res.status(200).send({status: true, message: "Successful", data: result})
+                res.status(200).send({status: true, message: "Successful", data: result})
             }
         })
+
+        if(fundWalletPage){
+            userFeedingSchema.paginate(updateData, {sort: {"createdAt": -1}, populate: ["userId"], pagination: false}, async (err, allUsers) => {
+                if(err){
+                    console.log(err)
+                    return res.status(400).send(err)
+                }
+                else{
+                    return await setCacheData("legibleUsers", allUsers, 3600)
+                }
+            })
+        }
+
+
 
     }
     else{
