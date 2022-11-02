@@ -51,7 +51,7 @@ exports.getUsersDetails = catchAsync(async(req, res, next) => {
         userData[i]["totalUsers"] = totalUserData[0]["totalUsers"]
       }
       
-      await setCacheData("userDetails", userData, 900)     
+      await setCacheData("userDetails", userData, 3600)     
     }
 
     let newUserAlert = await utilsSchema.find({}).select({_id: 0, newStudentAlert: 1})
@@ -123,7 +123,7 @@ exports.getTransactionsDetails = catchAsync(async(req, res, next) => {
       restaurantData[i]["totalAmount"] = transactionData[0]["totalAmount"]
     }
 
-    await setCacheData("transactionDetails", restaurantData, 900)    
+    await setCacheData("transactionDetails", restaurantData, 3600)    
 
   }
 
@@ -155,7 +155,7 @@ exports.getDisbursementDetails = catchAsync(async(req, res, next) => {
   if(!cachedResponse){
     disbursementData = await userFeedingSchema.aggregate(disbursementAggregate)
     
-    await setCacheData("disbursementDetails", disbursementData, 900)
+    await setCacheData("disbursementDetails", disbursementData, 3600)
 
   }
 
