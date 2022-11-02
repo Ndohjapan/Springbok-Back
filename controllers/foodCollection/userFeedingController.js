@@ -42,15 +42,22 @@ exports.getAllUsers = catchAsync(async(req, res, next) => {
                 console.log(err)
                 return res.status(400).send(err)
             }else{
-                let allUsers = await userFeedingSchema.find({}).sort({ createdAt: -1 }).populate("userId")
-                await setCacheData("allUsers", allUsers, 3600)
-                return res.status(200).send({status: true, message: "Successful", payload: result})
+                res.status(200).send({status: true, message: "Successful", payload: result})    
+            }
+        })
+
+        userFeedingSchema.paginate({}, {sort: {"createdAt": -1}, populate: ["userId"], pagination: false}, async (err, allUsers) => {
+            if(err){
+                console.log(err)
+                return res.status(400).send(err)
+            }
+            else{
+                console.log(allUsers.docs.length)
+                return await setCacheData("allUsers", allUsers, 3600)
             }
         })
     }
     else{
-        console.log("There is something in cache")
-
         return res.status(200).send({status: true, message: "Successful", payload: cachedResponse})
     }
 
@@ -165,10 +172,15 @@ exports.postFilter = catchAsync(async(req, res, next) => {
                 res.status(400).send(err)
             }else{
                 if(fundWalletPage){
-                    let allUsers = await userFeedingSchema.find({updateData}).sort({ createdAt: -1 }).populate("userId")
-                    await setCacheData("legibleUsers", allUsers, 120)
+                    userFeedingSchema.paginate({updateData}, {sort: {"createdAt": -1}, populate: ["userId"], pagination: false}, async (err, allUsers) => {
+                        if(err){
+                            console.log(err)
+                            return res.status(400).send(err)
+                        }
+                        await setCacheData("legibleUsers", allUsers, 3600)
+                    })
                 }
-                res.status(200).send({status: true, message: "Successful", data: result})
+                return res.status(200).send({status: true, message: "Successful", data: result})
             }
         })
 
