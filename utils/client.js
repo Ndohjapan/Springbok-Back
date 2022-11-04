@@ -72,6 +72,7 @@ async function connectToRedis(){
 
 exports.getCachedData = getCachedData
 exports.setCacheData = setCacheData
+exports.delcacheData = delcacheData
 
 
 
