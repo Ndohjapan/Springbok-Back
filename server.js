@@ -31,7 +31,7 @@ const io = socketio(server, {
 
 io.on("connection", async(socket) => {
   console.log(socket.id, "I Have Connected")
-  console.log(socket)
+  console.log(socket.handshake.headers.restuarant)
   if(socket.handshake.headers.restuarant){
     socket.join(socket.handshake.headers.restuarant)
   }
