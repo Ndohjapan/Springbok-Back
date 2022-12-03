@@ -34,6 +34,8 @@ io.on("connection", async(socket) => {
   
   if(socket.handshake.headers.restuarant){
     socket.join(socket.handshake.headers.restuarant)
+
+    socket.emit("new connection", "I have seen your connection")
   }
   else{
     socket.join("admin")
