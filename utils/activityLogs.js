@@ -15,5 +15,6 @@ exports.success = async(...args) => {
 exports.sendTransactionToRestaurant = async(...args) => {
     let socket = args[0]
     let restaurant = args[1].to
-    socket.in(restaurant).emit("reciept", args[1])
+    // socket.to(restaurant).emit("reciept", args[1])
+    socket.io.in(restaurant).emit('reciept', args[1])
 }

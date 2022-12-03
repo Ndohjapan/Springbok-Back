@@ -29,29 +29,19 @@ const io = socketio(server, {
   }
 })
 
-io.on("connection", async(socket) => {
-  console.log(socket.id, "I Have Connected")
-  
+io.on("connection", async(socket) => { 
+  console.log("I have connected ", socket.id)
+  socket.io = io
   if(socket.handshake.headers.restuarant){
     socket.join(socket.handshake.headers.restuarant)
-
-    socket.emit("new connection", "I have seen your connection")
   }
   else{
     socket.join("admin")
   }
-
-  console.log(socket.adapter.rooms)
-
-  await socketSchema.create({
-    socketId: socket.id
-  })
-
   app.set("socket", socket);
 
   socket.on("disconnect", async() => {
     console.log("I have disconnected ", socket.id)
-    await socketSchema.deleteOne({socketId: socket.id})
   })
 });
 
