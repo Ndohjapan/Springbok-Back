@@ -440,7 +440,9 @@ exports.exportCSV = catchAsync(async(req, res, next) => {
   }
   let restaurantId = req.body.restaurantId ? req.body.restaurantId : null
 
-  let workerData =  {from: req.body.from, to: req.body.to, restaurantId: restaurantId}
+  let userId = req.body.userId ? req.body.userId : null
+
+  let workerData =  {from: req.body.from, to: req.body.to, restaurantId: restaurantId, userId: userId}
 
   let thread = path.resolve(__dirname, "threads", "exportCSV.js")
 

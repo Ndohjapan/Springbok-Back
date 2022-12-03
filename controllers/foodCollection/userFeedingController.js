@@ -134,6 +134,66 @@ exports.deleteUser = catchAsync(async(req, res, next) => {
 
 })
 
+exports.getUserTransactions = catchAsync(async(req, res, next) => {
+    try{
+        let {userId, from, to} = req.body;
+        let response = dateFormat(from, to)
+        from = response[0]
+        to = response[1]
+
+        let statistics = await transactionSchema.aggregate([
+            {
+                '$match': {
+                    'from': `${userId}`,
+                    'createdAt': {
+                        '$gte': from, 
+                        '$lte': to
+                    }
+                }
+              },
+            {
+                '$group': {
+                  '_id': null, 
+                  'amount': {
+                    '$sum': '$amount'
+                  }, 
+                  'transactions': {
+                    '$sum': 1
+                  }
+                }
+              }
+        
+        ])
+
+        console.log(userId, statistics)
+
+        let page = req.query.page ? req.query.page : 1
+        let limit = req.query.limit ? req.query.limit : 1000000000
+
+        
+        const options = {
+            sort: {"createdAt": -1},
+            populate: ["from", "to"],
+            page: page,
+            limit: limit
+        };
+
+
+        transactionSchema.paginate({createdAt:{$gte:from,$lte:to}, from: userId}, options, function(err, result) {
+            if(err){
+                return next(new AppError(err, 400));
+
+            }else{
+                return res.status(200).send({status: true, result: result.docs, statistics: statistics})
+            }
+        })
+        
+    }
+    catch(err){
+        return next(new AppError(err, 400));
+    }
+    
+})
 
 exports.postFilter = catchAsync(async(req, res, next) => {
     let data = req.body
@@ -537,4 +597,19 @@ async function fundAllNegativeStudents(userIds, fundingDay, feedingAmount){
     )
 
     return user
+}
+
+
+function dateFormat(from, to){
+    from = new Date(from)
+    from.setHours(1)
+    from.setMinutes(0)
+    from.setSeconds(0)
+    
+    to = new Date(to)
+    to.setHours(24)
+    to.setMinutes(59)
+    to.setSeconds(59)
+
+    return [from, to]
 }

@@ -16,6 +16,7 @@ const {
   fundAllLegibleWallets,
   editTotalFunds,
   confirmPin,
+  getUserTransactions
 } = require("../controllers/foodCollection/userFeedingController");
 
 const { permissionTo } = require("../controllers/authController");
@@ -47,6 +48,11 @@ router.route("/post/filter").post(postFilter);
 router
   .route("/validateUsers")
   .post(permissionTo("validate users"), validateUsers);
+
+// Get a users transaction
+router
+  .route("/getUserTransactions")
+  .post(permissionTo("validate users"), getUserTransactions);
 
 // Validate Users
 router
