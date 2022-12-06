@@ -9,6 +9,8 @@ const AppError = require("../../../utils/appError");
 const catchAsync = require("../../../utils/catchAsync");
 const {getCachedData, setCacheData} = require("../../../utils/client")
 const ObjectId = require("mongoose").Types.ObjectId;
+const {sendTransactionToRestaurant} = require("../../../utils/activityLogs")
+
 
 exports.checkBalance = catchAsync(async (req, res, next) => {
   let userId = req.user["_id"].toString();
@@ -173,7 +175,11 @@ exports.restaurantDoTransfer = catchAsync(async (req, res, next) => {
 });
 
 exports.validateTransaction = catchAsync(async (req, res, next) => {
-  return res.send({ status: true });
+  const socket = req.app.get("socket");
+  let userId = req.user["_id"].toString()
+  let lastTransaction = await transactionSchema.findOne({from: req.user["_id"].toString()}).sort({createdAt: -1}).populate(["from"])
+  res.send({ status: true });
+  return sendTransactionToRestaurant(socket, lastTransaction)
 });
 
 async function confirm(balance, amount) {

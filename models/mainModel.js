@@ -519,6 +519,15 @@ const errorSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+const socketSchema = new mongoose.Schema(
+  {
+    socketId: {
+      type: String
+    }
+  },
+  {timestamps: true}
+)
+
 userSchema.methods.generateAuthToken = function () {
   return jwt.sign(
     { id: this._id, verified: this.verified },
@@ -587,6 +596,7 @@ module.exports.restaurantSchema = mongoose.model(
 module.exports.orderSchema = mongoose.model("Order", orderSchema);
 module.exports.errorSchema = mongoose.model("Errors", errorSchema);
 module.exports.recordsSchema = mongoose.model("Records", recordsSchema);
+module.exports.socketSchema = mongoose.model("SocketIds", socketSchema);
 module.exports.transactionSchema = mongoose.model(
   "transactions",
   transactionSchema

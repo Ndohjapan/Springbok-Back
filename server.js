@@ -1,6 +1,7 @@
 const app = require("./app");
 const connectDb = require("./start/db");
 const socketio = require("socket.io")
+const {socketSchema} = require("./models/mainModel")
 
 const dotenv = require("dotenv")
 const path = require("path")
@@ -28,8 +29,20 @@ const io = socketio(server, {
   }
 })
 
-io.on("connection", (socket) => {
+io.on("connection", async(socket) => { 
+  console.log("I have connected ", socket.id)
+  socket.io = io
+  if(socket.handshake.headers.restuarant){
+    socket.join(socket.handshake.headers.restuarant)
+  }
+  else{
+    socket.join("admin")
+  }
   app.set("socket", socket);
+
+  socket.on("disconnect", async() => {
+    console.log("I have disconnected ", socket.id)
+  })
 });
 
 process.on("unhandledRejection", (err) => {

@@ -2,7 +2,7 @@ const {userSchema, restaurantSchema, transactionSchema} = require("../../models/
 const AppError = require("../../utils/appError");
 const catchAsync = require("../../utils/catchAsync");
 const bcrypt = require("bcrypt")
-const {getCachedData, setCacheData} = require("../../utils/client")
+const {getCachedData, setCacheData, delcacheData} = require("../../utils/client")
 const {success} = require("../../utils/activityLogs")
 
 

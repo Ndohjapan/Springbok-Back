@@ -25,7 +25,7 @@ async function connectDB() {
   }
 }
 
-async function exportCSV(from, to, restaurantId) {
+async function exportCSV(from, to, restaurantId, userId) {
   [from, to] = dateFormat(from, to);
   try {
     let name = Date.now() + ".csv";
@@ -52,7 +52,17 @@ async function exportCSV(from, to, restaurantId) {
           sort: { createdAt: -1 },
         })
         .populate(["from", "to"]);
-    } else {
+    } 
+    
+    else if(userId){
+      transactions = await transactionSchema
+        .find({ createdAt: { $gte: from, $lte: to }, from: userId }, null, {
+          sort: { createdAt: -1 },
+        })
+        .populate(["from", "to"]);
+    }
+    
+    else {
       transactions = await transactionSchema
         .find({ createdAt: { $gte: from, $lte: to } }, null, {
           sort: { createdAt: -1 },
@@ -124,7 +134,7 @@ async function deleteCSV(name) {
 
 parentPort.on("message", async (data) => {
   let conn = await connectDB();
-  let response = await exportCSV(data.from, data.to, data.restaurantId);
+  let response = await exportCSV(data.from, data.to, data.restaurantId, data.userId);
   parentPort.postMessage(response);
   conn.disconnect();
 });

@@ -7,7 +7,7 @@ const catchAsync = require("../../utils/catchAsync");
 const bcrypt = require("bcrypt");
 const {success} = require("../../utils/activityLogs")
 const path = require("path")
-const {getCachedData, setCacheData} = require("../../utils/client")
+const {getCachedData, setCacheData, delcacheData} = require("../../utils/client")
 const {Worker} = require("worker_threads")
 
 exports.getUsersDetails = catchAsync(async(req, res, next) => {
@@ -51,7 +51,7 @@ exports.getUsersDetails = catchAsync(async(req, res, next) => {
         userData[i]["totalUsers"] = totalUserData[0]["totalUsers"]
       }
       
-      await setCacheData("userDetails", userData, 900)     
+      await setCacheData("userDetails", userData, 3600)     
     }
 
     let newUserAlert = await utilsSchema.find({}).select({_id: 0, newStudentAlert: 1})
@@ -123,7 +123,7 @@ exports.getTransactionsDetails = catchAsync(async(req, res, next) => {
       restaurantData[i]["totalAmount"] = transactionData[0]["totalAmount"]
     }
 
-    await setCacheData("transactionDetails", restaurantData, 900)    
+    await setCacheData("transactionDetails", restaurantData, 3600)    
 
   }
 
@@ -155,7 +155,7 @@ exports.getDisbursementDetails = catchAsync(async(req, res, next) => {
   if(!cachedResponse){
     disbursementData = await userFeedingSchema.aggregate(disbursementAggregate)
     
-    await setCacheData("disbursementDetails", disbursementData, 900)
+    await setCacheData("disbursementDetails", disbursementData, 3600)
 
   }
 
@@ -440,7 +440,9 @@ exports.exportCSV = catchAsync(async(req, res, next) => {
   }
   let restaurantId = req.body.restaurantId ? req.body.restaurantId : null
 
-  let workerData =  {from: req.body.from, to: req.body.to, restaurantId: restaurantId}
+  let userId = req.body.userId ? req.body.userId : null
+
+  let workerData =  {from: req.body.from, to: req.body.to, restaurantId: restaurantId, userId: userId}
 
   let thread = path.resolve(__dirname, "threads", "exportCSV.js")
 

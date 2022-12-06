@@ -19,7 +19,7 @@ exports.getAllActivity = catchAsync(async (req, res, next) => {
         if(err){
             return next(new AppError(err.message, 400));
         }else{
-            res.status(200).send({status: true, message: "Successful", data: result.docs})
+            res.status(200).send({status: true, message: "Successful", data: result})
             return utilsSchema.updateMany({}, {$set: {unreadNotifications: 0}})
         }
     })

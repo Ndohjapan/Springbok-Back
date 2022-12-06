@@ -2,7 +2,7 @@ const {utilsSchema, transactionSchema, restaurantSchema, userFeedingSchema, disb
 const AppError = require("../../utils/appError");
 const catchAsync = require("../../utils/catchAsync");
 const bcrypt = require("bcrypt")
-const {getCachedData, setCacheData} = require("../../utils/client")
+const {getCachedData, setCacheData, delcacheData} = require("../../utils/client")
 const moment = require("moment")
 const {success} = require("../../utils/activityLogs")
     
@@ -32,22 +32,32 @@ exports.getAllUsers = catchAsync(async(req, res, next) => {
     };
 
     
-    let cachedResponse = await getCachedData("allUsers")
+    let cachedResponse = await getCachedData("allUsers", parseInt(req.query.page), parseInt(req.query.limit))
 
+    
     if(!cachedResponse){
-
+        
         userFeedingSchema.paginate({}, options, async function(err, result) {
             if(err){
                 console.log(err)
                 return res.status(400).send(err)
             }else{
-                await setCacheData("allUsers", result.docs, 900)
-                return res.status(200).send({status: true, message: "Successful", payload: result.docs})
+                res.status(200).send({status: true, message: "Successful", payload: result})    
+            }
+        })
+
+        userFeedingSchema.paginate({}, {sort: {"createdAt": -1}, populate: ["userId"], pagination: false}, async (err, allUsers) => {
+            if(err){
+                console.log(err)
+                return res.status(400).send(err)
+            }
+            else{
+                console.log(allUsers.docs.length)
+                return await setCacheData("allUsers", allUsers, 3600)
             }
         })
     }
     else{
-
         return res.status(200).send({status: true, message: "Successful", payload: cachedResponse})
     }
 
@@ -118,12 +128,72 @@ exports.deleteUser = catchAsync(async(req, res, next) => {
     let userId = req.user["_id"].toString()
 
     const user = await userFeedingSchema.findOneAndDelete({userId: req.params.id})
-    await setCacheData("allUsers", "", 10)
+    await delcacheData("allUsers")
     res.status(200).send({status: true, message: "User Deleted"})
     return success(userId, ` deleted a user from database`, "Delete", socket)
 
 })
 
+exports.getUserTransactions = catchAsync(async(req, res, next) => {
+    try{
+        let {userId, from, to} = req.body;
+        let response = dateFormat(from, to)
+        from = response[0]
+        to = response[1]
+
+        let statistics = await transactionSchema.aggregate([
+            {
+                '$match': {
+                    'from': `${userId}`,
+                    'createdAt': {
+                        '$gte': from, 
+                        '$lte': to
+                    }
+                }
+              },
+            {
+                '$group': {
+                  '_id': null, 
+                  'amount': {
+                    '$sum': '$amount'
+                  }, 
+                  'transactions': {
+                    '$sum': 1
+                  }
+                }
+              }
+        
+        ])
+
+        console.log(userId, statistics)
+
+        let page = req.query.page ? req.query.page : 1
+        let limit = req.query.limit ? req.query.limit : 1000000000
+
+        
+        const options = {
+            sort: {"createdAt": -1},
+            populate: ["from", "to"],
+            page: page,
+            limit: limit
+        };
+
+
+        transactionSchema.paginate({createdAt:{$gte:from,$lte:to}, from: userId}, options, function(err, result) {
+            if(err){
+                return next(new AppError(err, 400));
+
+            }else{
+                return res.status(200).send({status: true, result: result.docs, statistics: statistics})
+            }
+        })
+        
+    }
+    catch(err){
+        return next(new AppError(err, 400));
+    }
+    
+})
 
 exports.postFilter = catchAsync(async(req, res, next) => {
     let data = req.body
@@ -138,6 +208,7 @@ exports.postFilter = catchAsync(async(req, res, next) => {
     let page = req.query.page ? req.query.page : 1
     let limit = req.query.limit ? req.query.limit : 1000000
 
+    
     const options = {
         page: page,
         limit: limit,
@@ -145,14 +216,44 @@ exports.postFilter = catchAsync(async(req, res, next) => {
         populate: ["userId"]
     };
 
-    userFeedingSchema.paginate(updateData, options, function(err, result) {
-        if(err){
-            console.log(err)
-            res.status(400).send(err)
-        }else{
-            res.status(200).send({status: true, message: "Successful", data: result.docs})
+    let cachedResponse = null
+    let fundWalletPage = JSON.stringify(updateData) === JSON.stringify({ studentStatus: true })
+
+    if(fundWalletPage){
+
+        cachedResponse = await getCachedData("legibleUsers", parseInt(req.query.page), parseInt(req.query.limit))
+    }
+
+    
+    if(!cachedResponse){
+        userFeedingSchema.paginate(updateData, options, async function(err, result) {
+            if(err){
+                console.log(err)
+                res.status(400).send(err)
+            }else{
+                res.status(200).send({status: true, message: "Successful", data: result})
+            }
+        })
+
+        if(fundWalletPage){
+            userFeedingSchema.paginate(updateData, {sort: {"createdAt": -1}, populate: ["userId"], pagination: false}, async (err, allUsers) => {
+                if(err){
+                    console.log(err)
+                    return res.status(400).send(err)
+                }
+                else{
+                    return await setCacheData("legibleUsers", allUsers, 3600)
+                }
+            })
         }
-    })
+
+
+
+    }
+    else{
+        return res.status(200).send({status: true, message: "Successful", data: cachedResponse})
+    }
+    
 })
 
 exports.validateUsers = catchAsync(async(req,res, next) => {
@@ -168,7 +269,8 @@ exports.validateUsers = catchAsync(async(req,res, next) => {
         let promises = [userUpdate, feedingUpdate, newStudentAlert]
     
         Promise.all(promises).then(async results => {
-            await setCacheData("allUsers", "", 10)
+            await delcacheData("allUsers")
+            await delcacheData("legibleUsers")
             res.status(200).send({status: true, message:"Update Successful"})
             return success(userId, ` validated ${results[0].modifiedCount} students`, "Update", socket)
 
@@ -219,7 +321,8 @@ exports.invalidateUsers = catchAsync(async(req,res, next) => {
         let promises = [userUpdate, feedingUpdate, newStudentAlert]
     
         Promise.all(promises).then(async results => {
-            await setCacheData("allUsers", "", 10)
+            await delcacheData("legibleUsers")
+            await delcacheData("allUsers")
             res.status(200).send({status: true, message:"Update Successful"})
             return success(userId, ` invalidated ${results[0].modifiedCount} students`, "Update", socket)
 
@@ -289,7 +392,8 @@ exports.fundWallet = catchAsync(async(req, res, next) => {
     
         res.status(200).send({status: true, message: "Update Successful"})
 
-        await setCacheData("disbursementDetails", "", 10)
+        await delcacheData("disbursementDetails")
+        await delcacheData("legibleUsers")
 
         return success(userId, ` funded ${user.modifiedCount} students with total of ${totalAmount} naira`, "Update", socket)
 
@@ -353,7 +457,8 @@ exports.fundAllLegibleWallets = catchAsync(async(req, res, next) => {
     
         res.status(200).send({status: true, message: "Update Successful"})
 
-        await setCacheData("disbursementDetails", "", 10)
+        await delcacheData("disbursementDetails")
+        await delcacheData("legibleUsers")
 
         return success(userId, ` funded ${user.modifiedCount} students who are legible after 30 days with total of ${totalAmount} naira`, "Update", socket)
 
@@ -492,4 +597,19 @@ async function fundAllNegativeStudents(userIds, fundingDay, feedingAmount){
     )
 
     return user
+}
+
+
+function dateFormat(from, to){
+    from = new Date(from)
+    from.setHours(1)
+    from.setMinutes(0)
+    from.setSeconds(0)
+    
+    to = new Date(to)
+    to.setHours(24)
+    to.setMinutes(59)
+    to.setSeconds(59)
+
+    return [from, to]
 }
