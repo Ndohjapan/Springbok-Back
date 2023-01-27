@@ -54,18 +54,28 @@ exports.updateUser = catchAsync(async (req, res, next) => {
     }
   });
 
-  let user = await userSchema.updateOne({_id: req.params.id, studentStatus: false}, updateData, {
-    new: true,
-  });
+  if(req.user.permissions.some(value => ['all', 'edit users'].includes(value)) ){
+    console.log("I am here ")
 
-  if(user.matchedCount != 1){
-    return next(new AppError("You cannot update your profile", 400));
-
+    user = await userSchema.updateOne({_id: req.params.id}, updateData, {
+      new: true,
+    });
+  }
+  else{   
+    console.log('I am a user')
+    let user = await userSchema.updateOne({_id: req.params.id, studentStatus: false}, updateData, {
+      new: true,
+    });
+  
+    if(user.matchedCount != 1){
+      return next(new AppError("You cannot update your profile", 400));
+  
+    }
   }
 
   user = await userSchema.findById(req.params.id);
 
-  res.status(200).send({ status: true, message: "User Updated", data: user });
+  return res.status(200).send({ status: true, message: "User Updated", data: user });
 });
 
 exports.deleteUser = catchAsync(async (req, res, next) => {
