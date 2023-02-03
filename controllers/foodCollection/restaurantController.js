@@ -83,7 +83,7 @@ exports.deleteRestaurant = catchAsync(async(req, res, next) => {
     let restaurantId = req.params.id
     
     const food = await restaurantSchema.findByIdAndDelete(req.params.id)
-    await transactionSchema.deleteMany({to: restaurantId})
+//     await transactionSchema.deleteMany({to: restaurantId})
     
     res.status(200).send({status: true, message: "Restaurant Deleted"})
     
