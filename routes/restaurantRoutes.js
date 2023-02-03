@@ -22,10 +22,10 @@ router.route("/").get(getAllRestaurants);
 router.route("/:id").get(getRestaurant);
 
 // Delete
-router.route("/:id").delete(permissionTo("edit restaurant"), deleteRestaurant);
+router.route("/:id").delete(permissionTo("all"), deleteRestaurant);
 
 // Put
-router.route("/:id").put(permissionTo("edit restaurant"), updateRestaurant);
+router.route("/:id").put(permissionTo("all"), updateRestaurant);
 
 // Restaurant with filter
 router.route("/post/filter").post(postFilter);
