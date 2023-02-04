@@ -48,21 +48,27 @@ exports.updateUser = catchAsync(async (req, res, next) => {
   let data = req.body;
   let updateData = {};
 
+  data.permissions = ""
+  data.password = ""
+
   Object.entries(data).forEach(([key, value]) => {
     if (value != "") {
       updateData[key] = value;
     }
   });
 
-  if(req.user.permissions.some(value => ['all', 'edit users'].includes(value)) ){
-    console.log("I am here ")
+  if(req.user.permissions){
+    if(req.user.permissions.some(value => ['all', 'edit users'].includes(value))){
+      user = await userSchema.updateOne({_id: req.params.id}, updateData, {
+        new: true,
+      });
 
-    user = await userSchema.updateOne({_id: req.params.id}, updateData, {
-      new: true,
-    });
+    }
+    else{
+      return next(new AppError("You do not have permission to do this", 403))
+    }
   }
   else{   
-    console.log('I am a user')
     let user = await userSchema.updateOne({_id: req.params.id, studentStatus: false}, updateData, {
       new: true,
     });

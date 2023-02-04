@@ -33,11 +33,7 @@ const userSchema = new mongoose.Schema(
       type: String,
       enum: ["blocked", "active"],
       default: "active",
-    },
-    permissions: {
-      type: [String],
-      default: ["user"],
-    },
+    }
   },
   { timestamps: true }
 );
@@ -335,6 +331,7 @@ const utilsSchema = new mongoose.Schema(
         "export csv",
         "view transactions",
         "edit users",
+        "view backup"
       ],
     },
 
@@ -528,6 +525,29 @@ const socketSchema = new mongoose.Schema(
   {timestamps: true}
 )
 
+const backupSchema = new mongoose.Schema(
+  {
+    folder: {
+      type: String,
+      unique: true
+    }
+  },
+  {timestamps: true}
+)
+
+const apiKeySchema = new mongoose.Schema(
+  {
+    apiAccessKey : {
+      type: String
+    },
+
+    apiSecretKey: {
+      type: String
+    }
+  },
+  {timestamps: true}
+)
+
 userSchema.methods.generateAuthToken = function () {
   return jwt.sign(
     { id: this._id, verified: this.verified },
@@ -597,6 +617,8 @@ module.exports.orderSchema = mongoose.model("Order", orderSchema);
 module.exports.errorSchema = mongoose.model("Errors", errorSchema);
 module.exports.recordsSchema = mongoose.model("Records", recordsSchema);
 module.exports.socketSchema = mongoose.model("SocketIds", socketSchema);
+module.exports.backupSchema = mongoose.model("folderBackups", backupSchema);
+module.exports.apiKeySchema = mongoose.model("apiKeys", apiKeySchema);
 module.exports.transactionSchema = mongoose.model(
   "transactions",
   transactionSchema

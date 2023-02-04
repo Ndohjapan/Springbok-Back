@@ -10,17 +10,17 @@ const {permissionTo, protect} = require("../../controllers/authController")
 // Chcek Balance
 router
     .route("/checkBalance")
-    .get(permissionTo("user"), checkBalance)    
+    .get(checkBalance)    
 
 // Confirm Restaurant
 router
     .route("/confirmRestaurant/:id")
-    .get(permissionTo("user"), confirmRestaurant)
+    .get(confirmRestaurant)
 
 // do the transfer
 router
     .route("/doTransfer")
-    .post(permissionTo("user"), doTransfer)
+    .post(doTransfer)
 
 router
     .route("/confirmPinAndBalance")
@@ -31,6 +31,6 @@ router
 //     .post(restrictTo("restaurant"), restaurantDoTransfer)
 router
     .route("/validateTransaction")
-    .get(permissionTo("user"), validateTransaction)
+    .get(validateTransaction)
     
 module.exports = router

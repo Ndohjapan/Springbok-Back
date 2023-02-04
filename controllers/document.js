@@ -1,6 +1,6 @@
 const Formidable = require('formidable');
 
-const cloudinary = require("cloudinary");
+const cloudinary = require("cloudinary").v2;
 const AppError = require("../utils/appError");
 
 const catchAsync = require("../utils/catchAsync");
@@ -18,6 +18,7 @@ cloudinary.config({
 
 const fs = require('fs');
 const AWS = require('aws-sdk');
+const { resolve } = require('path');
 
 const s3 = new AWS.S3({
     accessKeyId: process.env.accessKeyId,
@@ -86,6 +87,49 @@ exports.uploadFile = async(fileName) => {
             console.log(`File uploaded successfully at ${data}`)
             resolve( {status: 200, body: {success: true, url:data.Location}})
     
+        });
+    })
+}
+
+
+exports.uploadBackup = async(fileName, folder) => {
+
+    console.log(fileName, folder)
+
+    const file = fileName
+    return new Promise((resolve, reject) => {
+
+        cloudinary.uploader.upload(fileName, 
+            { 
+                resource_type: 'raw',
+                folder: folder, 
+                public_id: fileName
+            }
+        )
+        .then(result=>{
+            resolve(result)
+        })
+        .catch(err => {
+            console.log(err)
+            reject(err)
+        })
+    })
+}
+
+
+exports.getFilesInFolder = async(folder) => {
+   
+    console.log(folder, typeof folder)
+
+    return new Promise((resolve, reject) => {
+        cloudinary.api.resources({type: 'upload', resource_type: 'raw' , prefix: folder }, (error, result) => {
+            if (error) {
+              console.error(error);
+              reject(error)
+            } else {
+              const resources = result.resources;
+              resolve(resources)
+            }
         });
     })
 }
