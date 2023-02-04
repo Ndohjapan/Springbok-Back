@@ -89,8 +89,7 @@ exports.deleteUser = catchAsync(async (req, res, next) => {
   let userIds = req.body.userIds;
   const user = await userSchema.deleteMany({ _id: { $in: userIds } });
   let userFeeding = userFeedingSchema.deleteMany({ userId: { $in: userIds } });
-  let transactions = transactionSchema.deleteMany({ from: { $in: userIds } });
-  Promise.all([userFeeding, transactions]).then(async (result) => {
+  Promise.all([userFeeding]).then(async (result) => {
     await delcacheData("allUsers")
     await delcacheData("legibleUsers")
     res.status(204).send({ status: true, message: "User Deleted" });

@@ -1,5 +1,5 @@
 const {utilsSchema, userFeedingSchema, transactionSchema, 
-  disbursementSchema, adminSchema, recordsSchema, userSchema, restaurantSchema} = require("../../models/mainModel")
+  disbursementSchema, adminSchema, recordsSchema, userSchema, restaurantSchema, restaurantTransactionsSchema} = require("../../models/mainModel")
 const AppError = require("../../utils/appError");
 const moment = require("moment")
 const mongoose = require("mongoose")
@@ -61,73 +61,13 @@ exports.getUsersDetails = catchAsync(async(req, res, next) => {
 })
 
 exports.getTransactionsDetails = catchAsync(async(req, res, next) => {
-  let transactionAgreggate = [ 
-    {
-      '$group': {
-        _id: null,
-        totalTransactions: {
-          $count: {}
-        },
-        totalAmount: {
-          $sum: "$amount"
-        }
-      }
-    }
-  ]
 
-  let restuarantAggregate = [
-    {
-      '$addFields': {
-        'toId': {
-          '$toObjectId': '$to'
-        }
-      }
-    }, {
-      '$lookup': {
-        'from': 'restaurants', 
-        'localField': 'toId', 
-        'foreignField': '_id', 
-        'as': 'restaurant'
-      }
-    }, {
-      '$unwind': {
-        'path': '$restaurant', 
-        'preserveNullAndEmptyArrays': true
-      }
-    }, {
-      '$group': {
-        '_id': '$to', 
-        'transactions': {
-          '$count': {}
-        }, 
-        'amount': {
-          '$sum': '$amount'
-        }, 
-        'restaurantName': {
-          '$first': '$restaurant.name'
-        }
-      }
-    }
-  ]
+  let restaurantData = await restaurantTransactionsSchema.find({disabled: false})
+  let {totalAmountSpent, totalTransactions, totalDisbursedAmount, numOfUsers, students, nonStudents} = await utilsSchema.findOne({ _id: "6283ecbcffda06c1fd477266" })
+  let transactionData = {totalAmountSpent, totalTransactions, totalDisbursedAmount, numOfUsers, students, nonStudents}
 
-  let cachedResponse = await getCachedData("transactionDetails")
-  let restaurantData = cachedResponse
 
-  if(!cachedResponse){
-
-    let transactionData = await transactionSchema.aggregate(transactionAgreggate, {allowDiskUse: true})
-    restaurantData = await transactionSchema.aggregate(restuarantAggregate, {allowDiskUse: true})
-    
-    for(i=0; i<restaurantData.length; i++){
-      restaurantData[i]["totalTransactions"] = transactionData[0]["totalTransactions"]
-      restaurantData[i]["totalAmount"] = transactionData[0]["totalAmount"]
-    }
-
-    await setCacheData("transactionDetails", restaurantData, 3600)    
-
-  }
-
-  return res.status(200).send({status: true, message: "Succssful", data: restaurantData})
+  return res.status(200).send({status: true, message: "Succssful", restaurantData, transactoinsData: transactionData})
 })
 
 exports.getDisbursementDetails = catchAsync(async(req, res, next) => {

@@ -1,4 +1,4 @@
-const {restaurantSchema, transactionSchema, userSchema} = require("../../models/mainModel")
+const {restaurantSchema, transactionSchema, userSchema, restaurantTransactionsSchema} = require("../../models/mainModel")
 const AppError = require("../../utils/appError");
 const catchAsync = require("../../utils/catchAsync");
 const bcrypt = require("bcrypt")
@@ -24,6 +24,10 @@ exports.postRestaurant = catchAsync(async(req, res, next) => {
         name, email, logo: avatar, password
     })
 
+    await restaurantTransactionsSchema.create({
+        restaurantId: restaurant.id,
+        restaurantName: restaurant.name
+    })
 
     // res.status(200).send({status: true, message: "Restaurant Created", data: restaurant})
     res.status(200).send({status: true, message: "Restaurant Created", data: restaurant})
@@ -82,9 +86,10 @@ exports.deleteRestaurant = catchAsync(async(req, res, next) => {
     
     let restaurantId = req.params.id
     
-    const food = await restaurantSchema.findByIdAndDelete(req.params.id)
-//     await transactionSchema.deleteMany({to: restaurantId})
+    const food = await restaurantSchema.findByIdAndUpdate(req.params.id, {$set: {disabled: true}})
     
+    await restaurantTransactionsSchema.findOneAndUpdate({restaurantId: restaurantId}, {$set: {disabled: true}})
+
     res.status(200).send({status: true, message: "Restaurant Deleted"})
     
     return success(userId, ` deleted a restaurant from Database`, "Delete", socket)
@@ -121,7 +126,8 @@ exports.restaurantTransactions = catchAsync(async(req, res, next) => {
                     'createdAt': {
                         '$gte': from, 
                         '$lte': to
-                    }
+                    },
+                    disabled: false
                 }
               },
             {
@@ -150,7 +156,7 @@ exports.restaurantTransactions = catchAsync(async(req, res, next) => {
         };
 
 
-        transactionSchema.paginate({createdAt:{$gte:from,$lte:to}, to: restaurantId}, options, function(err, result) {
+        transactionSchema.paginate({createdAt:{$gte:from,$lte:to}, to: restaurantId, disabled: false}, options, function(err, result) {
             if(err){
                 return next(new AppError(err, 400));
 
@@ -180,7 +186,8 @@ exports.allTransactions = catchAsync(async(req, res, next) => {
                 'createdAt': {
                   '$gte': from, 
                   '$lte': to
-                }
+                },
+                disabled: false
               }
             }, {
               '$group': {
@@ -207,7 +214,7 @@ exports.allTransactions = catchAsync(async(req, res, next) => {
         };
         
 
-        transactionSchema.paginate({createdAt:{$gte:from,$lte:to}}, options, function(err, result) {
+        transactionSchema.paginate({createdAt:{$gte:from,$lte:to}, disabled: false}, options, function(err, result) {
             if(err){
                 return next(new AppError(err, 400));
             }else{

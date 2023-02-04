@@ -4,6 +4,7 @@ const {
   transactionSchema,
   userFeedingSchema,
   utilsSchema,
+  restaurantTransactionsSchema,
 } = require("../../../models/mainModel");
 const AppError = require("../../../utils/appError");
 const catchAsync = require("../../../utils/catchAsync");
@@ -94,6 +95,9 @@ exports.doTransfer = catchAsync(async (req, res, next) => {
         .findById(transaction["_id"].toString())
         .populate(["from", "to"])
         .select("-updatedAt");
+
+      await utilsSchema.updateMany({}, {$inc: {totalAmountSpent: amount, totalTransactions: 1}})
+      await restaurantTransactionsSchema.updateOne({restaurantId: restaurantId}, {$inc: {totalTransactions: 1, totalTransactionsAmount: amount}})
 
       res.status(200).send({ status: true, payload: transaction });
       return await setCacheData("transactionDetails", "", 10)

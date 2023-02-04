@@ -177,7 +177,7 @@ exports.verify = catchAsync(async (req, res, next) => {
     
     res.status(200).json({ status: true, data: user });
     
-    await utilsSchema.updateMany({}, {$inc: {newStudentAlert: 1}})
+    await utilsSchema.updateMany({}, {$inc: {newStudentAlert: 1, numberOfUsers: 1, nonStudents: 1}})
   
     return await setCacheData("allUsers", "", 10)
   }

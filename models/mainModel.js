@@ -190,6 +190,10 @@ const restaurantSchema = new mongoose.Schema(
       type: [String],
       default: ["view transactions", "edit restaurant"],
     },
+    disabled: {
+      type: Boolean,
+      default: false
+    }
   },
   { timestamps: true }
 );
@@ -223,6 +227,10 @@ const transactionSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    disabled: {
+      type: Boolean,
+      default: false
+    }
   },
   { timestamps: true }
 );
@@ -448,6 +456,37 @@ const utilsSchema = new mongoose.Schema(
         default: 10500,
       },
     },
+
+    totalDisbursedAmount:{
+      type: Number,
+      default: 0
+    },
+
+    totalAmountSpent:{
+      type: Number,
+      default: 0
+    },
+
+    totalTransactions: {
+      type: Number,
+      default: 0
+    },
+
+    numberOfUsers: {
+      type: Number,
+      default: 0
+    },
+
+    students: {
+      type: Number,
+      default: 0
+    },
+
+    nonStudents: {
+      type: Number,
+      default: 0
+    }
+
   },
   { timestamps: true }
 );
@@ -548,6 +587,30 @@ const apiKeySchema = new mongoose.Schema(
   {timestamps: true}
 )
 
+const restaurantTransactionsSchema = new mongoose.Schema(
+  {
+    restaurantId: {
+      type: String
+    },
+    restaurantName: {
+      type: String
+    },
+    totalTransactions: {
+      type: Number,
+      default: 0
+    },
+    totalTransactionsAmount: {
+      type: Number,
+      default: 0
+    },
+    disabled: {
+      type: Boolean,
+      default: false
+    }
+  },
+  {timestamps: true}
+)
+
 userSchema.methods.generateAuthToken = function () {
   return jwt.sign(
     { id: this._id, verified: this.verified },
@@ -619,6 +682,7 @@ module.exports.recordsSchema = mongoose.model("Records", recordsSchema);
 module.exports.socketSchema = mongoose.model("SocketIds", socketSchema);
 module.exports.backupSchema = mongoose.model("folderBackups", backupSchema);
 module.exports.apiKeySchema = mongoose.model("apiKeys", apiKeySchema);
+module.exports.restaurantTransactionsSchema = mongoose.model("restaurantTransactionsDetails", restaurantTransactionsSchema);
 module.exports.transactionSchema = mongoose.model(
   "transactions",
   transactionSchema
