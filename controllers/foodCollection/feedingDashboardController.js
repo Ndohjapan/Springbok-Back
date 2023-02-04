@@ -63,8 +63,8 @@ exports.getUsersDetails = catchAsync(async(req, res, next) => {
 exports.getTransactionsDetails = catchAsync(async(req, res, next) => {
 
   let restaurantData = await restaurantTransactionsSchema.find({disabled: false})
-  let {totalAmountSpent, totalTransactions, totalDisbursedAmount, numOfUsers, students, nonStudents} = await utilsSchema.findOne({ _id: "6283ecbcffda06c1fd477266" })
-  let transactionData = {totalAmountSpent, totalTransactions, totalDisbursedAmount, numOfUsers, students, nonStudents}
+  let {totalAmountSpent, totalTransactions, totalDisbursedAmount, numOfUsers, students, nonStudents, newStudentAlert} = await utilsSchema.findOne({ _id: "6283ecbcffda06c1fd477266" })
+  let transactionData = {totalAmountSpent, totalTransactions, totalDisbursedAmount, numOfUsers, students, nonStudents, newStudentAlert}
 
 
   return res.status(200).send({status: true, message: "Succssful", restaurantData, transactoinsData: transactionData})
