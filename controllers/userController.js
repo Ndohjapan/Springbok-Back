@@ -101,7 +101,7 @@ exports.postFilter = catchAsync(async (req, res, next) => {
     }
   });
 
-  let user = await userSchema.find({ updateData, role: { $ne: "restaurant" } });
+  let user = await userSchema.find({ updateData, role: { $ne: "restaurant" }, verified: true });
 
   res.status(200).send({ status: true, message: "Successful", data: user });
 });
