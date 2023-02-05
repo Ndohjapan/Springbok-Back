@@ -4,30 +4,30 @@ const router = express.Router()
 
 const {getAllRecords, getRecord, deleteRecord, postFilter} = require("../controllers/foodCollection/recordsController")
 
-const {permissionTo} = require("../controllers/authController")
+const {permissionTo, onlyAdmins} = require("../controllers/authController")
 
 
 // Get all from the collection
 router
     .route("/")
-    .get(getAllRecords)    
+    .get(onlyAdmins, getAllRecords)    
 
 
 // Gt a users transactions
 router
     .route("/:id")
-    .get(getRecord)
+    .get(onlyAdmins, getRecord)
 
 // Delete
 router
     .route("/:id")
-    .delete(permissionTo("all"), deleteRecord)
+    .delete(onlyAdmins, permissionTo("all"), deleteRecord)
 
 
 // Transactions with filter
 router
     .route("/post/filter")
-    .post(postFilter)
+    .post(onlyAdmins, postFilter)
 
 
 

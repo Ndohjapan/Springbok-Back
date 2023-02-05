@@ -17,7 +17,7 @@ router
 
 router
     .route("/getFiles")
-    .post(protect, permissionTo("view backup"), getBackupFiles)
+    .post(protect, onlyAdmins, permissionTo("view backup"), getBackupFiles)
 
 // // delete any
 // router

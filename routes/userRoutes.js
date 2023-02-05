@@ -10,7 +10,7 @@ const {
   postFilter,
   getAllUserData
 } = require("../controllers/userController");
-const { protect, permissionTo } = require("../controllers/authController");
+const { protect, permissionTo, onlyAdmins } = require("../controllers/authController");
 
 // Get all from the collection
 router.route("/").get(getAllUsers);
@@ -22,7 +22,7 @@ router.route("/:id").get(getUser);
 router.route("/all/:id").get(getAllUserData);
 
 // Delete
-router.route("/").delete(permissionTo("delete users"), deleteUser);
+router.route("/").delete(onlyAdmins, permissionTo("delete users"), deleteUser);
 
 // Put
 router.route("/:id").put(updateUser);

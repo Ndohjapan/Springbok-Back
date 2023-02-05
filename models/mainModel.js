@@ -17,10 +17,6 @@ const userSchema = new mongoose.Schema(
     verified: { type: Boolean, default: false },
     otp: { type: String },
     otpExpiresIn: { type: Date },
-    role: {
-      type: String,
-      default: "user",
-    },
     department: { type: String },
     level: { type: String },
     hostel: { type: String },
@@ -132,6 +128,7 @@ const adminSchema = new mongoose.Schema(
             "export csv",
             "view transactions",
             "edit users",
+            "view backup"
           ],
         },
       ],

@@ -4,7 +4,7 @@ const router = express.Router()
 
 const {getAllTransactions, getTransaction, deleteTransaction, postFilter, getUserTransactions} = require("../controllers/foodCollection/transactionsController")
 
-const {permissionTo} = require("../controllers/authController")
+const {permissionTo, onlyAdmins} = require("../controllers/authController")
 
 
 // Get all from the collection
@@ -26,7 +26,7 @@ router
 // Delete
 router
     .route("/:id")
-    .delete(permissionTo("all"), deleteTransaction)
+    .delete(onlyAdmins, permissionTo("all"), deleteTransaction)
 
 
 // Transactions with filter

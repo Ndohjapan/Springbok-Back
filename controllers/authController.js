@@ -279,10 +279,11 @@ exports.protect = catchAsync(async (req, res, next) => {
 });
 
 exports.onlyAdmins = catchAsync(async(req, res, next) => {
-  if(req.user.role){
+  const admin = await adminSchema.findById(req.user.id)
+  if(admin){
     return next()
   }
-  return new AppError("You do not permission to perform this action", 403)
+  return next(new AppError("You do not permission to perform this action", 403))
 })
 
 exports.apiKeyVerification = catchAsync(async (req, res, next) => {
