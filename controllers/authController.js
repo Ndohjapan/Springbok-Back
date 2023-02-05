@@ -231,9 +231,21 @@ exports.resetPassword = catchAsync(async(req, res, next) => {
 })
 
 exports.permissionTo = (...roles) => {
-  return ((req, res, next) => {
+  return ((req, res, next) => {    
     if(req.user.role === "bursar"){
-      next()
+      if(process.env.NODE_ENV === "production"){
+        if(req.user.email === process.env.PRODUCTION_ADMIN_EMAIL || req.user.email === process.env.DEVELOPMENT_ADMIN_EMAIL){
+          next()
+        }
+        else{
+          return next(
+            new AppError("You do not have permission to perform this action", 403)
+          )
+        }
+      }
+      else{
+        next()
+      }
     }
     else{
       let userPermissions = req.user.permissions

@@ -119,8 +119,6 @@ exports.uploadBackup = async(fileName, folder) => {
 
 exports.getFilesInFolder = async(folder) => {
    
-    console.log(folder, typeof folder)
-
     return new Promise((resolve, reject) => {
         cloudinary.api.resources({type: 'upload', resource_type: 'raw' , prefix: folder }, (error, result) => {
             if (error) {
@@ -128,7 +126,7 @@ exports.getFilesInFolder = async(folder) => {
               reject(error)
             } else {
               const resources = result.resources;
-              resolve(resources)
+              resolve(resources.map(({ public_id, secure_url }) => ({ public_id, secure_url })))
             }
         });
     })
