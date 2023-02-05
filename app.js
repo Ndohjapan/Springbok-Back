@@ -20,7 +20,7 @@ const qrTransactions = require("./routes/qrTransaction/qrTreansaction")
 const backupRoutes = require("./routes/backupRoutes")
 const userFeedingRoutes = require("./routes/userFeedingRoutes")
 const AppError = require("./utils/appError");
-const interceptorParam = require("./middleware/interceptorParam")
+const {interceptorParam, bruteForce} = require("./middleware/interceptorParam")
 
 const dotenv = require("dotenv")
 const path = require("path")
@@ -44,22 +44,22 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use(interceptorParam)
 
-app.use("/api/v1/users", fundingStatus, authRoutes);
-app.use("/document", documentRoutes);
+app.use("/api/v1/users", bruteForce.prevent, fundingStatus, authRoutes);
+app.use("/document", bruteForce.prevent, documentRoutes);
 app.use("/error", errorLogsRoute);
 app.use("/food", protect, foodRoutes)
-app.use("/transaction", protect, transactionRoute)
-app.use("/record", protect, recordRoute)
-app.use("/search", protect, searchRoute)
-app.use("/restaurant", fundingStatus, protect, restaurantRoutes)
-app.use("/order", protect, orderRoutes)
-app.use("/dashboard", protect, dashboardRoutes)
-app.use("/feeding", fundingStatus, protect, userFeedingRoutes)
-app.use("/activity", fundingStatus, protect, activityRoutes)
-app.use("/util", fundingStatus, utilsRoutes)
-app.use("/backup", backupRoutes)
-app.use("/user", protect, userRoutes)
-app.use("/qr", fundingStatus, protect, qrTransactions)
+app.use("/transaction", bruteForce.prevent, protect, transactionRoute)
+app.use("/record", bruteForce.prevent, protect, recordRoute)
+app.use("/search", bruteForce.prevent, protect, searchRoute)
+app.use("/restaurant", bruteForce.prevent, fundingStatus, protect, restaurantRoutes)
+app.use("/order", bruteForce.prevent, protect, orderRoutes)
+app.use("/dashboard", bruteForce.prevent, protect, dashboardRoutes)
+app.use("/feeding", bruteForce.prevent, fundingStatus, protect, userFeedingRoutes)
+app.use("/activity", bruteForce.prevent, fundingStatus, protect, activityRoutes)
+app.use("/util", bruteForce.prevent, fundingStatus, utilsRoutes)
+app.use("/backup", bruteForce.prevent, backupRoutes)
+app.use("/user", bruteForce.prevent, protect, userRoutes)
+app.use("/qr", bruteForce.prevent, fundingStatus, protect, qrTransactions)
 
 app.all("*", (req, res, next) =>
   next(new AppError(`Cannot find ${req.originalUrl} on this server`, 404))

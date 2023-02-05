@@ -1,5 +1,9 @@
 // Some information for printing access interface
-const interceptorParam  = (req, res, next) => {
+
+const ExpressBrute = require("express-brute");
+let store = new ExpressBrute.MemoryStore();
+exports.bruteForce = new ExpressBrute(store);
+exports.interceptorParam = (req, res, next) => {
 
     console.info("\nInterceptorParam-StartRecord------------------------------------------------")
     console.info("InterceptorParam-Access Time   : ", new Date().toLocaleString())
@@ -11,6 +15,7 @@ const interceptorParam  = (req, res, next) => {
 
 }
 
+
 const getAPIPath = (originalUrl) => {
     // has ?
     if (originalUrl.indexOf('?') > 0) {
@@ -19,6 +24,3 @@ const getAPIPath = (originalUrl) => {
 
     return originalUrl
 }
-
-
-module.exports = interceptorParam
