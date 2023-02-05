@@ -20,7 +20,7 @@ exports.getAllTransactions = catchAsync(async(req, res, next) => {
         limit: limit
     };
 
-    transactionSchema.paginate({}, options, function(err, result) {
+    transactionSchema.paginate({disabled: false}, options, function(err, result) {
         if(err){
             console.log(err)
             res.status(400).send(err)
@@ -44,7 +44,7 @@ exports.getUserTransactions = catchAsync(async(req, res, next) => {
         limit: limit
     };
 
-    transactionSchema.paginate({from: userId}, options, function(err, result) {
+    transactionSchema.paginate({from: userId, disabled: false}, options, function(err, result) {
         if(err){
             console.log(err)
             res.status(400).send(err)
@@ -55,7 +55,7 @@ exports.getUserTransactions = catchAsync(async(req, res, next) => {
 })
 
 exports.getTransaction = catchAsync(async(req, res, next) => {
-    const transaction = await transactionSchema.findOne({_id: req.params.id})
+    const transaction = await transactionSchema.findOne({_id: req.params.id, disabled: false})
 
     res.status(200).send({status: true, message: "Successful", data: transaction})
 })
@@ -65,7 +65,7 @@ exports.deleteTransaction = catchAsync(async(req, res, next) => {
     const socket = req.app.get("socket");
     let userId = req.user["_id"].toString()
 
-    await transactionSchema.findOneAndDelete({_id: req.params.id})
+    await transactionSchema.findOneAndUpdate({_id: req.params.id, disabled: false})
 
     res.status(200).send({status: true, message: "Tranaction Deleted"})
 
@@ -86,6 +86,8 @@ exports.postFilter = catchAsync(async(req, res, next) => {
             updateData[key] = value
         }
     })
+
+    updateData.disabled = false
 
 
     const options = {

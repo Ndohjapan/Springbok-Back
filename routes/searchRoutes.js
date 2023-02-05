@@ -4,12 +4,12 @@ const router = express.Router()
 
 const {userSearch} = require("../controllers/foodCollection/searchController")
 
-const {permissionTo} = require("../controllers/authController")
+const {permissionTo, onlyAdmins} = require("../controllers/authController")
 
 
 // Gt a users transactions
 router
     .route("/users")
-    .post(userSearch)
+    .post(onlyAdmins, userSearch)
 
 module.exports = router

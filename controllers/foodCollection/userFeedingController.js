@@ -264,7 +264,7 @@ exports.validateUsers = catchAsync(async(req,res, next) => {
     try{
         let userUpdate = userSchema.updateMany({"_id": {$in: userIds}}, {$set: {studentStatus: studentStatus}})
         let feedingUpdate = userFeedingSchema.updateMany({userId: {$in: userIds}, studentStatus: false}, {$set: {feedingType: feedingType, studentStatus: studentStatus, totalFeedingAmount: totalFeedingAmount, amountLeft: totalFeedingAmount}})
-        let newStudentAlert = utilsSchema.updateMany({}, {$set: {newStudentAlert: 0}})
+        let newStudentAlert = utilsSchema.updateMany({}, {$set: {newStudentAlert: 0}, $inc:{students: 1, nonStudents: -1}})
     
         let promises = [userUpdate, feedingUpdate, newStudentAlert]
     
@@ -316,7 +316,7 @@ exports.invalidateUsers = catchAsync(async(req,res, next) => {
     try{
         let userUpdate = userSchema.updateMany({"_id": {$in: userIds}}, {$set: {studentStatus: studentStatus}})
         let feedingUpdate = userFeedingSchema.updateMany({userId: {$in: userIds}}, {$set: {feedingType: 2, studentStatus: studentStatus, totalFeedingAmount: totalFeedingAmount, fundingStatus: studentStatus, balance: 0, previousBalance: 0, totalAmountFunded: 0}})
-        let newStudentAlert = utilsSchema.updateMany({}, {$set: {newStudentAlert: 0}})
+        let newStudentAlert = utilsSchema.updateMany({}, {$set: {newStudentAlert: 0}, $inc:{students: -1, nonStudents: 1}})
     
         let promises = [userUpdate, feedingUpdate, newStudentAlert]
     
@@ -385,10 +385,13 @@ exports.fundWallet = catchAsync(async(req, res, next) => {
         
         
         let totalAmount = (statistics[0]) ? statistics[0].amount : 0
+        totalAmount = totalAmount * -1
         await disbursementSchema.create({
             amount: totalAmount,
             numberOfStudents: user.modifiedCount
         })
+
+        await utilsSchema.updateMany({}, {$inc: {totalDisbursedAmount: totalAmount}})
     
         res.status(200).send({status: true, message: "Update Successful"})
 

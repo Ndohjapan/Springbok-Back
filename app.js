@@ -17,9 +17,10 @@ const recordRoute = require("./routes/recordsRoute")
 const searchRoute = require("./routes/searchRoutes")
 const errorLogsRoute = require("./routes/errorLogsRoutes")
 const qrTransactions = require("./routes/qrTransaction/qrTreansaction")
+const backupRoutes = require("./routes/backupRoutes")
 const userFeedingRoutes = require("./routes/userFeedingRoutes")
 const AppError = require("./utils/appError");
-const interceptorParam = require("./middleware/interceptorParam")
+const {interceptorParam, bruteForce} = require("./middleware/interceptorParam")
 
 const dotenv = require("dotenv")
 const path = require("path")
@@ -43,7 +44,7 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use(interceptorParam)
 
-app.use("/api/v1/users", fundingStatus, authRoutes);
+app.use("/api/v1/users", bruteForce.prevent, fundingStatus, authRoutes);
 app.use("/document", documentRoutes);
 app.use("/error", errorLogsRoute);
 app.use("/food", protect, foodRoutes)
@@ -56,6 +57,7 @@ app.use("/dashboard", protect, dashboardRoutes)
 app.use("/feeding", fundingStatus, protect, userFeedingRoutes)
 app.use("/activity", fundingStatus, protect, activityRoutes)
 app.use("/util", fundingStatus, utilsRoutes)
+app.use("/backup", backupRoutes)
 app.use("/user", protect, userRoutes)
 app.use("/qr", fundingStatus, protect, qrTransactions)
 

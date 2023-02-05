@@ -3,31 +3,31 @@ const express = require("express");
 const router = express.Router();
 
 const {resetStudentPin, resetStudentPassword, getTransactionsDetails, getUsersDetails, getDisbursementDetails, updateAdmins, deleteAdmins, getAllAdmins, unreadNotifications, allPermissions, createAdmin, exportCSV, endSession} = require("../controllers/foodCollection/feedingDashboardController");
-const {permissionTo} = require("../controllers/authController")
+const {permissionTo, onlyAdmins} = require("../controllers/authController")
 
 router
     .route("/userDetails")
-    .get(getUsersDetails);
+    .get(onlyAdmins, getUsersDetails);
 
 router
     .route("/transactionsDetails")
-    .get(getTransactionsDetails);
+    .get(onlyAdmins, getTransactionsDetails);
 
 router
     .route("/disbursementDetails")
-    .get(getDisbursementDetails);
+    .get(onlyAdmins, getDisbursementDetails);
 
 router
     .route("/createAdmin")
-    .post(permissionTo("all", "create admin"), createAdmin);
+    .post(onlyAdmins, permissionTo("all", "create admin"), createAdmin);
 
 router
     .route("/resetStudentPin")
-    .post(permissionTo("edit users"), resetStudentPin);
+    .post(onlyAdmins, permissionTo("edit users"), resetStudentPin);
 
 router
     .route("/resetStudentPassword")
-    .post(permissionTo("edit users"), resetStudentPassword);
+    .post(onlyAdmins, permissionTo("edit users"), resetStudentPassword);
 
 router
     .route("/getAllAdmins")
@@ -35,26 +35,26 @@ router
 
 router
     .route("/deleteAdmins/:id")
-    .delete(permissionTo("all"), deleteAdmins);
+    .delete(onlyAdmins, permissionTo("all"), deleteAdmins);
 
 router
     .route("/updateAdmins/:id")
-    .post(permissionTo("all"), updateAdmins)
+    .post(onlyAdmins, permissionTo("all"), updateAdmins)
 
 router
     .route("/unreadNotifications")
-    .get(unreadNotifications)
+    .get(onlyAdmins, unreadNotifications)
 
 router
     .route("/allPermissions")
-    .get(allPermissions)
+    .get(onlyAdmins, allPermissions)
 
 router
     .route("/exportCSV")
-    .post(exportCSV)
+    .post(onlyAdmins, permissionTo("export csv"), exportCSV)
 
 router
     .route("/endSession")
-    .post(endSession)
+    .post(onlyAdmins, endSession)
 
 module.exports = router;

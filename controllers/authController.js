@@ -2,7 +2,7 @@ const dotenv = require("dotenv")
 dotenv.config({path: "./config/config.env"})
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const {userFeedingSchema, utilsSchema, userSchema, adminSchema, restaurantSchema} = require("../models/mainModel");
+const {userFeedingSchema, utilsSchema, userSchema, adminSchema, restaurantSchema, apiKeySchema} = require("../models/mainModel");
 const AppError = require("../utils/appError");
 const generateOtp = require("../utils/generateOtp");
 const {sendMail} = require("../utils/sendMail");
@@ -177,7 +177,7 @@ exports.verify = catchAsync(async (req, res, next) => {
     
     res.status(200).json({ status: true, data: user });
     
-    await utilsSchema.updateMany({}, {$inc: {newStudentAlert: 1}})
+    await utilsSchema.updateMany({}, {$inc: {newStudentAlert: 1, numberOfUsers: 1, nonStudents: 1}})
   
     return await setCacheData("allUsers", "", 10)
   }
@@ -231,18 +231,38 @@ exports.resetPassword = catchAsync(async(req, res, next) => {
 })
 
 exports.permissionTo = (...roles) => {
-  return catchAsync((req, res, next) => {
+  return ((req, res, next) => {    
     if(req.user.role === "bursar"){
-      next()
+      if(process.env.NODE_ENV === "production"){
+        if(req.user.email === process.env.PRODUCTION_ADMIN_EMAIL || req.user.email === process.env.DEVELOPMENT_ADMIN_EMAIL){
+          next()
+        }
+        else{
+          return next(
+            new AppError("You do not have permission to perform this action", 403)
+          )
+        }
+      }
+      else{
+        next()
+      }
     }
     else{
       let userPermissions = req.user.permissions
-      let permission = userPermissions.join().includes(roles.join())
-      if (!permission)
+      try {
+        let permission = userPermissions.join().includes(roles.join())
+        if (!permission){
+          return next(
+            new AppError("You do not have permission to perform this action", 403)
+          );
+        }
+        next();
+        
+      } catch (error) {
         return next(
           new AppError("You do not have permission to perform this action", 403)
         );
-      next();
+      }
     }
   });
 };
@@ -269,3 +289,27 @@ exports.protect = catchAsync(async (req, res, next) => {
     return res.status(401).send({success: false, message: "Invalid Token"})
   }
 });
+
+exports.onlyAdmins = catchAsync(async(req, res, next) => {
+  const admin = await adminSchema.findById(req.user.id)
+  if(admin){
+    return next()
+  }
+  return next(new AppError("You do not permission to perform this action", 403))
+})
+
+exports.apiKeyVerification = catchAsync(async (req, res, next) => {
+  let accessKey = req.header("x-auth-accessKey")
+  let secretKey = req.header("x-auth-secretKey")
+
+  const decoded = await apiKeySchema.findOne({apiAccessKey: accessKey, apiSecretKey: secretKey})
+
+  if(decoded){
+    return next()
+  }
+  else{
+    return next(new AppError("You do not have permission to do this", 403))
+  }
+})
+
+
