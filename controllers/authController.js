@@ -10,9 +10,27 @@ const dates = require("../utils/dates");
 const catchAsync = require("../utils/catchAsync");
 const {success} = require("../utils/activityLogs")
 
+async function validateSignUpData(data){
+  let utils = await utilsSchema.find({})
+
+  let {departments, levels, hostels} = utils[0]
+
+  if(departments.includes(data.department) && levels.includes(data.level) && hostels.includes(data.hostel)){
+    return true
+  }
+
+  return false
+}
 
 exports.signup = catchAsync(async (req, res, next) => {
+
+  if(!await validateSignUpData(req.body)){
+    return next(new AppError("Invalid Signup", 400))
+  }
+
   const { firstname, lastname, middlename, email, password, department, level, hostel, transactionPin, matricNumber } = req.body;
+
+  
 
   if (await userSchema.findOne({ email }))
     return next(new AppError("User already exists", 400));
@@ -24,7 +42,7 @@ exports.signup = catchAsync(async (req, res, next) => {
   const hashedPassword = await bcrypt.hash(password, salt);
   const hashedPin = await bcrypt.hash(transactionPin, salt)
 
-  const user = await userSchema.create({
+  let user = await userSchema.create({
     firstname,
     lastname,
     middlename,
@@ -37,6 +55,10 @@ exports.signup = catchAsync(async (req, res, next) => {
     hostel,
     matricNumber
   });
+
+  user.otp = "";
+  user.otpExpiresIn = "";
+
   await userFeedingSchema.create({userId: user["_id"].toString(), transactionPin: hashedPin, totalAmountFunded: 0, numOfTimesFunded: 0, amountLeft: 0, amountLeft: 0 })
   const token = await user.generateAuthToken();
   await sendMail(email, otp);
