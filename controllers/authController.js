@@ -58,6 +58,7 @@ exports.signup = catchAsync(async (req, res, next) => {
 
   user.otp = "";
   user.otpExpiresIn = "";
+  user.password = "";
 
   await userFeedingSchema.create({userId: user["_id"].toString(), transactionPin: hashedPin, totalAmountFunded: 0, numOfTimesFunded: 0, amountLeft: 0, amountLeft: 0 })
   const token = await user.generateAuthToken();
@@ -85,6 +86,9 @@ exports.signin = catchAsync(async (req, res, next) => {
       return next(new AppError("Incorrect email or password", 400));
     }else{
       const token = await user.generateAuthToken();
+      user.otp = "";
+      user.otpExpiresIn = "";
+      user.password = "";
       res.status(200).json({ status: true, token, payload: user });
     }
 
