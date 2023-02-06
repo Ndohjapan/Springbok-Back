@@ -13,7 +13,7 @@ const {
 const {permissionTo, onlyAdmins} = require("../controllers/authController")
 
 // Create or Restaurant into the document
-router.route("/").post(permissionTo("edit restaurant"), postRestaurant);
+router.route("/").post(onlyAdmins, permissionTo("edit restaurant"), postRestaurant);
 
 // Get all from the collection
 router.route("/").get(getAllRestaurants);
