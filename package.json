@@ -11,7 +11,7 @@
   "dependencies": {
     "aws-sdk": "^2.1162.0",
     "bcrypt": "^5.0.1",
-    "cloudinary": "^1.30.0",
+    "cloudinary": "^1.33.0",
     "config": "^3.3.7",
     "cors": "^2.8.5",
     "csv-writer": "^1.6.0",
