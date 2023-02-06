@@ -135,23 +135,23 @@ exports.adminSignin = catchAsync(async (req, res, next) => {
     return next(new AppError("Provide an email and password", 400));
 
     const user = await adminSchema.findOne({ email });
-    let userId = user["_id"].toString()
-  if (!user){
-    return next(new AppError("User not found", 404));
-  }
-  else{
-
-    const correctPassword = await user.checkPassword(password);
-    if (!correctPassword){
-
-      return next(new AppError("Incorrect email or password", 400));
-    }else{
-      const token = await user.generateAuthToken();
-      res.status(200).json({ status: true, token, payload: user });
-
-      return success(userId, ` just logged on to admin dashboard`, "Login", socket)
-
+    if (!user){
+      return next(new AppError("Invalid Login", 404));
     }
+    else{
+      
+      let userId = user["_id"].toString()
+      const correctPassword = await user.checkPassword(password);
+      if (!correctPassword){
+
+        return next(new AppError("Incorrect email or password", 400));
+      }else{
+        const token = await user.generateAuthToken();
+        res.status(200).json({ status: true, token, payload: user });
+
+        return success(userId, ` just logged on to admin dashboard`, "Login", socket)
+
+      }
 
   } 
 
