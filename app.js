@@ -61,9 +61,12 @@ app.use("/backup", backupRoutes)
 app.use("/user", protect, userRoutes)
 app.use("/qr", fundingStatus, protect, qrTransactions)
 
-app.all("*", (req, res, next) =>
-  next(new AppError(`Cannot find ${req.originalUrl} on this server`, 404))
-);
+app.all("*", (req, res, next) => {
+  if(process.env.NODE_ENV === "production"){
+    return next (new AppError(`Page does not exist`, 404))
+  }
+  return next(new AppError(`Cannot find ${req.originalUrl} on this server`, 404))
+});
 
 app.use(globalErrorHandler);
 
