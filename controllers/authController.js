@@ -276,8 +276,10 @@ exports.permissionTo = (...roles) => {
     else{
       let userPermissions = req.user.permissions
       try {
-        let permission = userPermissions.join().includes(roles.join())
-        if (!permission){
+        let permission = roles.filter(function(element){
+          return userPermissions.includes(element);
+        });
+        if (!permission.length){
           return next(
             new AppError("You do not have permission to perform this action", 403)
           );

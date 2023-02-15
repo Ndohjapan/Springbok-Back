@@ -611,6 +611,14 @@ const restaurantTransactionsSchema = new mongoose.Schema(
     disabled: {
       type: Boolean,
       default: false
+    },
+    manualTransactions: {
+      type: Number,
+      default:0
+    },
+    manualTransactionsAmount:{
+      type: Number,
+      default: 0
     }
   },
   {timestamps: true}
@@ -676,6 +684,7 @@ userFeedingSchema.methods.checkPin = function (transactionPin) {
 
 restaurantSchema.plugin(mongoosePaginate);
 transactionSchema.plugin(mongoosePaginate);
+tempoararyTransactionsSchema.plugin(mongoosePaginate);
 foodSchema.plugin(mongoosePaginate);
 userFeedingSchema.plugin(mongoosePaginate);
 disbursementSchema.plugin(mongoosePaginate);

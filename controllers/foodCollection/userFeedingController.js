@@ -377,7 +377,7 @@ exports.fundWallet = catchAsync(async(req, res, next) => {
               '$group': {
                 '_id': null, 
                 'amount': {
-                  '$sum': {"$subtract": ["$previousBalance", "$balance"]}
+                    '$sum': {"$subtract": ["$balance", "$previousBalance"]}
                 }
               }
             }
@@ -385,13 +385,17 @@ exports.fundWallet = catchAsync(async(req, res, next) => {
         
         
         let totalAmount = (statistics[0]) ? statistics[0].amount : 0
-        totalAmount = totalAmount * -1
         await disbursementSchema.create({
             amount: totalAmount,
             numberOfStudents: user.modifiedCount
         })
 
         await utilsSchema.updateMany({}, {$inc: {totalDisbursedAmount: totalAmount}})
+
+        // Check the deficit difference
+        await checkDeficit(userIds)
+        await reduceDeficitOfNegativeStudents(userIds)
+        await reduceDeficitOfPositiveStudents(userIds)
     
         res.status(200).send({status: true, message: "Update Successful"})
 
@@ -445,7 +449,7 @@ exports.fundAllLegibleWallets = catchAsync(async(req, res, next) => {
               '$group': {
                 '_id': null, 
                 'amount': {
-                  '$sum': {"$subtract": ["$previousBalance", "$balance"]}
+                  '$sum': {"$subtract": ["$balance", "$previousBalance"]}
                 }
               }
             }
@@ -457,11 +461,15 @@ exports.fundAllLegibleWallets = catchAsync(async(req, res, next) => {
             amount: totalAmount,
             numberOfStudents: user.modifiedCount
         })
+
+
+        // Check the deficit difference
+        await checkDeficitToday()
+        await reduceDeficitOfNegativeStudentsToday()
+        await reduceDeficitOfPositiveStudentsToday()
     
         res.status(200).send({status: true, message: "Update Successful"})
 
-        await delcacheData("disbursementDetails")
-        await delcacheData("legibleUsers")
 
         return success(userId, ` funded ${user.modifiedCount} students who are legible after 30 days with total of ${totalAmount} naira`, "Update", socket)
 
@@ -519,7 +527,6 @@ async function fundAllPositiveStudentsToday(fundingDay, feedingAmount){
                 "previousBalance": '$balance',
                 "lastFunding": fundingDay, 
                 "lastFundingDay": fundingDay,
-                'fundingStatus': true, 
                 'totalAmountFunded': {$add: ["$totalAmountFunded", { $multiply: [ feedingAmount, "$feedingType" ] }]},
                 'balance': {$add: ["$balance", { $multiply: [ feedingAmount, "$feedingType" ] }]},
                 'numOfTimesFunded': {$add: ["$numOfTimesFunded", 1]},
@@ -542,7 +549,6 @@ async function fundAllNegativeStudentsToday(fundingDay, feedingAmount){
                 "previousBalance": '$balance',
                 "lastFunding": fundingDay, 
                 "lastFundingDay": fundingDay,
-                'fundingStatus': true, 
                 'totalAmountFunded': {$add: ["$totalAmountFunded", "$amountLeft"]},
                 'numOfTimesFunded': {$add: ["$numOfTimesFunded", 1]},
                 'balance': {$add: ["$amountLeft", "$balance"]},
@@ -602,6 +608,101 @@ async function fundAllNegativeStudents(userIds, fundingDay, feedingAmount){
     return user
 }
 
+async function checkDeficit(userIds){
+    let user = await userFeedingSchema.updateMany(
+        {fundingStatus: true, userId: {$in: userIds}, studentStatus: true}, 
+        [
+            {$set: {
+                'deficitCheck': {$subtract: [{$subtract: ["$balance", "$previousBalance"]}, "$deficit"]}
+                },
+            }
+        ], 
+        {multi: true}
+    )
+
+    return user
+}
+
+async function checkDeficitToday(){
+    let user = await userFeedingSchema.updateMany(
+        {fundingStatus: false, studentStatus: true}, 
+        [
+            {$set: {
+                'deficitCheck': {$subtract: [{$subtract: ["$balance", "$previousBalance"]}, "$deficit"]}
+                },
+            }
+        ], 
+        {multi: true}
+    )
+
+    return user
+}
+
+async function reduceDeficitOfNegativeStudentsToday(){
+    let users = await userFeedingSchema.updateMany(
+        {deficitCheck: {$lte: 0}, fundingStatus: false, studentStatus: true},
+        [
+            {$set: {
+                "deficit": {$subtract: ["$deficit", {$subtract: ["$balance", "$previousBalance"]}]},
+                "balance": "$previousBalance",
+                "fundingStatus": true
+                },
+            }
+        ], 
+        {multi: true}
+    )
+
+    return users
+}
+
+async function reduceDeficitOfPositiveStudentsToday(){
+    let users = await userFeedingSchema.updateMany(
+        {deficitCheck: {$gt: 0}, fundingStatus: false, studentStatus: true},
+        [
+            {$set: {
+                "balance": {$subtract: ["$balance", "$deficit"]},
+                "deficit": 0,
+                "fundingStatus": true
+                },
+            }
+        ], 
+        {multi: true}
+    )
+
+    return users
+}
+
+async function reduceDeficitOfNegativeStudents(userIds){
+    let users = await userFeedingSchema.updateMany(
+        {deficitCheck: {$lte: 0}, userId: {$in: userIds}, studentStatus: true},
+        [
+            {$set: {
+                "deficit": {$subtract: ["$deficit", {$subtract: ["$balance", "$previousBalance"]}]},
+                "balance": "$previousBalance"
+                },
+            }
+        ], 
+        {multi: true}
+    )
+
+    return users
+}
+
+async function reduceDeficitOfPositiveStudents(userIds){
+    let users = await userFeedingSchema.updateMany(
+        {deficitCheck: {$gt: 0}, userId: {$in: userIds}, studentStatus: true},
+        [
+            {$set: {
+                "balance": {$subtract: ["$balance", "$deficit"]},
+                "deficit": 0
+                },
+            }
+        ], 
+        {multi: true}
+    )
+
+    return users
+}
 
 function dateFormat(from, to){
     from = new Date(from)

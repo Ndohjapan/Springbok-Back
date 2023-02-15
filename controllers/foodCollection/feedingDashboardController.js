@@ -1,5 +1,5 @@
 const {utilsSchema, userFeedingSchema, transactionSchema, 
-  disbursementSchema, adminSchema, recordsSchema, userSchema, restaurantSchema, restaurantTransactionsSchema} = require("../../models/mainModel")
+  disbursementSchema, adminSchema, recordsSchema, userSchema, restaurantSchema, restaurantTransactionsSchema, tempoararyTransactionsSchema} = require("../../models/mainModel")
 const AppError = require("../../utils/appError");
 const moment = require("moment")
 const mongoose = require("mongoose")
@@ -193,6 +193,82 @@ exports.deleteAdmins = catchAsync(async(req, res, next) => {
   }
 
 
+})
+
+exports.approveTempoararyTransactions = catchAsync(async(req, res, next) => {
+  let tempoararyTransactionAggregate = [
+    {
+      '$match': {
+        'disabled': false
+      }
+    }, {
+      '$group': {
+        '_id': '$from', 
+        'deficit': {
+          '$sum': '$amount'
+        }
+      }
+    }
+  ]
+  let tempoararyTransactionRestaurantAggregate = [
+    {
+      '$match': {
+        'disabled': false
+      }
+    },  {
+      '$group': {
+        '_id': '$to', 
+        'totalAmount': {
+          '$sum': '$amount'
+        }, 
+        'totalTransactions': {
+          '$count': {}
+        }
+      }
+    }
+  ]
+
+  let userDetails = await tempoararyTransactionsSchema.aggregate(tempoararyTransactionAggregate)
+  let restaurantDetails = await tempoararyTransactionsSchema.aggregate(tempoararyTransactionRestaurantAggregate)
+  await tempoararyTransactionsSchema.updateMany({}, {$set: {disabled: true}})
+
+  userDetails.forEach( catchAsync(async(result) => {
+    let user = await userFeedingSchema.findOneAndUpdate(
+      {userId: result["_id"]},
+      {$set: {deficit: result.deficit}},
+      {new: true}
+    )
+  }))
+
+  restaurantDetails.forEach(catchAsync(async(result) => {
+    await restaurantSchema.findByIdAndUpdate(result["_id"], 
+      [
+        {$set: {
+            "previousBalance": "$balance",
+            "balance": {$add: ["$balance", result["totalAmount"]]}
+            },
+        }
+      ], 
+      {multi: true}
+    )
+
+    await restaurantTransactionsSchema.findOneAndUpdate({
+        restaurantId: result["_id"]
+      },
+      [
+        {$set: {
+            "manualTransactions": {$add: ["$manualTransactions", result["totalTransactions"]]},
+            "manualTransactionsAmount": {$add: ["$manualTransactionsAmount", result["totalAmount"]]},
+            "totalTransactions": {$add: ["$totalTransactions", result["totalTransactions"]]},
+            "totalTransactionsAmount": {$add: ["$totalTransactionsAmount", result["totalAmount"]]}
+            },
+        }
+      ], 
+      {multi: true}
+    )
+  }))
+
+  res.status(200).send({status: true, message:"Transactions Approved"})
 })
 
 exports.endSession = catchAsync(async(req, res, next) => {
