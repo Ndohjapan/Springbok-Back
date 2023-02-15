@@ -4,7 +4,7 @@ const router = express.Router()
 
 const {checkBalance, confirmRestaurant, doTransfer, confirmPinandBalance, restaurantDoTransfer, validateTransaction} = require("../../controllers/foodCollection/qrTransaction/qrTransaction")
 
-const {permissionTo, protect} = require("../../controllers/authController")
+const {permissionTo, protect, onlyRestauraants} = require("../../controllers/authController")
 
 
 // Chcek Balance
@@ -26,9 +26,9 @@ router
     .route("/confirmPinAndBalance")
     .post(confirmPinandBalance)
 
-// router
-//     .route("/restaurantDoTransfer")
-//     .post(restrictTo("restaurant"), restaurantDoTransfer)
+router
+    .route("/restaurantDoTransfer")
+    .post(onlyRestauraants, restaurantDoTransfer)
 router
     .route("/validateTransaction")
     .get(validateTransaction)

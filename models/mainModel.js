@@ -91,6 +91,14 @@ const userFeedingSchema = new mongoose.Schema(
     fundingCheck: {
       type: Number,
       default: 0
+    },
+    deficit: {
+      type: Number,
+      default: 0
+    },
+    deficitCheck:{
+      type: Number,
+      default: 0
     }
   },
   { timestamps: true }
@@ -608,6 +616,27 @@ const restaurantTransactionsSchema = new mongoose.Schema(
   {timestamps: true}
 )
 
+const tempoararyTransactionsSchema = new mongoose.Schema(
+  {
+    amount: {
+      type: Number,
+    },
+    from: {
+      type: String,
+      ref: "user",
+    },
+    to: {
+      type: String,
+      ref: "Restaurants",
+    },
+    disabled: {
+      type: Boolean,
+      default: false
+    }
+  },
+  { timestamps: true }
+)
+
 userSchema.methods.generateAuthToken = function () {
   return jwt.sign(
     { id: this._id, verified: this.verified },
@@ -659,20 +688,11 @@ recordsSchema.plugin(mongoosePaginate);
 module.exports.userSchema = mongoose.model("user", userSchema);
 module.exports.adminSchema = mongoose.model("admins", adminSchema);
 module.exports.activitySchema = mongoose.model("activity", activitySchema);
-module.exports.userFeedingSchema = mongoose.model(
-  "user-feeding",
-  userFeedingSchema
-);
-module.exports.disbursementSchema = mongoose.model(
-  "disbursement",
-  disbursementSchema
-);
+module.exports.userFeedingSchema = mongoose.model( "user-feeding", userFeedingSchema);
+module.exports.disbursementSchema = mongoose.model("disbursement", disbursementSchema);
 module.exports.foodSchema = mongoose.model("Food", foodSchema);
 module.exports.utilsSchema = mongoose.model("utils", utilsSchema);
-module.exports.restaurantSchema = mongoose.model(
-  "Restaurants",
-  restaurantSchema
-);
+module.exports.restaurantSchema = mongoose.model("Restaurants", restaurantSchema);
 module.exports.orderSchema = mongoose.model("Order", orderSchema);
 module.exports.errorSchema = mongoose.model("Errors", errorSchema);
 module.exports.recordsSchema = mongoose.model("Records", recordsSchema);
@@ -680,7 +700,5 @@ module.exports.socketSchema = mongoose.model("SocketIds", socketSchema);
 module.exports.backupSchema = mongoose.model("folderBackups", backupSchema);
 module.exports.apiKeySchema = mongoose.model("apiKeys", apiKeySchema);
 module.exports.restaurantTransactionsSchema = mongoose.model("restaurantTransactionsDetails", restaurantTransactionsSchema);
-module.exports.transactionSchema = mongoose.model(
-  "transactions",
-  transactionSchema
-);
+module.exports.tempoararyTransactionsSchema = mongoose.model("tempoararyTransactions", tempoararyTransactionsSchema);
+module.exports.transactionSchema = mongoose.model("transactions", transactionSchema);

@@ -4,7 +4,7 @@ const {
   transactionSchema,
   userFeedingSchema,
   utilsSchema,
-  restaurantTransactionsSchema,
+  restaurantTransactionsSchema, tempoararyTransactionsSchema
 } = require("../../../models/mainModel");
 const AppError = require("../../../utils/appError");
 const catchAsync = require("../../../utils/catchAsync");
@@ -67,11 +67,14 @@ exports.doTransfer = catchAsync(async (req, res, next) => {
        // return next(new AppError(errText, 400));
      // }
 
+      // Update the users details
       let userUpdate = await userFeedingSchema.findOneAndUpdate(
         { userId: userId },
         { $inc: { balance: -amount }, $set: { previousBalance: balance } },
         { new: true }
       );
+
+      // Update restaurants details 
       let restaurantUpdate = await restaurantSchema.findByIdAndUpdate(
         restaurantId,
         {
@@ -81,6 +84,7 @@ exports.doTransfer = catchAsync(async (req, res, next) => {
         { new: true }
       );
 
+      // Create a transaction document
       let transaction = await transactionSchema.create({
         from: userId,
         to: restaurantId,
@@ -91,10 +95,7 @@ exports.doTransfer = catchAsync(async (req, res, next) => {
         studentCurrentBalance: userUpdate.balance,
       });
 
-      transaction = await transactionSchema
-        .findById(transaction["_id"].toString())
-        .populate(["from", "to"])
-        .select("-updatedAt");
+      transaction = await transactionSchema.findById(transaction["_id"].toString()).populate(["from", "to"]).select("-updatedAt");
 
       await utilsSchema.updateMany({}, {$inc: {totalAmountSpent: amount, totalTransactions: 1}})
       await restaurantTransactionsSchema.updateOne({restaurantId: restaurantId}, {$inc: {totalTransactions: 1, totalTransactionsAmount: amount}})
@@ -135,47 +136,16 @@ exports.restaurantDoTransfer = catchAsync(async (req, res, next) => {
   let { userId, amount } = req.body;
   let restaurantId = req.user["_id"].toString();
 
-  const restaurant = await restaurantSchema.findOne({ userId: restaurantId });
-  const user = await userFeedingSchema
-    .findOne({ userId: userId })
-    .populate(["userId"]);
+  let transaction = await tempoararyTransactionsSchema.create({
+    from: userId,
+    to: restaurantId,
+    amount: amount
+  })
 
-  let balance = user.balance;
-  let restaurantBalance = restaurant.balance;
+  transaction = await tempoararyTransactionsSchema.findById(transaction["_id"].toString()).populate(["from", "to"]).select("-updatedAt");
 
-  if (await confirm(balance, amount)) {
-    let userUpdate = userFeedingSchema.findOneAndUpdate(
-      { userId: userId },
-      { $inc: { balance: -amount }, $set: { previousBalance: balance } }
-    );
-    let restaurantUpdate = restaurantSchema.findByIdAndUpdate(restaurantId, {
-      $inc: { balance: amount },
-      $set: { previousBalance: restaurantBalance },
-    });
-    let transaction = transactionSchema.create({
-      from: userId,
-      to: restaurantId,
-      amount: amount,
-      restaurantPreviousBalance: restaurantBalance,
-      restaurantCurrentBalance: restaurantBalance + amount,
-      studentPreviousBalance: balance,
-      studentCurrentBalance: balance + amount,
-    });
+  res.status(200).send({ status: true, payload: transaction });
 
-    let promises = [userUpdate, restaurantUpdate, transaction];
-
-    Promise.all(promises).then(async (results) => {
-      transaction = await transactionSchema
-        .findById(results[2]["_id"].toString())
-        .populate(["from", "to"])
-        .select("-updatedAt");
-
-      return res.status(200).send({ status: true, payload: transaction });
-    });
-  } else {
-    let message = `${user.userId.firstname} ${user.userId.lastname} has Insufficeint Balance`;
-    return next(new AppError(message, 400));
-  }
 });
 
 exports.validateTransaction = catchAsync(async (req, res, next) => {

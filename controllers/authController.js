@@ -324,6 +324,14 @@ exports.onlyAdmins = catchAsync(async(req, res, next) => {
   return next(new AppError("You do not permission to perform this action", 403))
 })
 
+exports.onlyRestauraants = catchAsync(async(req, res, next) => {
+  const admin = await restaurantSchema.findById(req.user.id)
+  if(admin){
+    return next()
+  }
+  return next(new AppError("You do not permission to perform this action", 403))
+})
+
 exports.apiKeyVerification = catchAsync(async (req, res, next) => {
   let accessKey = req.header("x-auth-accessKey")
   let secretKey = req.header("x-auth-secretKey")
