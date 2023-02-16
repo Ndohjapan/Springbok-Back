@@ -51,7 +51,7 @@ router
 
 router
     .route("/approveTempoararyTransactions")
-    .put(onlyAdmins, permissionTo("all"), approveTempoararyTransactions)
+    .post(onlyAdmins, permissionTo("all"), approveTempoararyTransactions)
 
 router
     .route("/exportCSV")

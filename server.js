@@ -30,10 +30,10 @@ const io = socketio(server, {
 })
 
 io.on("connection", async(socket) => { 
-  console.log("I have connected ", socket.id)
+  console.log("I have connected ", socket.id, socket.handshake.headers.restaurant)
   socket.io = io
-  if(socket.handshake.headers.restuarant){
-    socket.join(socket.handshake.headers.restuarant)
+  if(socket.handshake.headers.restaurant){
+    socket.join(socket.handshake.headers.restaurant)
   }
   else{
     socket.join("admin")
