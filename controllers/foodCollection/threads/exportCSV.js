@@ -132,8 +132,7 @@ async function deleteCSV(name) {
   });
 }
 
-async function exportTemporaryTransations(from, to, restaurantId, userId){
-  [from, to] = dateFormat(from, to);
+async function exportTemporaryTransations(restaurantId, userId){
   try {
     let name = Date.now() + ".csv";
     const csvWriter = createCsvWriter({
@@ -152,7 +151,7 @@ async function exportTemporaryTransations(from, to, restaurantId, userId){
     let transactions = [];
     if (restaurantId) {
       transactions = await tempoararyTransactionsSchema
-        .find({ createdAt: { $gte: from, $lte: to }, to: restaurantId }, null, {
+        .find({ to: restaurantId }, null, {
           sort: { createdAt: -1 },
         })
         .populate(["from", "to"]);
@@ -160,19 +159,12 @@ async function exportTemporaryTransations(from, to, restaurantId, userId){
     
     else if(userId){
       transactions = await tempoararyTransactionsSchema
-        .find({ createdAt: { $gte: from, $lte: to }, from: userId }, null, {
+        .find({ from: userId }, null, {
           sort: { createdAt: -1 },
         })
         .populate(["from", "to"]);
     }
     
-    else {
-      transactions = await tempoararyTransactionsSchema
-        .find({ createdAt: { $gte: from, $lte: to } }, null, {
-          sort: { createdAt: -1 },
-        })
-        .populate(["from", "to"]);
-    }
 
     let datas = [];
     if (!transactions.length) {
@@ -219,7 +211,7 @@ parentPort.on("message", async (data) => {
     conn.disconnect();
   }
   else{
-    let response = await exportTemporaryTransations(data.from, data.to, data.restaurantId, data.userId);
+    let response = await exportTemporaryTransations(data.restaurantId, data.userId);
     parentPort.postMessage(response);
     conn.disconnect();
   }

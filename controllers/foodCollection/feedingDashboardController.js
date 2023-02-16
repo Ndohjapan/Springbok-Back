@@ -468,14 +468,11 @@ exports.exportCSV = catchAsync(async(req, res, next) => {
 })
 
 exports.exportTemporaryTransations = catchAsync(async(req, res, next) => {
-  if (!(req.body.from) || !(req.body.to)){
-    return next (new AppError("Some required parameters are missing", 400))
-  }
   let restaurantId = req.body.restaurantId ? req.body.restaurantId : null
 
   let userId = req.body.userId ? req.body.userId : null
 
-  let workerData =  {from: req.body.from, to: req.body.to, restaurantId: restaurantId, userId: userId, type: "simulated"}
+  let workerData =  {restaurantId: restaurantId, userId: userId, type: "simulated"}
 
   let thread = path.resolve(__dirname, "threads", "exportCSV.js")
 
