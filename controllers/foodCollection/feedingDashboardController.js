@@ -236,7 +236,9 @@ exports.approveTempoararyTransactions = catchAsync(async(req, res, next) => {
       {
         $set:{
           "totalTransactions": {$add: ["$totalTransactions", "$manualTransactions"]},
-          "totalTransactionsAmount": {$add: ["$totalTransactionsAmount", "$manualTransactionsAmount"]}
+          "totalTransactionsAmount": {$add: ["$totalTransactionsAmount", "$manualTransactionsAmount"]},
+          "manualTransactions": 0,
+          "manualTransactionsAmount": 0
         }
       }
     ],
@@ -438,13 +440,13 @@ exports.allPermissions = catchAsync(async(req, res, next) => {
 
 exports.exportCSV = catchAsync(async(req, res, next) => {
   if (!(req.body.from) || !(req.body.to)){
-      return next (new AppError("Some required parameters are missing", 400))
+    return next (new AppError("Some required parameters are missing", 400))
   }
   let restaurantId = req.body.restaurantId ? req.body.restaurantId : null
 
   let userId = req.body.userId ? req.body.userId : null
 
-  let workerData =  {from: req.body.from, to: req.body.to, restaurantId: restaurantId, userId: userId}
+  let workerData =  {from: req.body.from, to: req.body.to, restaurantId: restaurantId, userId: userId, type: "normal"}
 
   let thread = path.resolve(__dirname, "threads", "exportCSV.js")
 
@@ -463,6 +465,34 @@ exports.exportCSV = catchAsync(async(req, res, next) => {
 
   worker.postMessage(workerData);
 
+})
+
+exports.exportTemporaryTransations = catchAsync(async(req, res, next) => {
+  if (!(req.body.from) || !(req.body.to)){
+    return next (new AppError("Some required parameters are missing", 400))
+  }
+  let restaurantId = req.body.restaurantId ? req.body.restaurantId : null
+
+  let userId = req.body.userId ? req.body.userId : null
+
+  let workerData =  {from: req.body.from, to: req.body.to, restaurantId: restaurantId, userId: userId, type: "simulated"}
+
+  let thread = path.resolve(__dirname, "threads", "exportCSV.js")
+
+  const worker = new Worker(thread);
+  worker.on("message", (response) => {
+    res.status(response.status).send(response.body)
+  })
+
+  worker.on("error", err => {
+      return next (new AppError(err.message, 500))
+  });
+
+  worker.on("exit", exitCode => {
+    return next (new AppError(exitCode, 500))
+  })
+
+  worker.postMessage(workerData);
 })
 
 exports.resetStudentPin = catchAsync(async(req, res, next) => {

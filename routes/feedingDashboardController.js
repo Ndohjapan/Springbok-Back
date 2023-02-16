@@ -2,7 +2,7 @@ const express = require("express");
 
 const router = express.Router();
 
-const {resetStudentPin, resetStudentPassword, getTransactionsDetails, getUsersDetails, getDisbursementDetails, updateAdmins, deleteAdmins, getAllAdmins, unreadNotifications, allPermissions, createAdmin, exportCSV, endSession, approveTempoararyTransactions} = require("../controllers/foodCollection/feedingDashboardController");
+const {resetStudentPin, resetStudentPassword, getTransactionsDetails, getUsersDetails, getDisbursementDetails, updateAdmins, deleteAdmins, getAllAdmins, unreadNotifications, allPermissions, createAdmin, exportCSV, endSession, approveTempoararyTransactions, exportTemporaryTransations} = require("../controllers/foodCollection/feedingDashboardController");
 const {permissionTo, onlyAdmins} = require("../controllers/authController")
 
 router
@@ -56,6 +56,10 @@ router
 router
     .route("/exportCSV")
     .post(onlyAdmins, permissionTo("export csv"), exportCSV)
+
+router
+    .route("/exportTempoararyTransationCSV")
+    .post(onlyAdmins, permissionTo("export csv"), exportTemporaryTransations)
 
 router
     .route("/endSession")

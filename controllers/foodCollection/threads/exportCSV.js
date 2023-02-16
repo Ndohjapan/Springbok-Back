@@ -1,5 +1,5 @@
 const { parentPort } = require("worker_threads");
-const { transactionSchema } = require("../../../models/mainModel");
+const { transactionSchema, tempoararyTransactionsSchema } = require("../../../models/mainModel");
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
 const AppError = require("../../../utils/appError");
@@ -132,11 +132,97 @@ async function deleteCSV(name) {
   });
 }
 
+async function exportTemporaryTransations(from, to, restaurantId, userId){
+  [from, to] = dateFormat(from, to);
+  try {
+    let name = Date.now() + ".csv";
+    const csvWriter = createCsvWriter({
+      path: name,
+      header: [
+        { id: "id", title: "id" },
+        { id: "from", title: "From" },
+        { id: "to", title: "To" },
+        { id: "amount", title: "Amount" },
+        { id: "disabled", title: "Disabled" },
+        { id: "createdAt", title: "Time" },
+      ],
+    });
+    // file name
+
+    let transactions = [];
+    if (restaurantId) {
+      transactions = await tempoararyTransactionsSchema
+        .find({ createdAt: { $gte: from, $lte: to }, to: restaurantId }, null, {
+          sort: { createdAt: -1 },
+        })
+        .populate(["from", "to"]);
+    } 
+    
+    else if(userId){
+      transactions = await tempoararyTransactionsSchema
+        .find({ createdAt: { $gte: from, $lte: to }, from: userId }, null, {
+          sort: { createdAt: -1 },
+        })
+        .populate(["from", "to"]);
+    }
+    
+    else {
+      transactions = await tempoararyTransactionsSchema
+        .find({ createdAt: { $gte: from, $lte: to } }, null, {
+          sort: { createdAt: -1 },
+        })
+        .populate(["from", "to"]);
+    }
+
+    let datas = [];
+    if (!transactions.length) {
+      console.log("No transactions");
+      return {
+        status: 400,
+        body: { success: false, message: "There are no transactions" },
+      };
+    }
+    for (i = 0; i < transactions.length; i++) {
+      let objectData = {};
+
+      objectData.id = transactions[i]._id;
+      objectData.from =
+        transactions[i].from.firstname + " " + transactions[i].from.lastname;
+      objectData.to = transactions[i].to.name;
+      objectData.amount = transactions[i].amount;
+      objectData.disabled = transactions[i].disabled;
+      objectData.createdAt = transactions[i].createdAt;
+
+      datas.push(objectData);
+    }
+
+    await csvWriter.writeRecords(datas);
+    console.log("The CSV file was written successfully");
+
+    return new Promise((resolve, reject) => {
+      uploadFile(name).then((result) => {
+        resolve(result);
+        deleteCSV(name);
+      });
+    });
+  } catch (err) {
+    console.log(err);
+    return { status: 400, body: { success: false, message: err.message } };
+  }
+}
+
 parentPort.on("message", async (data) => {
   let conn = await connectDB();
-  let response = await exportCSV(data.from, data.to, data.restaurantId, data.userId);
-  parentPort.postMessage(response);
-  conn.disconnect();
+  if(data.type === "normal"){
+    let response = await exportCSV(data.from, data.to, data.restaurantId, data.userId);
+    parentPort.postMessage(response);
+    conn.disconnect();
+  }
+  else{
+    let response = await exportTemporaryTransations(data.from, data.to, data.restaurantId, data.userId);
+    parentPort.postMessage(response);
+    conn.disconnect();
+  }
 });
 
 function dateFormat(from, to) {
