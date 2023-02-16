@@ -350,14 +350,14 @@ exports.fundWallet = catchAsync(async(req, res, next) => {
         let fundingDay = moment(todaysDate, 'YYYY-MM-DD').format("YYYY-MM-DD");
     
         let canBeFunded = await checkIfStudentCanBeFunded(userIds, feedingAmount)
-        let negativeStudents = await fundAllNegativeStudents(userIds, fundingDay, feedingAmount)
+        // let negativeStudents = await fundAllNegativeStudents(userIds, fundingDay, feedingAmount)
         let positiveStudents = await fundAllPositiveStudents(userIds, fundingDay, feedingAmount)
 
         let user = { "acknowledged": true,
                     "insertedId": null,
-                    "matchedCount": positiveStudents.matchedCount + negativeStudents.matchedCount,
-                    "modifiedCount": positiveStudents.modifiedCount + negativeStudents.modifiedCount,
-                    "upsertedCount": positiveStudents.upsertedCount + negativeStudents.upsertedCount
+                    "matchedCount": positiveStudents.matchedCount,
+                    "modifiedCount": positiveStudents.modifiedCount,
+                    "upsertedCount": positiveStudents.upsertedCount
                 }
         
         let statistics = await userFeedingSchema.aggregate([
@@ -391,16 +391,11 @@ exports.fundWallet = catchAsync(async(req, res, next) => {
         })
 
         await utilsSchema.updateMany({}, {$inc: {totalDisbursedAmount: totalAmount}})
-
-        // Check the deficit difference
-        await checkDeficit(userIds)
-        await reduceDeficitOfNegativeStudents(userIds)
-        await reduceDeficitOfPositiveStudents(userIds)
-    
-        res.status(200).send({status: true, message: "Update Successful"})
-
+        
         await delcacheData("disbursementDetails")
         await delcacheData("legibleUsers")
+
+        res.status(200).send({status: true, message: "Update Successful"})
 
         return success(userId, ` funded ${user.modifiedCount} students with total of ${totalAmount} naira`, "Update", socket)
 
@@ -425,14 +420,14 @@ exports.fundAllLegibleWallets = catchAsync(async(req, res, next) => {
         let fundingDay = moment(todaysDate, 'YYYY-MM-DD').format("YYYY-MM-DD");
     
         await checkIfStudentCanBeFundedToday(feedingAmount)
-        let negativeStudents = await fundAllNegativeStudentsToday(fundingDay, feedingAmount)
+        // let negativeStudents = await fundAllNegativeStudentsToday(fundingDay, feedingAmount)
         let positiveStudents = await fundAllPositiveStudentsToday(fundingDay, feedingAmount)
 
         let user = { "acknowledged": true,
                     "insertedId": null,
-                    "matchedCount": positiveStudents.matchedCount + negativeStudents.matchedCount,
-                    "modifiedCount": positiveStudents.modifiedCount + negativeStudents.modifiedCount,
-                    "upsertedCount": positiveStudents.upsertedCount + negativeStudents.upsertedCount
+                    "matchedCount": positiveStudents.matchedCount,
+                    "modifiedCount": positiveStudents.modifiedCount,
+                    "upsertedCount": positiveStudents.upsertedCount
                 }
         
         let statistics = await userFeedingSchema.aggregate([
@@ -462,11 +457,8 @@ exports.fundAllLegibleWallets = catchAsync(async(req, res, next) => {
             numberOfStudents: user.modifiedCount
         })
 
-
-        // Check the deficit difference
-        await checkDeficitToday()
-        await reduceDeficitOfNegativeStudentsToday()
-        await reduceDeficitOfPositiveStudentsToday()
+        await delcacheData("disbursementDetails")
+        await delcacheData("legibleUsers")
     
         res.status(200).send({status: true, message: "Update Successful"})
 

@@ -223,7 +223,8 @@ exports.approveTempoararyTransactions = catchAsync(async(req, res, next) => {
       [
         {
           $set:{
-            "deficit": {$add: ["$deficit", result.deficit]}
+            "previousBalance": "$balance",
+            "balance": {$subtract: ["$balance", result.deficit]}
           }
         }
       ],
