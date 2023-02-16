@@ -144,6 +144,8 @@ exports.restaurantDoTransfer = catchAsync(async (req, res, next) => {
 
   transaction = await tempoararyTransactionsSchema.findById(transaction["_id"].toString()).populate(["from", "to"]).select("-updatedAt");
 
+  await restaurantTransactionsSchema.updateOne({restaurantId: restaurantId}, {$inc: {manualTransactions: 1, manualTransactionsAmount: amount}}, {new: true})
+
   res.status(200).send({ status: true, payload: transaction });
 
 });

@@ -348,4 +348,13 @@ exports.apiKeyVerification = catchAsync(async (req, res, next) => {
   }
 })
 
+exports.adminAndRestaurants = catchAsync(async(req, res, next) => {
+  const restaurant = await restaurantSchema.findById(req.user.id)
+  const admin = await adminSchema.findById(req.user.id)
+  if(admin || restaurant){
+    return next()
+  }
+  return next(new AppError("You do not permission to perform this action", 403))
+})
+
 

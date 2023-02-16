@@ -1,4 +1,4 @@
-const {userSchema, restaurantSchema, tempoararyTransactionsSchema} = require("../../models/mainModel")
+const {userSchema, restaurantSchema, tempoararyTransactionsSchema, restaurantTransactionsSchema} = require("../../models/mainModel")
 const AppError = require("../../utils/appError");
 const catchAsync = require("../../utils/catchAsync");
 const bcrypt = require("bcrypt")
@@ -79,4 +79,10 @@ exports.postFilter = catchAsync(async(req, res, next) => {
             res.status(200).send({status: true, message: "Successful", data: result.docs})
         }
     })
+})
+
+exports.restaurantInfo = catchAsync(async(req, res, next) => {
+  let result = await restaurantTransactionsSchema.find({})
+  
+  res.send({status: true, data: result})
 })

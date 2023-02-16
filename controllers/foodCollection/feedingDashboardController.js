@@ -196,10 +196,13 @@ exports.deleteAdmins = catchAsync(async(req, res, next) => {
 })
 
 exports.approveTempoararyTransactions = catchAsync(async(req, res, next) => {
+  let {restaurantId} = req.body
+
   let tempoararyTransactionAggregate = [
     {
       '$match': {
-        'disabled': false
+        'disabled': false,
+        'to': restaurantId
       }
     }, {
       '$group': {
@@ -210,63 +213,46 @@ exports.approveTempoararyTransactions = catchAsync(async(req, res, next) => {
       }
     }
   ]
-  let tempoararyTransactionRestaurantAggregate = [
-    {
-      '$match': {
-        'disabled': false
-      }
-    },  {
-      '$group': {
-        '_id': '$to', 
-        'totalAmount': {
-          '$sum': '$amount'
-        }, 
-        'totalTransactions': {
-          '$count': {}
-        }
-      }
-    }
-  ]
 
   let userDetails = await tempoararyTransactionsSchema.aggregate(tempoararyTransactionAggregate)
-  let restaurantDetails = await tempoararyTransactionsSchema.aggregate(tempoararyTransactionRestaurantAggregate)
-  await tempoararyTransactionsSchema.updateMany({}, {$set: {disabled: true}})
+  await tempoararyTransactionsSchema.updateMany({to: restaurantId}, {$set: {disabled: true}})
 
   userDetails.forEach( catchAsync(async(result) => {
     let user = await userFeedingSchema.findOneAndUpdate(
       {userId: result["_id"]},
-      {$set: {deficit: result.deficit}},
-      {new: true}
-    )
-  }))
-
-  restaurantDetails.forEach(catchAsync(async(result) => {
-    await restaurantSchema.findByIdAndUpdate(result["_id"], 
       [
-        {$set: {
-            "previousBalance": "$balance",
-            "balance": {$add: ["$balance", result["totalAmount"]]}
-            },
+        {
+          $set:{
+            "deficit": {$add: ["$deficit", result.deficit]}
+          }
         }
-      ], 
-      {multi: true}
-    )
-
-    await restaurantTransactionsSchema.findOneAndUpdate({
-        restaurantId: result["_id"]
-      },
-      [
-        {$set: {
-            "manualTransactions": {$add: ["$manualTransactions", result["totalTransactions"]]},
-            "manualTransactionsAmount": {$add: ["$manualTransactionsAmount", result["totalAmount"]]},
-            "totalTransactions": {$add: ["$totalTransactions", result["totalTransactions"]]},
-            "totalTransactionsAmount": {$add: ["$totalTransactionsAmount", result["totalAmount"]]}
-            },
-        }
-      ], 
+      ],
       {multi: true}
     )
   }))
+
+  let restaurantDetails = await restaurantTransactionsSchema.findOneAndUpdate({restaurantId: restaurantId}, 
+    [
+      {
+        $set:{
+          "totalTransactions": {$add: ["$totalTransactions", "$manualTransactions"]},
+          "totalTransactionsAmount": {$add: ["$totalTransactionsAmount", "$manualTransactionsAmount"]}
+        }
+      }
+    ],
+    {multi: true, new: true}
+  )
+
+  await restaurantSchema.findByIdAndUpdate(restaurantId, 
+    [
+      {$set: {
+          "previousBalance": "$balance",
+          "balance": restaurantDetails.totalTransactionsAmount
+          },
+      }
+    ], 
+    {multi: true}
+  )
 
   res.status(200).send({status: true, message:"Transactions Approved"})
 })

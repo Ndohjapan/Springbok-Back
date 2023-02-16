@@ -2,31 +2,36 @@ const express = require("express")
 
 const router = express.Router()
 
-const {getAllTransactions, getTransaction, deleteTransaction, postFilter} = require("../controllers/foodCollection/tempoarayTransactionsController")
+const {getAllTransactions, getTransaction, deleteTransaction, postFilter, restaurantInfo} = require("../controllers/foodCollection/tempoarayTransactionsController")
 
-const {permissionTo, onlyAdmins, onlyRestauraants} = require("../controllers/authController")
+const {permissionTo, onlyAdmins, onlyRestauraants, adminAndRestaurants} = require("../controllers/authController")
 
 
 // Get all from the collection
 router
     .route("/")
-    .get(permissionTo("validate users", "edit restaurant"), getAllTransactions)    
+    .get(adminAndRestaurants, getAllTransactions)    
 
 // Get by id
 router
     .route("/:id")
-    .get(permissionTo("validate users", "edit restaurant"), getTransaction)
+    .get(adminAndRestaurants, getTransaction)
 
 // Delete
 router
     .route("/:id")
-    .delete(permissionTo("validate users", "edit restaurant"), deleteTransaction)
+    .delete(adminAndRestaurants, deleteTransaction)
 
 
 // Transactions with filter
 router
     .route("/post/filter")
-    .post(permissionTo("validate users", "edit restaurant"), postFilter)
+    .post(adminAndRestaurants, postFilter)
+
+// Restaurant details
+router
+    .route("/restaurantInfo")
+    .post(onlyAdmins, restaurantInfo)
 
 
 
