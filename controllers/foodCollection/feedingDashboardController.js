@@ -237,9 +237,7 @@ exports.approveTempoararyTransactions = catchAsync(async(req, res, next) => {
       {
         $set:{
           "totalTransactions": {$add: ["$totalTransactions", "$manualTransactions"]},
-          "totalTransactionsAmount": {$add: ["$totalTransactionsAmount", "$manualTransactionsAmount"]},
-          "manualTransactions": 0,
-          "manualTransactionsAmount": 0
+          "totalTransactionsAmount": {$add: ["$totalTransactionsAmount", "$manualTransactionsAmount"]}
         }
       }
     ],
@@ -254,7 +252,10 @@ exports.approveTempoararyTransactions = catchAsync(async(req, res, next) => {
           "manualTransactions": 0,
           "manualTransactionsAmount": 0
           },
-      }
+      },
+      {$pull: {
+        permissions: "simulate transactions"
+      }}
     ], 
     {multi: true}
   )

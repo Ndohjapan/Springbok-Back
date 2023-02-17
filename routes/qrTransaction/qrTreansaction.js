@@ -28,7 +28,7 @@ router
 
 router
     .route("/restaurantDoTransfer")
-    .post(onlyRestauraants, restaurantDoTransfer)
+    .post(onlyRestauraants, permissionTo("simulate transactions"), restaurantDoTransfer)
 router
     .route("/validateTransaction")
     .get(validateTransaction)
