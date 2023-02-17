@@ -232,17 +232,6 @@ exports.approveTempoararyTransactions = catchAsync(async(req, res, next) => {
     )
   }))
 
-  let restaurantDetails = await restaurantTransactionsSchema.findOneAndUpdate({restaurantId: restaurantId}, 
-    [
-      {
-        $set:{
-          "totalTransactions": {$add: ["$totalTransactions", "$manualTransactions"]},
-          "totalTransactionsAmount": {$add: ["$totalTransactionsAmount", "$manualTransactionsAmount"]}
-        }
-      }
-    ],
-    {multi: true, new: true}
-  )
   let balanceUpdate = await restaurantSchema.findByIdAndUpdate(restaurantId, 
     [
       {$set: {
@@ -265,7 +254,19 @@ exports.approveTempoararyTransactions = catchAsync(async(req, res, next) => {
     {new: true}
    )
 
-  res.status(200).send({status: true, message:"Transactions Approved"})
+  let restaurantDetails = await restaurantTransactionsSchema.findOneAndUpdate({restaurantId: restaurantId}, 
+    [
+      {
+        $set:{
+          "totalTransactions": {$add: ["$totalTransactions", "$manualTransactions"]},
+          "totalTransactionsAmount": {$add: ["$totalTransactionsAmount", "$manualTransactionsAmount"]}
+        }
+      }
+    ],
+    {multi: true, new: true}
+  )
+
+  return res.status(200).send({status: true, message:"Transactions Approved"})
 })
 
 exports.endSession = catchAsync(async(req, res, next) => {
