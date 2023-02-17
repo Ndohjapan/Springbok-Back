@@ -242,8 +242,10 @@ exports.approveTempoararyTransactions = catchAsync(async(req, res, next) => {
           },
       }
     ], 
-    {multi: true}
+    {multi: true, new: true}
   )
+
+    console.log(balanceUpdate)
 
   let permissionUpdate = await restaurantSchema.findOneAndUpdate({_id: restaurantId}, 
     {
@@ -253,6 +255,8 @@ exports.approveTempoararyTransactions = catchAsync(async(req, res, next) => {
     },
     {new: true}
    )
+
+    console.log(permissionUpdate)
 
   let restaurantDetails = await restaurantTransactionsSchema.findOneAndUpdate({restaurantId: restaurantId}, 
     [
@@ -265,6 +269,7 @@ exports.approveTempoararyTransactions = catchAsync(async(req, res, next) => {
     ],
     {multi: true, new: true}
   )
+  console.log(balanceUpdate)
 
   return res.status(200).send({status: true, message:"Transactions Approved"})
 })
