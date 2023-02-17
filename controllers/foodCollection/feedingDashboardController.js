@@ -243,7 +243,6 @@ exports.approveTempoararyTransactions = catchAsync(async(req, res, next) => {
     ],
     {multi: true, new: true}
   )
-
   await restaurantSchema.findByIdAndUpdate(restaurantId, 
     [
       {$set: {
@@ -252,13 +251,18 @@ exports.approveTempoararyTransactions = catchAsync(async(req, res, next) => {
           "manualTransactions": 0,
           "manualTransactionsAmount": 0
           },
-      },
-      {$pull: {
-        permissions: "simulate transactions"
-      }}
+      }
     ], 
     {multi: true}
   )
+
+  await restaurantSchema.findByIdAndUpdate(restaurantId, 
+    {
+      $pull: {
+        permissions: "simulate transactions"
+      }
+    }
+   )
 
   res.status(200).send({status: true, message:"Transactions Approved"})
 })
