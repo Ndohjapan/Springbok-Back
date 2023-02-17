@@ -250,7 +250,9 @@ exports.approveTempoararyTransactions = catchAsync(async(req, res, next) => {
     [
       {$set: {
           "previousBalance": "$balance",
-          "balance": restaurantDetails.totalTransactionsAmount
+          "balance": restaurantDetails.totalTransactionsAmount,
+          "manualTransactions": 0,
+          "manualTransactionsAmount": 0
           },
       }
     ], 
