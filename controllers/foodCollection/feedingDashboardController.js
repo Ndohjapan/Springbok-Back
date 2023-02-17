@@ -232,29 +232,7 @@ exports.approveTempoararyTransactions = catchAsync(async(req, res, next) => {
     )
   }))
 
-  let balanceUpdate = restaurantSchema.findByIdAndUpdate(restaurantId, 
-    [
-      {$set: {
-          "previousBalance": "$balance",
-          "balance": {$add: ["$balance", "$manualTransactionsAmount"]},
-          "manualTransactions": 0,
-          "manualTransactionsAmount": 0
-          },
-      }
-    ], 
-    {multi: true, new: true}
-  )
-
-  let permissionUpdate = restaurantSchema.findOneAndUpdate({_id: restaurantId}, 
-    {
-      $pull: {
-        permissions: "simulate transactions"
-      }
-    },
-    {new: true}
-   )
-
-  let restaurantUpdate = restaurantTransactionsSchema.findOneAndUpdate({restaurantId: restaurantId}, 
+  await restaurantTransactionsSchema.findOneAndUpdate({restaurantId: restaurantId}, 
     [
       {
         $set:{
@@ -265,11 +243,29 @@ exports.approveTempoararyTransactions = catchAsync(async(req, res, next) => {
     ],
     {multi: true, new: true}
   )
+  await restaurantSchema.findByIdAndUpdate(restaurantId, 
+    [
+      {$set: {
+          "previousBalance": "$balance",
+          "balance": {$add: ["$balance", "$manualTransactionsAmount"]},
+          "manualTransactions": 0,
+          "manualTransactionsAmount": 0
+          },
+      }
+    ], 
+    {multi: true}
+  )
 
-  Promise.all([balanceUpdate, permissionUpdate, restaurantUpdate], (result)=> {
-    return res.status(200).send({status: true, message:"Transactions Approved"})
-  })
+  await restaurantSchema.findByIdAndUpdate(restaurantId, 
+    {
+      $pull: {
+        permissions: "simulate transactions"
+      }
+    },
+    {new: true}
+   )
 
+  res.status(200).send({status: true, message:"Transactions Approved"})
 })
 
 exports.endSession = catchAsync(async(req, res, next) => {
