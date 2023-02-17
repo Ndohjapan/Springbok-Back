@@ -198,6 +198,14 @@ const restaurantSchema = new mongoose.Schema(
     disabled: {
       type: Boolean,
       default: false
+    },
+    manualTransactionsAmount: {
+      type: Number,
+      default: 0
+    },
+    manualTransactions: {
+      type: Number,
+      default: 0
     }
   },
   { timestamps: true }
