@@ -217,6 +217,8 @@ exports.approveTempoararyTransactions = catchAsync(async(req, res, next) => {
   let userDetails = await tempoararyTransactionsSchema.aggregate(tempoararyTransactionAggregate)
   await tempoararyTransactionsSchema.updateMany({to: restaurantId}, {$set: {disabled: true}})
 
+  let restaurant = await restaurantSchema.findById(restaurantId)
+
   userDetails.forEach( catchAsync(async(result) => {
     let user = await userFeedingSchema.findOneAndUpdate(
       {userId: result["_id"]},
@@ -228,8 +230,22 @@ exports.approveTempoararyTransactions = catchAsync(async(req, res, next) => {
           }
         }
       ],
-      {multi: true}
+      {multi: true, new: true}
     )
+
+    restaurant.previousBalance = restaurant.balance
+    restaurant.balance += result.deficit
+
+    await transactionSchema.create({
+      from: result["_id"],
+      to: restaurantId,
+      amount: result.deficit,
+      restaurantPreviousBalance: restaurant.previousBalance,
+      restaurantCurrentBalance: restaurant.balance,
+      studentPreviousBalance: user.previousBalance,
+      studentCurrentBalance: user.balance,
+    }); 
+  
   }))
 
   await restaurantTransactionsSchema.findOneAndUpdate({restaurantId: restaurantId}, 
