@@ -522,7 +522,8 @@ async function fundAllPositiveStudentsToday(fundingDay, feedingAmount){
                 'totalAmountFunded': {$add: ["$totalAmountFunded", { $multiply: [ feedingAmount, "$feedingType" ] }]},
                 'balance': {$add: ["$balance", { $multiply: [ feedingAmount, "$feedingType" ] }]},
                 'numOfTimesFunded': {$add: ["$numOfTimesFunded", 1]},
-                "amountLeft": {$subtract: ["$totalFeedingAmount",  {$add: ["$totalAmountFunded", { $multiply: [ feedingAmount, "$feedingType" ] }]}]}
+                "amountLeft": {$subtract: ["$totalFeedingAmount",  {$add: ["$totalAmountFunded", { $multiply: [ feedingAmount, "$feedingType" ] }]}]},
+                'fundingStatus': true
                 },
             }
         ], 
