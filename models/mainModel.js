@@ -29,7 +29,7 @@ const userSchema = new mongoose.Schema(
       type: String,
       enum: ["blocked", "active"],
       default: "active",
-    }
+    },
   },
   { timestamps: true }
 );
@@ -62,7 +62,7 @@ const userFeedingSchema = new mongoose.Schema(
     },
     lastFunding: {
       type: String,
-      default: "2022-09-17"
+      default: "2022-09-17",
     },
     studentStatus: {
       type: Boolean,
@@ -86,20 +86,20 @@ const userFeedingSchema = new mongoose.Schema(
     },
     lastFundingDay: {
       type: String,
-      default: "2022-09-17"
+      default: "2022-09-17",
     },
     fundingCheck: {
       type: Number,
-      default: 0
+      default: 0,
     },
     deficit: {
       type: Number,
-      default: 0
+      default: 0,
     },
-    deficitCheck:{
+    deficitCheck: {
       type: Number,
-      default: 0
-    }
+      default: 0,
+    },
   },
   { timestamps: true }
 );
@@ -136,7 +136,7 @@ const adminSchema = new mongoose.Schema(
             "export csv",
             "view transactions",
             "edit users",
-            "view backup"
+            "view backup",
           ],
         },
       ],
@@ -197,16 +197,16 @@ const restaurantSchema = new mongoose.Schema(
     },
     disabled: {
       type: Boolean,
-      default: false
+      default: false,
     },
     manualTransactionsAmount: {
       type: Number,
-      default: 0
+      default: 0,
     },
     manualTransactions: {
       type: Number,
-      default: 0
-    }
+      default: 0,
+    },
   },
   { timestamps: true }
 );
@@ -242,8 +242,8 @@ const transactionSchema = new mongoose.Schema(
     },
     disabled: {
       type: Boolean,
-      default: false
-    }
+      default: false,
+    },
   },
   { timestamps: true }
 );
@@ -352,7 +352,7 @@ const utilsSchema = new mongoose.Schema(
         "export csv",
         "view transactions",
         "edit users",
-        "view backup"
+        "view backup",
       ],
     },
 
@@ -470,36 +470,35 @@ const utilsSchema = new mongoose.Schema(
       },
     },
 
-    totalDisbursedAmount:{
+    totalDisbursedAmount: {
       type: Number,
-      default: 0
+      default: 0,
     },
 
-    totalAmountSpent:{
+    totalAmountSpent: {
       type: Number,
-      default: 0
+      default: 0,
     },
 
     totalTransactions: {
       type: Number,
-      default: 0
+      default: 0,
     },
 
     numberOfUsers: {
       type: Number,
-      default: 0
+      default: 0,
     },
 
     students: {
       type: Number,
-      default: 0
+      default: 0,
     },
 
     nonStudents: {
       type: Number,
-      default: 0
-    }
-
+      default: 0,
+    },
   },
   { timestamps: true }
 );
@@ -525,33 +524,33 @@ const activitySchema = new mongoose.Schema(
 const recordsSchema = new mongoose.Schema(
   {
     name: {
-      type: String
+      type: String,
     },
-    numberOfStudents:{
+    numberOfStudents: {
       type: Number,
-      default: 0
+      default: 0,
     },
     amountDisbursed: {
       type: Number,
-      default: 0
+      default: 0,
     },
     amountSpent: {
       type: Number,
-      default: 0
+      default: 0,
     },
     totalTransactions: {
       type: Number,
-      default: 0
+      default: 0,
     },
-    restaurants :{
-      type: [{type: Object}]
+    restaurants: {
+      type: [{ type: Object }],
     },
     from: String,
     to: String,
-    days: Number
+    days: Number,
   },
-  {timestamps: true}
-)
+  { timestamps: true }
+);
 
 const errorSchema = new mongoose.Schema(
   {
@@ -571,66 +570,66 @@ const errorSchema = new mongoose.Schema(
 const socketSchema = new mongoose.Schema(
   {
     socketId: {
-      type: String
-    }
+      type: String,
+    },
   },
-  {timestamps: true}
-)
+  { timestamps: true }
+);
 
 const backupSchema = new mongoose.Schema(
   {
     folder: {
       type: String,
-      unique: true
-    }
+      unique: true,
+    },
   },
-  {timestamps: true}
-)
+  { timestamps: true }
+);
 
 const apiKeySchema = new mongoose.Schema(
   {
-    apiAccessKey : {
-      type: String
+    apiAccessKey: {
+      type: String,
     },
 
     apiSecretKey: {
-      type: String
-    }
+      type: String,
+    },
   },
-  {timestamps: true}
-)
+  { timestamps: true }
+);
 
 const restaurantTransactionsSchema = new mongoose.Schema(
   {
     restaurantId: {
-      type: String
+      type: String,
     },
     restaurantName: {
-      type: String
+      type: String,
     },
     totalTransactions: {
       type: Number,
-      default: 0
+      default: 0,
     },
     totalTransactionsAmount: {
       type: Number,
-      default: 0
+      default: 0,
     },
     disabled: {
       type: Boolean,
-      default: false
+      default: false,
     },
     manualTransactions: {
       type: Number,
-      default:0
+      default: 0,
     },
-    manualTransactionsAmount:{
+    manualTransactionsAmount: {
       type: Number,
-      default: 0
-    }
+      default: 0,
+    },
   },
-  {timestamps: true}
-)
+  { timestamps: true }
+);
 
 const tempoararyTransactionsSchema = new mongoose.Schema(
   {
@@ -647,11 +646,23 @@ const tempoararyTransactionsSchema = new mongoose.Schema(
     },
     disabled: {
       type: Boolean,
-      default: false
-    }
+      default: false,
+    },
   },
   { timestamps: true }
-)
+);
+
+const tempoararyEmailSchema = new mongoose.Schema({
+  email: {
+    type: String,
+    unique: true,
+  },
+  otp: {
+    type: String,
+    default: "",
+  },
+  otpExpiresIn: { type: Date },
+});
 
 userSchema.methods.generateAuthToken = function () {
   return jwt.sign(
@@ -705,17 +716,39 @@ recordsSchema.plugin(mongoosePaginate);
 module.exports.userSchema = mongoose.model("user", userSchema);
 module.exports.adminSchema = mongoose.model("admins", adminSchema);
 module.exports.activitySchema = mongoose.model("activity", activitySchema);
-module.exports.userFeedingSchema = mongoose.model( "user-feeding", userFeedingSchema);
-module.exports.disbursementSchema = mongoose.model("disbursement", disbursementSchema);
+module.exports.userFeedingSchema = mongoose.model(
+  "user-feeding",
+  userFeedingSchema
+);
+module.exports.disbursementSchema = mongoose.model(
+  "disbursement",
+  disbursementSchema
+);
 module.exports.foodSchema = mongoose.model("Food", foodSchema);
 module.exports.utilsSchema = mongoose.model("utils", utilsSchema);
-module.exports.restaurantSchema = mongoose.model("Restaurants", restaurantSchema);
+module.exports.restaurantSchema = mongoose.model(
+  "Restaurants",
+  restaurantSchema
+);
 module.exports.orderSchema = mongoose.model("Order", orderSchema);
 module.exports.errorSchema = mongoose.model("Errors", errorSchema);
 module.exports.recordsSchema = mongoose.model("Records", recordsSchema);
 module.exports.socketSchema = mongoose.model("SocketIds", socketSchema);
 module.exports.backupSchema = mongoose.model("folderBackups", backupSchema);
 module.exports.apiKeySchema = mongoose.model("apiKeys", apiKeySchema);
-module.exports.restaurantTransactionsSchema = mongoose.model("restaurantTransactionsDetails", restaurantTransactionsSchema);
-module.exports.tempoararyTransactionsSchema = mongoose.model("tempoararyTransactions", tempoararyTransactionsSchema);
-module.exports.transactionSchema = mongoose.model("transactions", transactionSchema);
+module.exports.tempoararyEmailSchema = mongoose.model(
+  "tempoararyEmails",
+  tempoararyEmailSchema
+);
+module.exports.restaurantTransactionsSchema = mongoose.model(
+  "restaurantTransactionsDetails",
+  restaurantTransactionsSchema
+);
+module.exports.tempoararyTransactionsSchema = mongoose.model(
+  "tempoararyTransactions",
+  tempoararyTransactionsSchema
+);
+module.exports.transactionSchema = mongoose.model(
+  "transactions",
+  transactionSchema
+);
