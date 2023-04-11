@@ -53,7 +53,7 @@ router
 // Get a users transaction
 router
   .route("/getUserTransactions")
-  .post(onlyAdmins, permissionTo("validate users"), getUserTransactions);
+  .post(onlyAdmins, permissionTo("validate users", "view transactions"), getUserTransactions);
 
 // Validate Users
 router

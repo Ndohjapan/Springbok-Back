@@ -4,14 +4,14 @@ const {
   transactionSchema,
   userFeedingSchema,
   utilsSchema,
-  restaurantTransactionsSchema, tempoararyTransactionsSchema
+  restaurantTransactionsSchema,
+  tempoararyTransactionsSchema,
 } = require("../../../models/mainModel");
 const AppError = require("../../../utils/appError");
 const catchAsync = require("../../../utils/catchAsync");
-const {getCachedData, setCacheData} = require("../../../utils/client")
+const { getCachedData, setCacheData } = require("../../../utils/client");
 const ObjectId = require("mongoose").Types.ObjectId;
-const {sendTransactionToRestaurant} = require("../../../utils/activityLogs")
-
+const { sendTransactionToRestaurant } = require("../../../utils/activityLogs");
 
 exports.checkBalance = catchAsync(async (req, res, next) => {
   let userId = req.user["_id"].toString();
@@ -62,10 +62,10 @@ exports.doTransfer = catchAsync(async (req, res, next) => {
     if (balance < amount || amount < 1) {
       return next(new AppError("Insufficient Funds", 400));
     } else {
-    //  let [limit, errText] = await weeklyLimit(user, amount);
-    //  if (!limit) {
-    //    return next(new AppError(errText, 400));
-    //  }
+      //  let [limit, errText] = await weeklyLimit(user, amount);
+      //  if (!limit) {
+      //    return next(new AppError(errText, 400));
+      //  }
 
       // Update the users details
       let userUpdate = await userFeedingSchema.findOneAndUpdate(
@@ -74,7 +74,7 @@ exports.doTransfer = catchAsync(async (req, res, next) => {
         { new: true }
       );
 
-      // Update restaurants details 
+      // Update restaurants details
       let restaurantUpdate = await restaurantSchema.findByIdAndUpdate(
         restaurantId,
         {
@@ -95,13 +95,22 @@ exports.doTransfer = catchAsync(async (req, res, next) => {
         studentCurrentBalance: userUpdate.balance,
       });
 
-      transaction = await transactionSchema.findById(transaction["_id"].toString()).populate(["from", "to"]).select("-updatedAt");
+      transaction = await transactionSchema
+        .findById(transaction["_id"].toString())
+        .populate(["from", "to"])
+        .select("-updatedAt");
 
-      await utilsSchema.updateMany({}, {$inc: {totalAmountSpent: amount, totalTransactions: 1}})
-      await restaurantTransactionsSchema.updateOne({restaurantId: restaurantId}, {$inc: {totalTransactions: 1, totalTransactionsAmount: amount}})
+      await utilsSchema.updateMany(
+        {},
+        { $inc: { totalAmountSpent: amount, totalTransactions: 1 } }
+      );
+      await restaurantTransactionsSchema.updateOne(
+        { restaurantId: restaurantId },
+        { $inc: { totalTransactions: 1, totalTransactionsAmount: amount } }
+      );
 
       res.status(200).send({ status: true, payload: transaction });
-      return await setCacheData("transactionDetails", "", 10)
+      return await setCacheData("transactionDetails", "", 10);
     }
   }
 
@@ -139,24 +148,37 @@ exports.restaurantDoTransfer = catchAsync(async (req, res, next) => {
   let transaction = await tempoararyTransactionsSchema.create({
     from: userId,
     to: restaurantId,
-    amount: amount
-  })
+    amount: amount,
+  });
 
-  transaction = await tempoararyTransactionsSchema.findById(transaction["_id"].toString()).populate(["from", "to"]).select("-updatedAt");
+  transaction = await tempoararyTransactionsSchema
+    .findById(transaction["_id"].toString())
+    .populate(["from", "to"])
+    .select("-updatedAt");
 
-  await restaurantTransactionsSchema.updateOne({restaurantId: restaurantId}, {$inc: {manualTransactions: 1, manualTransactionsAmount: amount}}, {new: true})
-  await restaurantSchema.updateOne({_id: restaurantId}, {$inc: {manualTransactions: 1, manualTransactionsAmount: amount}}, {new: true})
+  await restaurantTransactionsSchema.updateOne(
+    { restaurantId: restaurantId },
+    { $inc: { manualTransactions: 1, manualTransactionsAmount: amount } },
+    { new: true }
+  );
+  await restaurantSchema.updateOne(
+    { _id: restaurantId },
+    { $inc: { manualTransactions: 1, manualTransactionsAmount: amount } },
+    { new: true }
+  );
 
   res.status(200).send({ status: true, payload: transaction });
-
 });
 
 exports.validateTransaction = catchAsync(async (req, res, next) => {
   const socket = req.app.get("socket");
-  let userId = req.user["_id"].toString()
-  let lastTransaction = await transactionSchema.findOne({from: req.user["_id"].toString()}).sort({createdAt: -1}).populate(["from"])
+  let userId = req.user["_id"].toString();
+  let lastTransaction = await transactionSchema
+    .findOne({ from: req.user["_id"].toString() })
+    .sort({ createdAt: -1 })
+    .populate(["from"]);
   res.send({ status: true });
-  return sendTransactionToRestaurant(socket, lastTransaction)
+  return sendTransactionToRestaurant(socket, lastTransaction);
 });
 
 async function confirm(balance, amount) {
