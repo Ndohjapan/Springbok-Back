@@ -655,7 +655,6 @@ const tempoararyTransactionsSchema = new mongoose.Schema(
 const tempoararyEmailSchema = new mongoose.Schema({
   email: {
     type: String,
-    unique: true,
   },
   otp: {
     type: String,

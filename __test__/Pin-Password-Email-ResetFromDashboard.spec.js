@@ -21,11 +21,21 @@ const admin = {
   permissions: ["all"],
 };
 
-const user = {
+const user1 = {
   firstname: "Joel",
   lastname: "Ndoh",
   middlename: "Chibueze",
   email: "ndohjoelmbj16@gmail.com",
+  password: "12345678",
+  studentStatus: true,
+  status: "active",
+};
+
+const user2 = {
+  firstname: "Joel",
+  lastname: "Ndoh",
+  middlename: "Chibueze",
+  email: "ndohjoel2017@gmail.com",
   password: "12345678",
   studentStatus: true,
   status: "active",
@@ -40,7 +50,7 @@ beforeAll(async () => {
   const hashedPassword = await bcrypt.hash(admin.password, salt);
 
   admin.password = hashedPassword;
-  user.password = hashedPassword;
+  user1.password = hashedPassword;
 });
 
 beforeEach(async () => {
@@ -68,12 +78,12 @@ const createAdminAndLogin = async () => {
   return response.body.token;
 };
 
-const createUser = async () => {
+const createUser = async (user = user1) => {
   await userSchema.create(user);
 };
 
-const sendOtpTochangeEmail = async (email, token) => {
-  await createUser();
+const sendOtpTochangeEmail = async (email, token, user=user1) => {
+  await createUser(user);
   const agent = request(app).post("/dashboard/sendOtpToNewEmail");
 
   agent.set("x-auth-token", token);
@@ -93,7 +103,7 @@ describe("Change Email", () => {
   it("returns 400 if the email new email is already in the database", async () => {
     const token = await createAdminAndLogin();
 
-    const response = await sendOtpTochangeEmail(user.email, token);
+    const response = await sendOtpTochangeEmail(user1.email, token);
 
     expect(response.status).toBe(400);
   });
@@ -101,7 +111,7 @@ describe("Change Email", () => {
   it("returns error message of new email is already in the database if we try to use an email that is already in the database", async () => {
     const token = await createAdminAndLogin();
 
-    const response = await sendOtpTochangeEmail(user.email, token);
+    const response = await sendOtpTochangeEmail(user1.email, token);
 
     expect(response.body.error).toBe(en.email_already_in_use);
   });
@@ -145,6 +155,23 @@ describe("Change Email", () => {
     mockSendEmail.mockRestore();
   });
 
+  it("we can have duplicate of the new email in the tempoarary email schema", async() => {
+    const token = await createAdminAndLogin();
+    const mockSendEmail = jest
+      .spyOn(emailService, "sendMail")
+      .mockResolvedValueOnce({ message: "Email Sent to the user" });
+
+    await sendOtpTochangeEmail("bikamed933@ippals.com", token);
+    const response = await sendOtpTochangeEmail("bikamed933@ippals.com", token, user2);
+    const tempEmailInDb = await tempoararyEmailSchema.find({
+      email: "bikamed933@ippals.com",
+    });
+
+    expect(response.status).toBe(200)
+    expect(tempEmailInDb.length).toBe(2)
+
+  })
+
   it("returns 400 when the otp is invalid", async () => {
     const token = await createAdminAndLogin();
     const mockSendEmail = jest
@@ -159,7 +186,7 @@ describe("Change Email", () => {
     const invalidOTP = "1234" !== tempEmailInDb[0].otp ? "1234" : "5678";
 
     const response = await confirmOtpAndChangeEmail(
-      user.email,
+      user1.email,
       "ndohjoel2018@gmail.com",
       invalidOTP,
       token
@@ -183,7 +210,7 @@ describe("Change Email", () => {
     const invalidOTP = "1234" !== tempEmailInDb[0].otp ? "1234" : "5678";
 
     const response = await confirmOtpAndChangeEmail(
-      user.email,
+      user1.email,
       "ndohjoel2018@gmail.com",
       invalidOTP,
       token
@@ -210,7 +237,7 @@ describe("Change Email", () => {
     
 
     const response = await confirmOtpAndChangeEmail(
-      user.email,
+      user1.email,
       "ndohjoel2018@gmail.com",
       tempEmailInDb.otp,
       token
@@ -238,7 +265,7 @@ describe("Change Email", () => {
     
 
     const response = await confirmOtpAndChangeEmail(
-      user.email,
+      user1.email,
       "ndohjoel2018@gmail.com",
       tempEmailInDb.otp,
       token
@@ -261,7 +288,7 @@ describe("Change Email", () => {
     });
 
     const response = await confirmOtpAndChangeEmail(
-      user.email,
+      user1.email,
       "ndohjoel2018@gmail.com",
       tempEmailInDb[0].otp,
       token
@@ -270,7 +297,7 @@ describe("Change Email", () => {
     const userInDb = await userSchema.find({});
 
     expect(response.status).toBe(200);
-    expect(userInDb[0].email).not.toBe(user.email);
+    expect(userInDb[0].email).not.toBe(user1.email);
     expect(userInDb[0].email).toBe("ndohjoel2018@gmail.com");
     mockSendEmail.mockRestore();
   });
@@ -287,13 +314,13 @@ describe("Change Email", () => {
     });
 
     const response = await confirmOtpAndChangeEmail(
-      user.email,
+      user1.email,
       "ndohjoel2018@gmail.com",
       tempEmailInDb[0].otp,
       token
     );
 
-    const userInDb = await userSchema.exists({email: user.email});
+    const userInDb = await userSchema.exists({email: user1.email});
 
     expect(userInDb).toBeFalsy()
     mockSendEmail.mockRestore();
@@ -311,7 +338,7 @@ describe("Change Email", () => {
     });
 
     const response = await confirmOtpAndChangeEmail(
-      user.email,
+      user1.email,
       "ndohjoel2018@gmail.com",
       tempEmailInDb[0].otp,
       token
