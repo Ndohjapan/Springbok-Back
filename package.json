@@ -12,7 +12,7 @@
   "author": "Promise Sheggsmann, Ndoh Joel, Jay Stance",
   "license": "MIT",
   "dependencies": {
-    "aws-sdk": "^2.1162.0",
+    "aws-sdk": "^2.1354.0",
     "bcrypt": "^5.0.1",
     "cloudinary": "^1.30.0",
     "config": "^3.3.7",
