@@ -12,6 +12,7 @@ const catchAsync = require("../../../utils/catchAsync");
 const { getCachedData, setCacheData } = require("../../../utils/client");
 const ObjectId = require("mongoose").Types.ObjectId;
 const { sendTransactionToRestaurant } = require("../../../utils/activityLogs");
+const en = require("../../../locale/en/translation");
 
 exports.checkBalance = catchAsync(async (req, res, next) => {
   let userId = req.user["_id"].toString();
@@ -57,10 +58,10 @@ exports.doTransfer = catchAsync(async (req, res, next) => {
   const checkPin = await user.checkPin(transactionPin);
 
   if (!checkPin) {
-    return next(new AppError("Wrong Pin", 400));
+    return next(new AppError(en.wrong_pin, 400));
   } else {
     if (balance < amount || amount < 1) {
-      return next(new AppError("Insufficient Funds", 400));
+      return next(new AppError(en.insufficient_balance, 400));
     } else {
       //  let [limit, errText] = await weeklyLimit(user, amount);
       //  if (!limit) {
@@ -75,7 +76,7 @@ exports.doTransfer = catchAsync(async (req, res, next) => {
       );
 
       // Update restaurants details
-      let restaurantUpdate = await restaurantSchema.findByIdAndUpdate(
+      await restaurantSchema.findByIdAndUpdate(
         restaurantId,
         {
           $inc: { balance: amount },
@@ -109,14 +110,10 @@ exports.doTransfer = catchAsync(async (req, res, next) => {
         { $inc: { totalTransactions: 1, totalTransactionsAmount: amount } }
       );
 
-      res.status(200).send({ status: true, payload: transaction });
-      return await setCacheData("transactionDetails", "", 10);
+      return res.status(200).send({ status: true, payload: transaction });
     }
   }
 
-  // Check the pin
-  // add money to restauant, remove money from student
-  // create transaction document
 });
 
 exports.confirmPinandBalance = catchAsync(async (req, res, next) => {

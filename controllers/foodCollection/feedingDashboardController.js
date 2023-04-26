@@ -21,7 +21,6 @@ const path = require("path");
 const {
   getCachedData,
   setCacheData,
-  delcacheData,
 } = require("../../utils/client");
 const { Worker } = require("worker_threads");
 const { sendMail } = require("../../utils/sendMail");
@@ -570,7 +569,7 @@ exports.sendOtpToNewEmail = catchAsync(async (req, res, next) => {
 
   await sendMail(email, otp);
 
-  res.send({ status: true, message: en.otp_sent_to_new_email });
+  return res.send({ status: true, message: en.otp_sent_to_new_email });
 });
 
 exports.confirmOtpAndChangeEmail = catchAsync(async (req, res, next) => {
@@ -597,8 +596,7 @@ exports.confirmOtpAndChangeEmail = catchAsync(async (req, res, next) => {
       await tempoararyEmailSchema.deleteMany({ email: newEmail });
       session.commitTransaction();
       session.endSession();
-
-      res.status(200).json({ status: true, message: 'Email Changed Successfully'});
+      return res.status(200).json({ status: true, message: 'Email Changed Successfully'});
     } catch (error) {
       session.abortTransaction();
       session.endSession();

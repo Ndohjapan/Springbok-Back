@@ -88,7 +88,7 @@ const sendOtpTochangeEmail = async (email, token, user=user1) => {
 
   agent.set("x-auth-token", token);
 
-  return await agent.send({ email });
+  return agent.send({ email });
 };
 
 const confirmOtpAndChangeEmail = async (oldEmail, newEmail, otp, token) => {

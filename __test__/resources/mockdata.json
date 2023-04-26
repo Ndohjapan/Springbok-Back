@@ -1,0 +1,64 @@
+{
+    "admin1": {
+        "firstname": "Joel",
+        "lastname": "Ndoh",
+        "email": "admin@mail.com",
+        "number": "1234567890",
+        "password": "$2a$10$z6PhsvLgF0ojlYt..uoHn.8Glq8PQw01q1shObOTkE8m4HwYKxlre",
+        "verified": true,
+        "role": "bursar",
+        "permissions": [
+            "all"
+        ]
+    },
+    "user1": {
+        "firstname": "Joel",
+        "lastname": "Ndoh",
+        "middlename": "Chibueze",
+        "email": "user1@mail.com",
+        "password": "$2a$10$z6PhsvLgF0ojlYt..uoHn.8Glq8PQw01q1shObOTkE8m4HwYKxlre",
+        "studentStatus": true,
+        "status": "active",
+        "verified": true
+    },
+    "user2": {
+        "firstname": "Joel",
+        "lastname": "Ndoh",
+        "middlename": "Chibueze",
+        "email": "user2@mail.com",
+        "password": "$2a$10$z6PhsvLgF0ojlYt..uoHn.8Glq8PQw01q1shObOTkE8m4HwYKxlre",
+        "studentStatus": true,
+        "status": "active"
+    },
+    "user3": {
+        "firstname": "Joel",
+        "lastname": "Ndoh",
+        "middlename": "Chibueze",
+        "email": "user3@mail.com",
+        "password": "$2a$10$z6PhsvLgF0ojlYt..uoHn.8Glq8PQw01q1shObOTkE8m4HwYKxlre",
+        "studentStatus": true,
+        "status": "active"
+    },
+    "restaurant1": {
+        "name": "Cresta",
+        "email": "res1@mail.com",
+        "password": "$2a$10$z6PhsvLgF0ojlYt..uoHn.8Glq8PQw01q1shObOTkE8m4HwYKxlre",
+        "number": "1234567890"
+    },
+    "restaurant2": {
+        "name": "Tasty Vine",
+        "email": "res2@mail.com",
+        "password": "$2a$10$z6PhsvLgF0ojlYt..uoHn.8Glq8PQw01q1shObOTkE8m4HwYKxlre",
+        "number": "1234567891"
+    },
+    "restaurant3": {
+        "name": "Marigold",
+        "email": "res3@mail.com",
+        "password": "$2a$10$z6PhsvLgF0ojlYt..uoHn.8Glq8PQw01q1shObOTkE8m4HwYKxlre",
+        "number": "1234567892"
+    },
+    "utils": {
+        "feedingAmount": 15000
+    },
+    "transactionPin": "$2a$10$Ut3xbGJUB4J3UThLN1/yke2c23FQzDH8vB7mKGTtsunEwftWQuWQ2"
+}
