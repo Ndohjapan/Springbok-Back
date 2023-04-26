@@ -4,7 +4,6 @@ const cloudinary = require("cloudinary").v2;
 const AppError = require("../utils/appError");
 
 const catchAsync = require("../utils/catchAsync");
-const { success } = require("../utils/activityLogs");
 
 const dotenv = require("dotenv");
 const path = require("path");
@@ -16,22 +15,6 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_SECRET,
 });
 
-const fs = require("fs");
-const AWS = require("aws-sdk");
-const { resolve } = require("path");
-
-const s3 = new AWS.S3({
-  accessKeyId: process.env.accessKeyId,
-  secretAccessKey: process.env.secretAccessKey,
-});
-
-const fileName = "contacts.csv";
-
-const uploadFile = () => {
-  fs.readFile(fileName, (err, data) => {
-    if (err) throw err;
-  });
-};
 
 exports.uploadDocument = catchAsync(async (req, res, next) => {
   const form = Formidable();
@@ -60,11 +43,10 @@ exports.uploadFile = async (fileName) => {
   return new Promise(async (resolve, reject) => {
     let filePath;
 
-    if (process.env.NODE_ENV === "test") {
-        filePath = path.join(__dirname, "..", "__test__", "resources", fileName);
-    }
-    else{
-        filePath = path.join(__dirname, "..", fileName);
+    if (process.env.NODE_ENV === "testing") {
+      filePath = path.join(__dirname, "..", "__test__", "resources", fileName);
+    } else {
+      filePath = path.join(__dirname, "..", fileName);
     }
 
     try {

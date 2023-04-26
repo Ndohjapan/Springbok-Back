@@ -1,7 +1,6 @@
 const app = require("../app");
 const request = require("supertest");
 const mongoose = require("mongoose");
-const FormData = require("form-data");
 const fs = require("fs");
 const path = require("path");
 
@@ -48,10 +47,9 @@ function isURL(str) {
 
 const uploadProfileImage = async () => {
   const filePath = path.resolve(__dirname, "resources", "profile2.png");
-  console.log(filePath);
   return await request(app)
     .post("/document/uploadDocument")
-    .attach("document", filePath)
+    .attach("document", filePath);
 };
 
 describe("Upload profile picture from the app", () => {
@@ -78,33 +76,29 @@ describe("Upload profile picture from the app", () => {
 });
 
 describe("Upload the compiled CSV to Cloudinary", () => {
-    it('returns status of 200 if the file is uploaded succesfully', async() => {
+  it("returns status of 200 if the file is uploaded succesfully", async () => {
+    const filePath = "Main-Royal-Cafeteria-2023-04-04.csv";
 
-        const filePath = "Main-Royal-Cafeteria-2023-04-04.csv";
+    let response = await uploadFile(filePath);
 
-        let response = await uploadFile(filePath)
+    expect(response.status).toBe(200);
+  });
 
-        console.log(response)
-        expect(response.status).toBe(200)
-    })
+  it("returns successstatus true if the file is uploaded succesfully", async () => {
+    const filePath = "Main-Royal-Cafeteria-2023-04-04.csv";
 
-    it('returns successstatus true if the file is uploaded succesfully', async() => {
+    let response = await uploadFile(filePath);
 
-        const filePath = "Main-Royal-Cafeteria-2023-04-04.csv";
+    expect(response.body.success).toBe(true);
+  });
 
-        let response = await uploadFile(filePath)
+  it("returns a real url  when upload is completed", async () => {
+    const filePath = "Main-Royal-Cafeteria-2023-04-04.csv";
 
-        expect(response.body.success).toBe(true)
-    })
+    let response = await uploadFile(filePath);
 
-    it('returns a real url  when upload is completed', async() => {
+    const url = isURL(response.body.url);
 
-        const filePath = "Main-Royal-Cafeteria-2023-04-04.csv";
-
-        let response = await uploadFile(filePath)
-
-        const url = isURL(response.body.url);
-
-        expect(url).toBeTruthy(true)
-    })
-})
+    expect(url).toBeTruthy();
+  });
+});

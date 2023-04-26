@@ -11,7 +11,7 @@ const userSchema = new mongoose.Schema(
     email: { type: String, required: true, trim: true, unique: true },
     avatar: {
       type: String,
-      default: "https://leadcity.s3.eu-west-2.amazonaws.com/1656238085089.png",
+      default: "https://res.cloudinary.com/lcu-feeding-backup/image/upload/v1675596558/samples/animals/cat.jpg",
     },
     password: { type: String, required: true },
     verified: { type: Boolean, default: false },
@@ -84,10 +84,6 @@ const userFeedingSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
-    lastFundingDay: {
-      type: String,
-      default: "2022-09-17",
-    },
     fundingCheck: {
       type: Number,
       default: 0,
@@ -112,7 +108,7 @@ const adminSchema = new mongoose.Schema(
     number: { type: String, trim: true, unique: true },
     avatar: {
       type: String,
-      default: "https://leadcity.s3.eu-west-2.amazonaws.com/1656238739061.png",
+      default: "https://res.cloudinary.com/lcu-feeding-backup/image/upload/v1681319593/utils/software-engineer_wwu87t.png",
     },
     password: { type: String, required: true },
     verified: { type: Boolean, default: false },
@@ -178,7 +174,7 @@ const restaurantSchema = new mongoose.Schema(
     },
     logo: {
       type: String,
-      default: "https://leadcity.s3.eu-west-2.amazonaws.com/1656238457405.png",
+      default: "https://res.cloudinary.com/lcu-feeding-backup/image/upload/v1681319379/utils/restaurant_r7e2d5.png",
     },
     balance: {
       type: Number,
