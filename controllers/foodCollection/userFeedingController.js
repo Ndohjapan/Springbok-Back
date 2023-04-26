@@ -471,6 +471,8 @@ exports.fundWallet = catchAsync(async (req, res, next) => {
         "Update",
         socket
       );
+
+      await delcacheData("legibleUsers")
     }
 
     await utilsSchema.updateMany(
@@ -544,6 +546,8 @@ exports.fundAllLegibleWallets = catchAsync(async (req, res, next) => {
         ` funded ${user.modifiedCount} students who are legible after 30 days with total of ${totalAmount} naira`,
         "Update"
       );
+
+      await delcacheData("legibleUsers")
     }
 
     await utilsSchema.updateMany(
