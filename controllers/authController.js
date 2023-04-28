@@ -167,15 +167,12 @@ exports.adminSignin = catchAsync(async (req, res, next) => {
     let userId = user["_id"].toString();
 
     const correctPassword = await user.checkPassword(password);
-    
+
     if (!correctPassword) {
-    
       return next(new AppError("Incorrect email or password", 400));
-    
     } else {
-    
       const token = await user.generateAuthToken();
-    
+
       res.status(200).json({ status: true, token, payload: user });
 
       if (process.env.NODE_ENV !== "testing") {

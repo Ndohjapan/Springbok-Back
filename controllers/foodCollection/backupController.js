@@ -1,64 +1,70 @@
-const {Worker} = require("worker_threads")
-const catchAsync = require("../../utils/catchAsync");
-const AppError = require("../../utils/appError");
-const {restaurantSchema, backupSchema, apiKeySchema} = require("../../models/mainModel")
-const {uploadBackup} = require("./threads/backupCSV")
-const path = require("path");
-const { getFilesInFolder } = require("../document");
+const catchAsync = require('../../utils/catchAsync');
+const {
+	restaurantSchema,
+	backupSchema,
+} = require('../../models/mainModel');
+const { uploadBackup } = require('./threads/backupCSV');
+const { getFilesInFolder } = require('../document');
 const date = new Date();
 
 const padWithZero = (num) => {
-    return num < 10 ? '0' + num : num;
+	return num < 10 ? '0' + num : num;
 };
 
 const replaceSpacesWithDashes = (str) => {
-    str = str.replace(/&/g, 'and')
-    return str.replace(/\s/g, '-');
+	str = str.replace(/&/g, 'and');
+	return str.replace(/\s/g, '-');
 };
 
+exports.dailyBackup = catchAsync(async (req, res) => {
+	let restaurants = await restaurantSchema.find({});
 
-exports.dailyBackup = catchAsync(async(req, res, next) => {
+	const year = date.getFullYear();
+	const month = padWithZero(date.getMonth() + 1);
+	const day = padWithZero(date.getDate());
 
-    let restaurants = await restaurantSchema.find({})
-      
-    const year = date.getFullYear();
-    const month = padWithZero(date.getMonth() + 1);
-    const day = padWithZero(date.getDate());
+	console.log(restaurants.length);
 
-    console.log(restaurants.length)
-    
-    let resultData = await performBackup(restaurants, year, month, day)
-    
-    let backUpData = await backupSchema.create({folder: `${year}-${month}-${day}`})
-    
-    res.send({success: true, data: backUpData})
-})
+	await performBackup(restaurants, year, month, day);
 
-exports.getBackupFiles = catchAsync(async(req, res, next) => {
-    let {folder} = req.body
+	let backUpData = await backupSchema.create({
+		folder: `${year}-${month}-${day}`,
+	});
 
-    let result = await getFilesInFolder(folder)
+	res.send({ success: true, data: backUpData });
+});
 
-    res.send({success: true, data: result})
-})
+exports.getBackupFiles = catchAsync(async (req, res) => {
+	let { folder } = req.body;
 
-exports.getALlFolders = catchAsync(async(req, res, next) => {
-    let result = await backupSchema.find({}).sort({CreatedAt: 1})
+	let result = await getFilesInFolder(folder);
 
-    return res.send({success: true, data: result})
-})
+	res.send({ success: true, data: result });
+});
 
-async function performBackup(restaurants, year, month, day){
-    let resultData = []
-    let i = 0
-    while(i<restaurants.length){
-        let data = {restaurantName: replaceSpacesWithDashes(restaurants[i].name), restaurantId: restaurants[i].id , year,  month, day}
-        
-        let result = await uploadBackup(data)
-        resultData.push(result)
-        
-        i++
-    }
+exports.getALlFolders = catchAsync(async (req, res) => {
+	let result = await backupSchema.find({}).sort({ CreatedAt: 1 });
 
-    return resultData
+	return res.send({ success: true, data: result });
+});
+
+async function performBackup(restaurants, year, month, day) {
+	let resultData = [];
+	let i = 0;
+	while (i < restaurants.length) {
+		let data = {
+			restaurantName: replaceSpacesWithDashes(restaurants[i].name),
+			restaurantId: restaurants[i].id,
+			year,
+			month,
+			day,
+		};
+
+		let result = await uploadBackup(data);
+		resultData.push(result);
+
+		i++;
+	}
+
+	return resultData;
 }
