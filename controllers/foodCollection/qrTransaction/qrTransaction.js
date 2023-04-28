@@ -15,14 +15,14 @@ const { sendTransactionToRestaurant } = require("../../../utils/activityLogs");
 const en = require("../../../locale/en/translation");
 
 exports.checkBalance = catchAsync(async (req, res, next) => {
-  let userId = req.user["_id"].toString();
+  const userId = req.user["_id"].toString();
   const result = await userFeedingSchema.findOne({ userId: userId });
 
   res.status(200).send({ status: true, balance: result.balance });
 });
 
 exports.confirmRestaurant = catchAsync(async (req, res, next) => {
-  let restaurantId = req.params.id;
+  const restaurantId = req.params.id;
 
   if (ObjectId.isValid(restaurantId)) {
     if (String(new ObjectId(restaurantId)) === restaurantId) {
@@ -42,7 +42,7 @@ exports.confirmRestaurant = catchAsync(async (req, res, next) => {
 });
 
 exports.doTransfer = catchAsync(async (req, res, next) => {
-  let userId = req.user["_id"].toString();
+  const userId = req.user["_id"].toString();
   let { transactionPin, amount, restaurantId } = req.body;
 
   amount = parseInt(amount);
@@ -51,8 +51,8 @@ exports.doTransfer = catchAsync(async (req, res, next) => {
   const restaurant = await restaurantSchema.findById(restaurantId);
 
   // Get user and restaurants balance.
-  let balance = parseInt(user.balance);
-  let restaurantBalance = parseInt(restaurant.balance);
+  const balance = parseInt(user.balance);
+  const restaurantBalance = parseInt(restaurant.balance);
 
   // Confirm the user pin
   const checkPin = await user.checkPin(transactionPin);
@@ -69,7 +69,7 @@ exports.doTransfer = catchAsync(async (req, res, next) => {
       //  }
 
       // Update the users details
-      let userUpdate = await userFeedingSchema.findOneAndUpdate(
+      const userUpdate = await userFeedingSchema.findOneAndUpdate(
         { userId: userId },
         { $inc: { balance: -amount }, $set: { previousBalance: balance } },
         { new: true }
@@ -113,16 +113,15 @@ exports.doTransfer = catchAsync(async (req, res, next) => {
       return res.status(200).send({ status: true, payload: transaction });
     }
   }
-
 });
 
 exports.confirmPinandBalance = catchAsync(async (req, res, next) => {
-  let userId = req.user["_id"].toString();
-  let { transactionPin, amount } = req.body;
+  const userId = req.user["_id"].toString();
+  const { transactionPin, amount } = req.body;
 
   const user = await userFeedingSchema.findOne({ userId: userId });
 
-  let balance = user.balance;
+  const balance = user.balance;
 
   const checkPin = await user.checkPin(transactionPin);
   if (!checkPin) {
@@ -139,8 +138,8 @@ exports.confirmPinandBalance = catchAsync(async (req, res, next) => {
 });
 
 exports.restaurantDoTransfer = catchAsync(async (req, res, next) => {
-  let { userId, amount } = req.body;
-  let restaurantId = req.user["_id"].toString();
+  const { userId, amount } = req.body;
+  const restaurantId = req.user["_id"].toString();
 
   let transaction = await tempoararyTransactionsSchema.create({
     from: userId,
@@ -169,8 +168,8 @@ exports.restaurantDoTransfer = catchAsync(async (req, res, next) => {
 
 exports.validateTransaction = catchAsync(async (req, res, next) => {
   const socket = req.app.get("socket");
-  let userId = req.user["_id"].toString();
-  let lastTransaction = await transactionSchema
+  const userId = req.user["_id"].toString();
+  const lastTransaction = await transactionSchema
     .findOne({ from: req.user["_id"].toString() })
     .sort({ createdAt: -1 })
     .populate(["from"]);
@@ -225,11 +224,12 @@ async function weeklyLimit(userInfo, amount) {
       ? settings.feedingPlanLimits.twoMeals
       : settings.feedingPlanLimits.threeMeals;
 
-  if (amount > usersWeeklyLimit)
+  if (amount > usersWeeklyLimit) {
     return [
       false,
       `Sorry, you can't spend more than #${usersWeeklyLimit} weekly.`,
     ];
+  }
 
   // if it does exceed, return a transaction is invalid error
   if (

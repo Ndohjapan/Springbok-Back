@@ -5,7 +5,11 @@ const {
   userSchema,
   transactionSchema,
 } = require("../models/mainModel");
-const {getCachedData, setCacheData, delcacheData} = require("../utils/client")
+const {
+  getCachedData,
+  setCacheData,
+  delcacheData,
+} = require("../utils/client");
 
 exports.getAllUsers = catchAsync(async (req, res, next) => {
   // let page = req.query.page ? req.query.page : 1;
@@ -39,17 +43,24 @@ exports.getUser = catchAsync(async (req, res, next) => {
 
 exports.getAllUserData = catchAsync(async (req, res, next) => {
   const userProfileData = await userSchema.findById(req.params.id);
-  const userFeedingData = await userFeedingSchema.findOne({userId: req.params.id})
+  const userFeedingData = await userFeedingSchema.findOne({
+    userId: req.params.id,
+  });
 
-  res.status(200).send({ status: true, message: "Successful", profileData: userProfileData, feedingData: userFeedingData });
+  res.status(200).send({
+    status: true,
+    message: "Successful",
+    profileData: userProfileData,
+    feedingData: userFeedingData,
+  });
 });
 
 exports.updateUser = catchAsync(async (req, res, next) => {
   let data = req.body;
   let updateData = {};
 
-  data.permissions = ""
-  data.password = ""
+  data.permissions = "";
+  data.password = "";
 
   Object.entries(data).forEach(([key, value]) => {
     if (value != "") {
@@ -57,31 +68,46 @@ exports.updateUser = catchAsync(async (req, res, next) => {
     }
   });
 
-  if(req.user.permissions){
-    if(req.user.permissions.some(value => ['all', 'edit users'].includes(value))){
-      user = await userSchema.updateOne({_id: req.params.id}, updateData, {
+  if (req.user.permissions) {
+    if (
+      req.user.permissions.some((value) =>
+        ["all", "edit users"].includes(value)
+      )
+    ) {
+      user = await userSchema.updateOne({ _id: req.params.id }, updateData, {
         new: true,
       });
+    } else {
+      return next(new AppError("You do not have permission to do this", 403));
+    }
+  } else {
+    let user = await userSchema.updateOne(
+      { _id: req.params.id, studentStatus: false },
+      updateData,
+      {
+        new: true,
+      }
+    );
+    if (updateData.avatar) {
+      user = await userSchema.updateOne(
+        { _id: req.params.id },
+        { $set: { avatar: updateData.avatar } },
+        {
+          new: true,
+        }
+      );
+    }
 
-    }
-    else{
-      return next(new AppError("You do not have permission to do this", 403))
-    }
-  }
-  else{   
-    let user = await userSchema.updateOne({_id: req.params.id, studentStatus: false}, updateData, {
-      new: true,
-    });
-  
-    if(user.matchedCount != 1){
+    if (user.matchedCount != 1) {
       return next(new AppError("You cannot update your profile", 400));
-  
     }
   }
 
   user = await userSchema.findById(req.params.id);
 
-  return res.status(200).send({ status: true, message: "User Updated", data: user });
+  return res
+    .status(200)
+    .send({ status: true, message: "User Updated", data: user });
 });
 
 exports.deleteUser = catchAsync(async (req, res, next) => {
@@ -90,8 +116,8 @@ exports.deleteUser = catchAsync(async (req, res, next) => {
   const user = await userSchema.deleteMany({ _id: { $in: userIds } });
   let userFeeding = userFeedingSchema.deleteMany({ userId: { $in: userIds } });
   Promise.all([userFeeding]).then(async (result) => {
-    await delcacheData("allUsers")
-    await delcacheData("legibleUsers")
+    await delcacheData("allUsers");
+    await delcacheData("legibleUsers");
     res.status(204).send({ status: true, message: "User Deleted" });
   });
 });
@@ -106,7 +132,11 @@ exports.postFilter = catchAsync(async (req, res, next) => {
     }
   });
 
-  let user = await userSchema.find({ updateData, role: { $ne: "restaurant" }, verified: true });
+  let user = await userSchema.find({
+    updateData,
+    role: { $ne: "restaurant" },
+    verified: true,
+  });
 
   res.status(200).send({ status: true, message: "Successful", data: user });
 });

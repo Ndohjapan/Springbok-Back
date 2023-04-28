@@ -18,10 +18,7 @@ const catchAsync = require("../../utils/catchAsync");
 const bcrypt = require("bcrypt");
 const { success } = require("../../utils/activityLogs");
 const path = require("path");
-const {
-  getCachedData,
-  setCacheData,
-} = require("../../utils/client");
+const { getCachedData, setCacheData } = require("../../utils/client");
 const { Worker } = require("worker_threads");
 const { sendMail } = require("../../utils/sendMail");
 const generateOtp = require("../../utils/generateOtp");
@@ -245,7 +242,7 @@ exports.deleteAdmins = catchAsync(async (req, res, next) => {
 
     res.status(200).send({ status: true, message: "Admin Deleted" });
 
-    return success(userId, ` deleted an admin from database`, "Delete", socket);
+    return success(userId, " deleted an admin from database", "Delete", socket);
   }
 });
 
@@ -545,7 +542,7 @@ exports.endSession = catchAsync(async (req, res, next) => {
       res
         .status(200)
         .send({ status: true, message: "Session Ended", data: records });
-      return success(userId, ` ended the session`, "Update", socket);
+      return success(userId, " ended the session", "Update", socket);
     });
   } catch (err) {
     console.log(err);
@@ -558,7 +555,6 @@ exports.sendOtpToNewEmail = catchAsync(async (req, res, next) => {
   let exists = await userSchema.exists({ email });
 
   if (exists) {
-    
     return next(new AppError(en.email_already_in_use, 400));
   }
 
@@ -596,7 +592,9 @@ exports.confirmOtpAndChangeEmail = catchAsync(async (req, res, next) => {
       await tempoararyEmailSchema.deleteMany({ email: newEmail });
       session.commitTransaction();
       session.endSession();
-      return res.status(200).json({ status: true, message: 'Email Changed Successfully'});
+      return res
+        .status(200)
+        .json({ status: true, message: "Email Changed Successfully" });
     } catch (error) {
       session.abortTransaction();
       session.endSession();
