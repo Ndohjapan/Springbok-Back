@@ -43,7 +43,7 @@ exports.getBackupFiles = catchAsync(async (req, res) => {
 });
 
 exports.getALlFolders = catchAsync(async (req, res) => {
-	let result = await backupSchema.find({}).sort({ CreatedAt: 1 });
+	let result = await backupSchema.find({}).sort({ folder: 1 });
 
 	return res.send({ success: true, data: result });
 });

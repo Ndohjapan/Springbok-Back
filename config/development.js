@@ -13,20 +13,24 @@ module.exports = {
     USERNAME: process.env.REDIS_USERNAME,
     PORT: process.env.REDIS_PORT,
   },
-  mail:{
+  mail: {
     KEY: process.env.postmarkKey,
-    SENDER_EMAIL: "support@lcufeeding.com"
+    SENDER_EMAIL: "support@lcufeeding.com",
   },
-  cloudinary:{
+  cloudinary: {
     NAME: process.env.CLOUD_NAME,
     KEY: process.env.CLOUDINARY_KEY,
-    SECRET: process.env.CLOUDINARY_SECRET
+    SECRET: process.env.CLOUDINARY_SECRET,
   },
   admin: {
-    EMAIL: process.env.DEVELOPMENT_ADMIN_EMAIL
+    EMAIL: process.env.DEVELOPMENT_ADMIN_EMAIL,
   },
-  jwt:{
-    KEY: process.env.jwtPrivateKey
+  jwt: {
+    KEY: process.env.jwtPrivateKey,
   },
-  otpMinutesLimit: "10"
+  treblle: {
+    KEY: process.env.TREBLLE_API_KEY,
+    PROJECT_ID: process.env.TREBLLE_PROJECT_ID,
+  },
+  otpMinutesLimit: "10",
 };

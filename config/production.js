@@ -28,5 +28,9 @@ module.exports = {
   jwt: {
     KEY: process.env.jwtPrivateKey,
   },
+  treblle: {
+    KEY: process.env.TREBLLE_API_KEY,
+    PROJECT_ID: process.env.TREBLLE_PROJECT_ID,
+  },
   otpMinutesLimit: "10",
 };

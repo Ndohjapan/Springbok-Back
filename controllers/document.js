@@ -68,7 +68,6 @@ exports.uploadFile = async (fileName) => {
 };
 
 exports.uploadBackup = async (fileName, folder) => {
-  console.log(fileName, folder);
 
   const file = fileName;
   return new Promise((resolve, reject) => {

@@ -1,10 +1,8 @@
 const app = require("./app");
 const connectDb = require("./start/db");
 const socketio = require("socket.io")
-const {socketSchema} = require("./models/mainModel")
 
 const dotenv = require("dotenv")
-const path = require("path")
 dotenv.config({path: "./config/config.env"})
 
 process.on("uncaughtException", (err) => {
@@ -19,7 +17,7 @@ connectDb();
 
 const PORT = process.env.PORT || 9002;
 const server = app.listen(PORT, () =>
-  console.log(`APP RUNNING ON PORT: ${PORT}`)
+  console.log(`${process.env.NODE_ENV} APP RUNNING ON PORT: ${PORT}`)
 );
 
 const io = socketio(server, {

@@ -1,20 +1,13 @@
-const { parentPort } = require("worker_threads");
 const { transactionSchema } = require("../../../models/mainModel");
-const mongoose = require("mongoose");
 const dotenv = require("dotenv");
-const AppError = require("../../../utils/appError");
-const catchAsync = require("../../../utils/catchAsync");
 
 
 const { uploadBackup } = require("../../document");
 const createCsvWriter = require("csv-writer").createObjectCsvWriter;
 const fs = require("fs");
 const path = require("path");
-const { rejects } = require("assert");
-const { resolve } = require("path");
 
 dotenv.config({ path: "../../../config/config.env" });
-const MONGO_URI = process.env.mongoDbUrl;
 
 exports.uploadBackup = (async(data) => {
     const year = data.year

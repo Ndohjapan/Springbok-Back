@@ -127,6 +127,7 @@ exports.sendTransactions = async (userId, restaurantId, amount) => {
     return true;
   } catch (error) {
     await session.abortTransaction();
+    await session.endSession();
     return false;
   }
 };
