@@ -51,13 +51,6 @@ if (process.env.NODE_ENV !== "testing") {
   app.use(interceptorParam);
 }
 
-if(process.env.NODE_ENV === "development"){
-  app.use(treblle({
-    apiKey: KEY,
-    projectId: PROJECT_ID,
-  }))
-}
-
 app.use("/api/v1/users", fundingStatus, authRoutes);
 app.use("/document", documentRoutes);
 app.use("/error", errorLogsRoute);
