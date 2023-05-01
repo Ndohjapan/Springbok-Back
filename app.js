@@ -1,7 +1,6 @@
 const express = require("express");
 const cors = require("cors");
 const morgan = require("morgan");
-const treblle = require('@treblle/express')
 const globalErrorHandler = require("./controllers/errorController");
 const { fundingStatus } = require("./middleware/fundingStatus");
 const { protect } = require("./controllers/authController");
