@@ -1,7 +1,6 @@
 const express = require("express");
 const cors = require("cors");
 const morgan = require("morgan");
-const treblle = require('@treblle/express')
 const globalErrorHandler = require("./controllers/errorController");
 const { fundingStatus } = require("./middleware/fundingStatus");
 const { protect } = require("./controllers/authController");
@@ -49,13 +48,6 @@ app.use(express.urlencoded({ extended: true }));
 
 if (process.env.NODE_ENV !== "testing") {
   app.use(interceptorParam);
-}
-
-if(process.env.NODE_ENV === "development"){
-  app.use(treblle({
-    apiKey: KEY,
-    projectId: PROJECT_ID,
-  }))
 }
 
 app.use("/api/v1/users", fundingStatus, authRoutes);
