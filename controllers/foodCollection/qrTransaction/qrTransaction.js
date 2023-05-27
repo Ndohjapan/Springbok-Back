@@ -63,11 +63,6 @@ exports.doTransfer = catchAsync(async (req, res, next) => {
     if (balance < amount || amount < 1) {
       return next(new AppError(en.insufficient_balance, 400));
     } else {
-      //  let [limit, errText] = await weeklyLimit(user, amount);
-      //  if (!limit) {
-      //    return next(new AppError(errText, 400));
-      //  }
-
       // Update the users details
       const userUpdate = await userFeedingSchema.findOneAndUpdate(
         { userId: userId },
