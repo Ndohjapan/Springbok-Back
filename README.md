@@ -69,6 +69,11 @@ Go to the official website for mongodb and downlaod it for your operating system
 
 https://www.mongodb.com/try/download/community
 
+### Use Docker to Start Redis on Port 6380
+~~~
+docker run -d -p 6380:6379 --name redis-container redis:latest
+~~~
+
 ### Run Test Command
 ~~~
 npm run test
